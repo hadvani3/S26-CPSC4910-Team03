@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "express": "^5.2.1",
-    "mysql2": "^3.16.3",
-    "prompt-sync": "^4.2.0"
-  }
-}
