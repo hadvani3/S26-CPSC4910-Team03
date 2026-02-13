@@ -45,6 +45,6 @@ const server = http.createServer((req, res) => {
     });
 });
 
-server.listen(5000, '0.0.0.0', () => {
+server.listen(3000, '0.0.0.0', () => {
     console.log('Server running at http://100.51.75.41:5000');
 });
