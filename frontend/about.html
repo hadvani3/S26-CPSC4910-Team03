@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>About Us</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #34495e;
+        }
+
+        .item {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>About Us</h1>
+
+        <div class="item">
+            <span class="label">Product:</span> ${product_name}
+        </div>
+
+        <div class="item">
+            <span class="label">Version:</span> ${version_number}
+        </div>
+
+        <div class="item">
+            <span class="label">Team:</span> ${team_number}
+        </div>
+
+        <div class="item">
+            <span class="label">Release Date:</span> ${release_date.toDateString()}
+        </div>
+
+        <div class="item">
+            <span class="label">Product Description:</span><br>
+            ${product_desc}
+        </div>
+    </div>
+</body>
+</html>
