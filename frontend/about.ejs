@@ -8,12 +8,12 @@
             font-family: Arial, Helvetica, sans-serif;
             background-color: #f4f6f8;
             margin: 0;
-            padding: 40px;
+            padding: 0px;
         }
 
         .container {
             max-width: 700px;
-            margin: auto;
+            margin: 30px auto;
             background: #ffffff;
             padding: 30px;
             border-radius: 10px;
@@ -59,33 +59,34 @@
 </head>
 
 <body>
-    <div class="container">
-	<ul>
+    <ul>
             <li><a href="https://team03.cpsc4911.com/"/>Login</a></li>
             <li><a href="https://team03.cpsc4911.com/about">About</a></li>
-    	</ul>
+    </ul>
+    <div class="container">
         <h1>About Us</h1>
 
         <div class="item">
-            <span class="label">Product:</span> ${product_name}
+            <span class="label">Product:</span> <%= product_name %>
         </div>
 
         <div class="item">
-            <span class="label">Version:</span> ${version_number}
+            <span class="label">Version:</span> <%= version_number %>
         </div>
 
         <div class="item">
-            <span class="label">Team:</span> ${team_number}
+            <span class="label">Team:</span> <%= team_number %>
         </div>
 
         <div class="item">
-            <span class="label">Release Date:</span> ${release_date.toDateString()}
+            <span class="label">Release Date:</span> <%= release_date %>
         </div>
 
         <div class="item">
             <span class="label">Product Description:</span><br>
-            ${product_desc}
+            <%= product_desc %>
         </div>
     </div>
 </body>
 </html>
+

@@ -9,10 +9,11 @@
             background-color: #f4f6f8;
             display: flex;
             margin: 0;
-            padding: 40px;
+            padding: 0px;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+	    flex-direction: column;
         }
         .container {
             max-width: 700px;
@@ -64,10 +65,34 @@
             background-color: transparent;
             text-decoration: underline;
         }
+	ul {
+  	    list-style-type: none;
+  	    margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #333333;
+	    width: 100%;
+        }
+
+	ul li {
+		float: left;
+	}
+
+	ul li a {
+  		display: block;
+  		color: white;
+  		text-align: center;
+  		padding: 14px 16px;
+  		text-decoration: none;
+	}
 
     </style>
 </head>
 <body>
+    <ul>
+  	<li><a href="https://team03.cpsc4911.com/"/>Login</a></li>
+        <li><a href="https://team03.cpsc4911.com/about">About</a></li>
+    </ul>
     <div class="container">
         <h1>Login</h1>
         <form action="/login" method="POST">
