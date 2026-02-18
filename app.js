@@ -74,6 +74,11 @@ app.get('/about', (req, res) => {
 });
 
 
+app.get('/create_account', (req, res) => {
+	res.sendFile(path.join(__dirname, 'frontend', 'CreateAccount.html'));
+});
+
+
 	
 
 
