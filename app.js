@@ -37,7 +37,7 @@ app.listen(PORT, '0.0.0.0', () => {
 
 app.get('/about', (req, res) => {
 
-	const query = 'SELECT team_number, version_number, release_date, product_name, product_desc FROM about_info WHERE id = 1';
+	const query = 'SELECT team_number, version_number, release_date, product_name, product_desc FROM about_info WHERE is_curr = 1';
 	const query2 = 'SELECT product_desc FROM about_info WHERE id = 2';
 	db.query(query, (err, results) =>{
 		if(err){
