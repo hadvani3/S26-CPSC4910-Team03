@@ -48,3 +48,25 @@ CREATE TABLE IF NOT EXISTS drivers (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- driver application table
+CREATE TABLE IF NOT EXISTS driver_applications (
+	application_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL, -- applicant ID
+    sponsor_id INT NOT NULL,  -- the sponsor the driver is applying to
+    application_status VARCHAR(25) NOT NULL DEFAULT 'PENDING', -- pending, approved, denied
+    notes VARCHAR(500),
+    reviewed_at TIMESTAMP NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- driver points table
+CREATE TABLE IF NOT EXISTS driver_points (
+	transaction_id INT PRIMARY KEY AUTO_INCREMENT,
+    driver_id INT NOT NULL,
+    sponsor_id INT NOT NULL,
+    points_change INT NOT NULL, -- can be negative or positive
+    reason VARCHAR(255),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
