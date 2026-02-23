@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "start": "node app.js",
+    "start:react": "node app.react.js",
+    "build:client": "npm run build --prefix client"
+  },
   "dependencies": {
     "ejs": "^4.0.1",
     "express": "^5.2.1",
