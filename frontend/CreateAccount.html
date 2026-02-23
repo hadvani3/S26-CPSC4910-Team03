@@ -87,6 +87,31 @@
 	}
 
     </style>
+    <script>
+        function comparePasswords(){
+            const password = document.getElementById("password").value;
+            const confirmPass = document.getElementById("Cpassword").value;
+            const checkPass = document.getElementById("checkPass"); 
+            const register = document.getElementById("submitBtn");
+
+            if(password === "" || confirmPass === ""){
+                checkPass.innerText = "";
+                register.disabled = true;
+                return;
+            }
+
+            if(password.value === confirmPass.value){
+                if(confirmPass.length >= 10)
+                checkPass.innerText = "✓";
+                checkPass.style.color = "green";
+                register.disabled = false;
+            }else{
+                checkPass.innerText = "Passwords do not match";
+                checkPass.style.color = "red";
+                register.disabled = true;
+            }
+    }
+    </script>
 </head>
 <body>
     <ul>
@@ -95,7 +120,7 @@
     </ul>
     <div class="container">
         <h1>Create Account</h1>
-        <form action="/create_account" method="POST">
+        <form action="create_account" method="POST">
             <label>
                 Email:
                 <input type="email"  name="email" required>
@@ -103,11 +128,12 @@
             <br>
             <label>
                 Password:
-                <input type="password" name="password" minlength="10" maxlength="20" required>
+                <input type="password" id="password" name = "password" minlength="10" maxlength="20" required>
             </label>
             <label>
                 Confirm Password:
-                <input type="password" name="Cpassword" minlength="10" maxlength="20" required>
+                <input type="password" id="Cpassword" name = "confirmPassword" minlength="10" maxlength="20" required oninput="comparePasswords()">
+                <p id = "checkPass"></p>
             </label>
             <br>
             <label>
@@ -118,8 +144,9 @@
                 <option value="sponsor">Sponsor</option>
                 <option value="admin">Admin</option>
             </select>
+
             <div class="container">
-            <button style= "width: 150px; height: 50px" type="submit" >
+            <button style= "width: 150px; height: 50px" type="submit" id="submitBtn" disabled>
                 Register
             </button>
             </div>

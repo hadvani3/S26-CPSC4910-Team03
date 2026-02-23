@@ -1,5 +1,6 @@
 
 const express = require('express');
+const bcrpyt = require('bcrypt')
 const mysql = require('mysql2');
 const path = require('path');
 
@@ -23,8 +24,28 @@ db.connect(err => {
 });
 
 app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 
 //API routes
+
+app.post('/create_account', async (req, res) => {
+	const { email, password, role} = req.body;
+	console.log(req.body);
+	const hashedPassword = await bcrpyt.hash(password, 10);
+	const query = 'INSERT INTO users (email, password_hash, role_type, is_active) VALUES (?,?,?,?)';
+	const values = [email, hashedPassword, role, 0];
+	db.query(query, values, (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: "Database insert failed" });
+            }
+            res.json({
+                message: "Account created successfully",
+                user_id: result.insertId
+            });
+        })
+});
+
 
 app.get('/api/about', (req, res) => {
 	const query = 'SELECT team_number, version_number, release_date, product_name, product_desc FROM about_info WHERE is_curr = 1';
