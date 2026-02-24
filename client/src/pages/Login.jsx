@@ -48,7 +48,7 @@ export default function Login() {
       <Nav />
       <div className="container">
         <h1>Login</h1>
-        <form action="/login" method="POST">
+        <form onSubmit={handleSubmit}>
           <label>
             Email:
             <input
