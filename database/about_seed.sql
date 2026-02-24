@@ -13,20 +13,20 @@ is_curr
 
 SELECT 
 	'Team 3',
-    'Sprint 3',
+    'Sprint 4',
     CURDATE(),
     'Good Driver Incentive Program',
-    'A full-stack web application designed to reward drivers for good driving habits.',
+    'Sprint 4 Changes - Added React login page and began driver authentication implementations',
     TRUE
 
 WHERE NOT EXISTS (
 	SELECT 1
     FROM about_info
-    WHERE team_number = 'Team 3' AND version_number = 'Sprint 3'
+    WHERE team_number = 'Team 3' AND version_number = 'Sprint 4'
 );
 
--- ensure that only sprint 3 row is inserted
+-- ensure that only Sprint 4 data is inserted as current version
 UPDATE about_info
-SET is_curr = (version_number = 'Sprint 3')
+SET is_curr = (version_number = 'Sprint 4')
 WHERE team_number = 'Team 3';
     
