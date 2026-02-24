@@ -3,6 +3,7 @@ const express = require('express');
 const bcrpyt = require('bcrypt')
 const mysql = require('mysql2');
 const path = require('path');
+const generateAccessToken = require("./generateAccessToken")
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -82,6 +83,38 @@ app.get('/api/about', (req, res) => {
 		});
 	});
 });
+
+app.post("/", (req, res)=> {
+	const user = req.body.name
+	const password = req.body.password
+	const sqlSearch = 'SELECT * FROM users WHERE email = ?';
+	const search_query = mysql.format(sqlSearch,[user])
+	db.query(search_query, (err, userResults) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({error: "Database Error"});
+		}
+		if (userResults.length === 0) {
+			console.log("User doesn't exist.")
+			return res.status(404).json({error: "No data found"});
+		}
+		else {
+			const hashedPassword = userResults[0].hash_password
+			//get the hashedPassword from result
+			if (password === hashedPassword) {
+				console.log("---------> Login Successful")
+				console.log("---------> Generating accessToken")
+				const token = generateAccessToken({user: user})
+				console.log(token)
+				res.json({accessToken: token})
+			}
+			else {
+				console.log("---------> Password Incorrect")
+				res.send("Password incorrect!")
+			} //end of bcrypt.compare()
+		}
+	})
+})
 
 //Serve React build
 const clientDist = path.join(__dirname, 'client', 'dist');
