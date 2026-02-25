@@ -44,7 +44,7 @@ export default function About() {
         </div>
         <div className="item">
           <span className="label">Sponsor User Features:</span><br />
-          <p>Sponsors have the power to create accounts representing their staff, accept and reject driver applications to the program, manage driver accounts, award and dock points, and maintain a catalog of products for drivers to purchase supplied by a public API.</p>
+          <p>{data.sponsor_desc}</p>
         </div>
       </div>
     </>
