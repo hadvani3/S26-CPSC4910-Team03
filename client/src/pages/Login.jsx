@@ -77,6 +77,9 @@ export default function Login() {
             </button>
           </div>
         </form>
+        <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '14px' }}>
+        <Link to="/forgot-password">Forgot Password?</Link>
+        </div>
         <p style={{ textAlign: 'center' }}>
           Don&apos;t have an account? <Link to="/create_account">Create Account</Link>
         </p>
