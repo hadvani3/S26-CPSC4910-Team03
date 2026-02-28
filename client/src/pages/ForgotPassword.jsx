@@ -40,6 +40,9 @@ export default function ForgotPassword() {
             <Nav />
             <div className="container">
                 <h1>Forgot Password</h1>
+                <p style={{ textAlign: 'center', color: '#495057', marginBottom: '20px' }}>
+                    Please enter the email address associated with this account to receive a password reset link.
+                </p>
                 <form onSubmit={handleSubmit}>
                     <label>
                         Email:
@@ -48,6 +51,7 @@ export default function ForgotPassword() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
+                            placeholder="email@example.com"
                         />
                     </label>
                     <div className="container">
