@@ -50,7 +50,7 @@ export default function Login() {
         <h1>Login</h1>
         <form onSubmit={handleSubmit}>
           <label>
-            Email:
+            mail:
             <input
                 type="email"
                 name="email"
