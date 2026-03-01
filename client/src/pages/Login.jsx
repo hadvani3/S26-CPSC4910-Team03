@@ -11,7 +11,7 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const res = await fetch("https://team03.cpsc4911.com", {
+      const res = await fetch("http://localhost:3000/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -50,7 +50,7 @@ export default function Login() {
         <h1>Login</h1>
         <form onSubmit={handleSubmit}>
           <label>
-            mail:
+            Email:
             <input
                 type="email"
                 name="email"

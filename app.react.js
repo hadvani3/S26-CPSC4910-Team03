@@ -99,7 +99,7 @@ app.post("/", (req, res)=> {
 			return res.status(404).json({error: "No data found"});
 		}
 		else {
-			const hashedPassword = userResults[0].hash_password
+			const hashedPassword = userResults[0].password_hash
 			//get the hashedPassword from result
 			if (password === hashedPassword) {
 				console.log("---------> Login Successful")
