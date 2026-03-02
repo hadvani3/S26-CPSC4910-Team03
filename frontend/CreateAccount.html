@@ -88,28 +88,37 @@
 
     </style>
     <script>
-        function comparePasswords(){
-            const password = document.getElementById("password").value;
-            const confirmPass = document.getElementById("Cpassword").value;
-            const checkPass = document.getElementById("checkPass"); 
-            const register = document.getElementById("submitBtn");
+    function comparePasswords() {
+        // 1. Get the string values
+        const password = document.getElementById("password").value;
+        const confirmPass = document.getElementById("Cpassword").value;
+        const checkPass = document.getElementById("checkPass");
+        const register = document.getElementById("submitBtn");
 
-            if(password === "" || confirmPass === ""){
-                checkPass.innerText = "";
-                register.disabled = true;
-                return;
-            }
+        // 2. Handle empty states
+        if (password === "" || confirmPass === "") {
+            checkPass.innerText = "";
+            register.disabled = true;
+            return;
+        }
 
-            if(password.value === confirmPass.value){
-                if(confirmPass.length >= 10)
+        // 3. Compare the strings directly (no .value here)
+        if (password === confirmPass) {
+            // Check length requirement
+            if (confirmPass.length >= 10) {
                 checkPass.innerText = "✓";
                 checkPass.style.color = "green";
                 register.disabled = false;
-            }else{
-                checkPass.innerText = "Passwords do not match";
-                checkPass.style.color = "red";
+            } else {
+                checkPass.innerText = "Password must be at least 10 characters";
+                checkPass.style.color = "orange";
                 register.disabled = true;
             }
+        } else {
+            checkPass.innerText = "Passwords do not match";
+            checkPass.style.color = "red";
+            register.disabled = true;
+        }
     }
     </script>
 </head>
@@ -128,7 +137,7 @@
             <br>
             <label>
                 Password:
-                <input type="password" id="password" name = "password" minlength="10" maxlength="20" required>
+                <input type="password" id="password" name = "password" minlength="10" maxlength="20" required required oninput="comparePasswords()">
             </label>
             <label>
                 Confirm Password:
