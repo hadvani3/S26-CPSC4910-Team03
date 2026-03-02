@@ -5,7 +5,7 @@ export default function ChangeEmail(){
     const [nEmail, setNewEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const handleSubmit = async (o, n, p) =>{
+    const handleSubmit = async (e) =>{
 
     }
 
@@ -20,7 +20,7 @@ export default function ChangeEmail(){
                         <input
                             type="email"
                             value={oEmail}
-                            onChange={(o) => setOldEmail(o.target.value)}
+                            onChange={(e) => setOldEmail(e.target.value)}
                             required
                         />
                     </label>
@@ -29,7 +29,7 @@ export default function ChangeEmail(){
                         <input
                             type="email"
                             value={nEmail}
-                            onChange={(n) => setNewEmail(n.target.value)}
+                            onChange={(e) => setNewEmail(e.target.value)}
                             required
                         />
                     </label>
@@ -38,7 +38,7 @@ export default function ChangeEmail(){
                         <input 
                             type="password"
                             value={password}
-                            onChange={(p) => setPassword(p.target.value)}
+                            onChange={(e) => setPassword(e.target.value)}
                             minLength={10} 
                             maxLength={20} 
                             required 

@@ -2,10 +2,10 @@
 const express = require('express');
 
 const app = express();
+app.set('view engine', 'pug');
 //need to add queries by ?q=(insert terms)
 app.get('/search', async (req, res) => {
     const searchTerm = req.query.q; 
-    
 
     const url = new URL('https://api.etsy.com/v3/application/listings/active');
     url.searchParams.append('keywords', searchTerm);
@@ -14,7 +14,7 @@ app.get('/search', async (req, res) => {
     const requestOptions = {
         method: 'GET',
         headers: {
-            'x-api-key': '', //I am not sure we should put the api key in the public github repo so I left it out
+            'x-api-key': 'eygp51dfkb5pm7buhaxjtm93:str7wniisc', //I am not sure we should put the api key in the public github repo so I left it out
             'Accept': 'application/json'
         },
     };
@@ -25,13 +25,44 @@ app.get('/search', async (req, res) => {
     /*here is the data, there are going to be a lot of fields, I would probably control+f " to see what fields each item has
     then use .map to create an array of the fields we want*/
     if (response.ok) {
-        res.status(200).json(data.results);
+        const newData = data.results.map(item => item.title);
+        res.status(200).json(data);
     } else {
         res.status(response.status).json({ error: data });
     }
 
 });
 
+
+//this is an example on how to show images from the api
+app.get('/image', async (req, res) => {
+    const url = new URL('https://openapi.etsy.com/v3/application/listings/898077239/images');
+
+    const requestOptions = {
+        method: 'GET',
+        headers: {
+            'x-api-key': 'eygp51dfkb5pm7buhaxjtm93:str7wniisc', //I am not sure we should put the api key in the public github repo so I left it out
+            'Accept': 'application/json'
+        },
+    };
+
+    const response = await fetch(url.toString(), requestOptions);
+    const data = await response.json();
+    if (response.ok) {
+        const imageUrl = data.results[0]?.url_fullxfull;
+
+        if (imageUrl) {
+            res.send(`
+                <h1>This is testing retrieving an image</h1>
+                <img src="${imageUrl}" style="width:500px;" alt="Etsy Product" />
+            `);
+        } else {
+            res.send("<h1>No images found for this listing</h1>");
+        }
+    } else {
+        res.status(response.status).json({ error: data });
+    }
+});
 
 const port = 3003;
 app.listen(port, () => {
