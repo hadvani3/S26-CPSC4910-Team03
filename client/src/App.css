@@ -114,3 +114,8 @@ button {
   margin-top: 20px;
   color: #d81818;
 }
+
+.wrap{
+  display: flex;
+  gap: 10px;
+}
