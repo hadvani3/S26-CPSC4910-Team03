@@ -113,7 +113,7 @@ app.get('/api/about', (req, res) => {
 	});
 });
 
-app.post("/", (req, res)=> {
+app.post("/login", (req, res)=> {
 	//const user = req.body.name
 	//const password = req.body.password
 
