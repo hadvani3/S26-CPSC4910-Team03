@@ -12,7 +12,7 @@ export default function ForgotPassword() {
         setLoading(true);
 
         try {
-            const res = await fetch("http://localhost:3000/forgot-password", {
+            const res = await fetch("/forgot-password", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

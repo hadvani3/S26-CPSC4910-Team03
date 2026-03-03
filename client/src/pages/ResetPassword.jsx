@@ -23,7 +23,7 @@ export default function ResetPassword() {
         }
 
         try {
-            const res = await fetch("http://localhost:3000/reset-password", {
+            const res = await fetch("/reset-password", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
