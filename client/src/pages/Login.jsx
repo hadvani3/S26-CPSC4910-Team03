@@ -11,7 +11,7 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const res = await fetch("https://team03.cpsc4911.com/login", {
+      const res = await fetch("https://team03.cpsc4911.com/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
