@@ -1,9 +1,10 @@
-
+require("dotenv").config();
 const express = require('express');
 const bcrpyt = require('bcrypt')
 const mysql = require('mysql2');
 const path = require('path');
 const generateAccessToken = require("./generateAccessToken")
+const prompt = require('prompt-sync')({ sigint: true });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,6 +23,34 @@ db.connect(err => {
 		process.exit(1);
 	}
 	console.log("Connected to MySQL RDS");
+	const user = prompt("Enter username: ")
+	const password = prompt("Enter password: ")
+	const sqlSearch = 'SELECT * FROM users WHERE email = ?';
+	const search_query = mysql.format(sqlSearch,[user])
+	db.query(search_query, (err, userResults) => {
+		if (err) {
+			console.error(err);
+			//return res.status(500).json({error: "Database Error"});
+		}
+		if (userResults.length === 0) {
+			console.log("User doesn't exist.")
+			//return res.status(404).json({error: "No data found"});
+		}
+		else {
+			const hashedPassword = userResults[0].password_hash
+			if (password === hashedPassword) {
+				console.log("---------> Login Successful")
+				console.log("---------> Generating accessToken")
+				const token = generateAccessToken({user: user})
+				console.log(token)
+				//res.json({accessToken: token})
+			}
+			else {
+				console.log("---------> Password Incorrect")
+				//res.send("Password incorrect!")
+			}
+		}
+	})
 });
 
 app.use(express.json());
@@ -85,8 +114,9 @@ app.get('/api/about', (req, res) => {
 });
 
 app.post("/", (req, res)=> {
-	const user = req.body.name
-	const password = req.body.password
+	//const user = req.body.name
+	//const password = req.body.password
+
 	const sqlSearch = 'SELECT * FROM users WHERE email = ?';
 	const search_query = mysql.format(sqlSearch,[user])
 	db.query(search_query, (err, userResults) => {
@@ -100,7 +130,6 @@ app.post("/", (req, res)=> {
 		}
 		else {
 			const hashedPassword = userResults[0].password_hash
-			//get the hashedPassword from result
 			if (password === hashedPassword) {
 				console.log("---------> Login Successful")
 				console.log("---------> Generating accessToken")
@@ -111,7 +140,7 @@ app.post("/", (req, res)=> {
 			else {
 				console.log("---------> Password Incorrect")
 				res.send("Password incorrect!")
-			} //end of bcrypt.compare()
+			}
 		}
 	})
 })
