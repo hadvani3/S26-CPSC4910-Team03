@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from "react";
 import Nav from '../components/Nav';
 
@@ -6,6 +6,7 @@ export default function Login() {
   const [name, setName] = useState("")
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,13 +26,10 @@ export default function Login() {
       const data = await res.json()
 
       if (res.ok) {
-        // login success
-        setMessage("Login successful!");
-
-        // store token if returned
         if (data.accessToken) {
           localStorage.setItem("token", data.accessToken);
         }
+        navigate('/home');
       } else {
         // error from backend
         setMessage(data.error || "Login failed");
