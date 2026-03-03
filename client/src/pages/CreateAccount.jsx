@@ -59,7 +59,7 @@ export default function CreateAccount() {
           </label>
           <br />
           <label>How will you use the site:</label>
-          <select name="role" id="role" value={role_type} onChange={(e) => setRole(e.target.value)}>
+          <select name="role_type" id="role_type" value={role_type} onChange={(e) => setRole(e.target.value)}>
             <option value="driver">Driver</option>
             <option value="sponsor">Sponsor</option>
             <option value="admin">Admin</option>
