@@ -5,14 +5,13 @@ import Nav from '../components/Nav';
 export default function Login() {
   const [name, setName] = useState("")
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:3000/", {
+      const res = await fetch("http://localhost:3000/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -28,22 +27,23 @@ export default function Login() {
       if (res.ok) {
         if (data.accessToken) {
           localStorage.setItem("token", data.accessToken);
+          alert("Login Successful");
         }
         navigate('/home');
       } else {
         // error from backend
-        setMessage(data.error || "Login failed");
+        alert(data.error || "Login failed");
       }
     } catch (err) {
       console.error(err);
-      setMessage("Server error");
+      alert("Server error");
     }
 
   }
 
   return (
     <>
-      <Nav />
+      <Nav/>
       <div className="container">
         <h1>Login</h1>
         <form onSubmit={handleSubmit}>
@@ -54,9 +54,9 @@ export default function Login() {
                 name="email"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required />
+                required/>
           </label>
-          <br />
+          <br/>
           <label>
             Password:
             <input
@@ -65,7 +65,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 minLength={10} maxLength={20}
-                required />
+                required/>
           </label>
           <div className="container">
             <button style={{ width: '150px', height: '50px' }} type="submit">

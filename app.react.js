@@ -3,11 +3,14 @@ const express = require('express');
 const bcrpyt = require('bcrypt')
 const mysql = require('mysql2');
 const path = require('path');
+const cors = require('cors')
 const generateAccessToken = require("./generateAccessToken")
 //const prompt = require('prompt-sync')({ sigint: true });
 
 const app = express();
+app.use(cors())
 const PORT = process.env.PORT || 3000;
+const allowedOrigins = ['http://localhost:5173'];
 
 const db = mysql.createConnection({
 	host: "cpsc4910-s26.cobd8enwsupz.us-east-1.rds.amazonaws.com",
@@ -114,9 +117,9 @@ app.get('/api/about', (req, res) => {
 	});
 });
 
-app.post("/", (req, res)=> {
-	//const user = req.body.name
-	//const password = req.body.password
+app.post("/login", (req, res)=> {
+	const user = req.body.name
+	const password = req.body.password
 
 	const sqlSearch = 'SELECT * FROM users WHERE email = ?';
 	const search_query = mysql.format(sqlSearch,[user])
@@ -127,7 +130,7 @@ app.post("/", (req, res)=> {
 		}
 		if (userResults.length === 0) {
 			console.log("User doesn't exist.")
-			return res.status(404).json({error: "No data found"});
+			return res.status(404).json({error: "User not found!"});
 		}
 		else {
 			const hashedPassword = userResults[0].password_hash
