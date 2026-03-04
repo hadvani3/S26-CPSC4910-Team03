@@ -4,7 +4,7 @@ const bcrpyt = require('bcrypt')
 const mysql = require('mysql2');
 const path = require('path');
 const generateAccessToken = require("./generateAccessToken")
-const prompt = require('prompt-sync')({ sigint: true });
+//const prompt = require('prompt-sync')({ sigint: true });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,6 +23,7 @@ db.connect(err => {
 		process.exit(1);
 	}
 	console.log("Connected to MySQL RDS");
+	/**
 	const user = prompt("Enter username: ")
 	const password = prompt("Enter password: ")
 	const sqlSearch = 'SELECT * FROM users WHERE email = ?';
@@ -50,7 +51,7 @@ db.connect(err => {
 				//res.send("Password incorrect!")
 			}
 		}
-	})
+	})*/
 });
 
 app.use(express.json());
@@ -144,6 +145,122 @@ app.post("/", (req, res)=> {
 		}
 	})
 })
+
+// Forgot Password Route
+app.post('/api/forgot-password', (req, res) => {
+	const { email } = req.body;
+
+	if (!email) {
+		return res.status(400).json({ error: "Email is required!" });
+	}
+
+	const query = 'SELECT user_id, email FROM users WHERE email = ?';
+
+	db.query(query, [email], (err, results) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({ error: "Database Error" });
+		}
+
+		const successResponse = {
+			success: true,
+			message: "If an account exists with this email, you'll receive a password reset email."
+		};
+
+		if (results.length === 0) {
+			return res.json(successResponse);
+		}
+
+		const user = results[0];
+		
+		// generate secure random token
+		const crypto = require('crypto');
+		const resetToken = crypto.randomBytes(32).toString('hex');
+		
+		// ensure token expires in 30 minutes
+		//const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+
+		// save token to database
+		db.query(
+			'INSERT INTO reset_password_tokens (user_id, token, expires_at, used) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 30 MINUTE), FALSE)',
+			[user.user_id, resetToken],
+			(err) => {
+				if (err) {
+					console.error('Error storing token!', err);
+					return res.status(500).json({ error: "Database Error" });
+				}
+
+				// log the reset URL (for testing without email)
+				console.log(`Password reset token created for ${email}`);
+				console.log(`Reset URL: http://localhost:5173/reset-password?token=${resetToken}`);
+
+				res.json(successResponse);
+			}
+		);
+	});
+});
+
+// Reset Password Route
+app.post('/api/reset-password', async (req, res) => {
+	const { token, password, confirmPassword } = req.body;
+
+	if (!token || !password || !confirmPassword) {
+		return res.status(400).json({ error: "All fields are required!" });
+	}
+
+	// make sure passwords match
+	if (password !== confirmPassword) {
+		return res.status(400).json({ error: "Passwords do not match!" });
+	}
+
+	// check that token exists and hasn't expired
+	db.query(
+		'SELECT token_id, user_id FROM reset_password_tokens WHERE token = ? AND expires_at > NOW() AND used = FALSE',
+		[token],
+		async (err, results) => {
+			if (err) {
+				console.error(err);
+				return res.status(500).json({ error: "Database Error" });
+			}
+			
+			if (results.length === 0) {
+				return res.status(400).json({ error: "Invalid or expired token!" });
+			}
+
+			const resetRecord = results[0];
+
+			// hash the new password
+			const bcrypt = require('bcrypt');
+			const hashedPassword = await bcrypt.hash(password, 10);
+
+			db.query(
+				'UPDATE users SET password_hash = ? WHERE user_id = ?',
+				[hashedPassword, resetRecord.user_id],
+				(err) => {
+					if (err) {
+						console.error(err);
+						return res.status(500).json({ error: "Database Error" });
+					}
+
+					// mark token as used
+					db.query(
+						'UPDATE reset_password_tokens SET used = TRUE WHERE token_id = ?',
+						[resetRecord.token_id],
+						(err) => {
+							if (err) {
+								console.error(err);
+								return res.status(500).json({ error: "Database Error" });
+							}
+							
+							console.log('Password reset was successful');
+							res.json({ success: true, message: "Password reset was successful!" });
+						}
+					);
+				}
+			);
+		}
+	);
+});
 
 //Serve React build
 const clientDist = path.join(__dirname, 'client', 'dist');
