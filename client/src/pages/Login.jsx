@@ -22,8 +22,9 @@ export default function Login() {
         }),
       });
 
-      const data = await res.json()
-      console.log(data)
+      console.log(await res.json())
+      //const data = await res.json()
+      //console.log(data)
 
       if (res.ok) {
         if (data.accessToken) {
