@@ -29,13 +29,9 @@ export default function Login() {
       if (res.ok) {
         if (data.accessToken) {
           localStorage.setItem("token", data.accessToken);
-          alert("Login Successful");
           console.log(sessionStorage.getItem("token"))
         }
         navigate('/home');
-      } else {
-        // error from backend
-        alert(data.error || "Login failed");
       }
     } catch (err) {
       console.error(err);

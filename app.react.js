@@ -130,13 +130,13 @@ app.post("/login", (req, res)=> {
 		}
 		if (userResults.length === 0) {
 			console.log("User doesn't exist.")
-			return res.status(404).json({error: "User not found!"});
+			return res.status(404).json({error: "Email or password incorrect."});
 		}
 		else {
 			const hashedPassword = userResults[0].password_hash
 			if (password === hashedPassword) {
-				console.log("---------> Login Successful")
-				console.log("---------> Generating accessToken")
+				console.log("Login Successful")
+				console.log("Generating accessToken")
 				const token = generateAccessToken({user: user})
 				const decoded = decodeAccessToken(token)
 				console.log(token)
@@ -144,8 +144,8 @@ app.post("/login", (req, res)=> {
 				return res.json({accessToken: token})
 			}
 			else {
-				console.log("---------> Password Incorrect")
-				return res.status(404).json({error: "Password incorrect!"})
+				console.log("Password Incorrect")
+				return res.status(404).json({error: "Email or password incorrect."})
 			}
 		}
 	})
