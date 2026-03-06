@@ -4,7 +4,7 @@ const bcrpyt = require('bcrypt')
 const mysql = require('mysql2');
 const path = require('path');
 const cors = require('cors')
-const generateAccessToken = require("./generateAccessToken")
+const { generateAccessToken, decodeAccessToken } = require("./generateAccessToken")
 //const prompt = require('prompt-sync')({ sigint: true });
 
 const app = express();
@@ -43,14 +43,14 @@ db.connect(err => {
 		else {
 			const hashedPassword = userResults[0].password_hash
 			if (password === hashedPassword) {
-				console.log("---------> Login Successful")
-				console.log("---------> Generating accessToken")
+				console.log("Login Successful")
+				console.log("Generating accessToken")
 				const token = generateAccessToken({user: user})
 				console.log(token)
 				//res.json({accessToken: token})
 			}
 			else {
-				console.log("---------> Password Incorrect")
+				console.log("Password Incorrect")
 				//res.send("Password incorrect!")
 			}
 		}
@@ -138,7 +138,9 @@ app.post("/login", (req, res)=> {
 				console.log("---------> Login Successful")
 				console.log("---------> Generating accessToken")
 				const token = generateAccessToken({user: user})
+				const decoded = decodeAccessToken(token)
 				console.log(token)
+				console.log(decoded)
 				return res.json({accessToken: token})
 			}
 			else {
