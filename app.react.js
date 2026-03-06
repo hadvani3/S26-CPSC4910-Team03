@@ -63,11 +63,11 @@ app.use(express.urlencoded({extended: true}));
 //API routes
 
 app.post('/create_account', async (req, res) => {
-	const { email, password, role} = req.body;
+	const { email, password, role_type} = req.body;
 	console.log(req.body);
 	const hashedPassword = await bcrpyt.hash(password, 10);
 	const query = 'INSERT INTO users (email, password_hash, role_type, is_active) VALUES (?,?,?,?)';
-	const values = [email, hashedPassword, role, 0];
+	const values = [email, hashedPassword, role_type, 1];
 	db.query(query, values, (err, result) => {
             if (err) {
                 console.error(err);
