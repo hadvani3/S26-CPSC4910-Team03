@@ -139,11 +139,11 @@ app.post("/login", (req, res)=> {
 				console.log("---------> Generating accessToken")
 				const token = generateAccessToken({user: user})
 				console.log(token)
-				res.json({accessToken: token})
+				return res.json({accessToken: token})
 			}
 			else {
 				console.log("---------> Password Incorrect")
-				res.send("Password incorrect!")
+				return res.status(404).json({error: "Password incorrect!"})
 			}
 		}
 	})
