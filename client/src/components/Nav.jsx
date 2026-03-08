@@ -1,27 +1,16 @@
 import { Link } from 'react-router-dom';
+import { useContext } from "react";
+import { AuthContext } from "./AuthContext.jsx";
 
 export default function Nav() {
-    //const [token, setToken] = useState(null);
-
-    //useEffect(() => {
-        //const storedToken = sessionStorage.getItem("token");
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        //setToken(storedToken);
-    //}, []);
-
-    //if (token) {
-        //return (
-            //<ul className="nav-list">
-                //<li><Link to="/about">About</Link></li>
-                //<li><Link to="/home">Home</Link></li>
-            //</ul>
-        //);
+    const { token, logout } = useContext(AuthContext)
 
     return (
-        <ul className="nav-list">
-            <li><Link to="/">Login</Link></li>
-            <li><Link to="/about">About</Link></li>
-            <li><Link to="/home">Home</Link></li>
-        </ul>
+            <ul className="nav-list">
+                {!token && <li>< Link to="/">Login</Link></li>}
+                {token && <li onClick={logout}>Logout</li>}
+                <li><Link to="/about">About</Link></li>
+                <li><Link to="/home">Home</Link></li>
+            </ul>
     );
 }

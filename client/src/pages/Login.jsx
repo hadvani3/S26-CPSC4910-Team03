@@ -1,11 +1,14 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from "react";
+import { useContext } from "react";
+import { AuthContext } from "../components/AuthContext.jsx";
 import Nav from '../components/Nav';
 
 export default function Login() {
   const [name, setName] = useState("")
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,7 +31,7 @@ export default function Login() {
 
       if (res.ok) {
         if (data.accessToken) {
-          localStorage.setItem("token", data.accessToken);
+          login(data.accessToken);
           console.log(sessionStorage.getItem("token"))
         }
         navigate('/home');
