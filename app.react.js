@@ -175,7 +175,7 @@ app.post("/login", (req, res)=> {
 
 	const sqlSearch = 'SELECT * FROM users WHERE email = ?';
 	const search_query = mysql.format(sqlSearch,[user])
-	db.query(search_query, (err, userResults) => {
+	db.query(search_query, async (err, userResults) => {
 		if (err) {
 			console.error(err);
 			return res.status(500).json({error: "Database Error"});
@@ -183,10 +183,9 @@ app.post("/login", (req, res)=> {
 		if (userResults.length === 0) {
 			console.log("User doesn't exist.")
 			return res.status(404).json({error: "Email or password incorrect."});
-		}
-		else {
+		} else {
 			const hashedPassword = userResults[0].password_hash
-			if (password === hashedPassword) {
+			if (await bcrpyt.compare(password, hashedPassword)) {
 				console.log("Login Successful")
 				console.log("Generating accessToken")
 				const token = generateAccessToken({user: user})
@@ -194,8 +193,7 @@ app.post("/login", (req, res)=> {
 				console.log(token)
 				console.log(decoded)
 				return res.json({accessToken: token})
-			}
-			else {
+			} else {
 				console.log("Password Incorrect")
 				return res.status(404).json({error: "Email or password incorrect."})
 			}
