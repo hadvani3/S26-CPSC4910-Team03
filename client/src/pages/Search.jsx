@@ -10,6 +10,7 @@ const SearchResults = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  //get the queries passed we want to search with
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const searchTerm = queryParams.get('q');
@@ -19,6 +20,7 @@ const SearchResults = () => {
     }
   }, [location.search]);
 
+  //recieve the data from the backend with these queries
   const fetchResults = async (query) => {
     setLoading(true);
     try {
@@ -32,6 +34,7 @@ const SearchResults = () => {
     }
   };
 
+  //used to search again from the same page
   const handleNewSearch = (e) => {
     e.preventDefault();
     navigate(`/search?q=${encodeURIComponent(searchQuery)}`);

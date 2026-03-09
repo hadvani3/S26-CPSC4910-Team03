@@ -1,9 +1,25 @@
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom'
+import Nav from '../components/Nav';
+
+
 export default function DriverHomePage(){
+
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const navigate = useNavigate();
+
+    //search for products from the homepage
+    const searchCatalogue = (e) => {
+    e.preventDefault();
+    navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+  };
+
     return (
         <>
-        <form class="search-container">
-            <input type="text" class="search-bar" placeholder="Search..."></input>
-            <button class="search-button">Search</button>
+        <form class="search-container" onSubmit={searchCatalogue}>
+            <input type="text" value = {searchQuery} onChange = {(e) => setSearchQuery(e.target.value)} class="search-bar" placeholder="Search..."></input>
+            <button class="search-button" type="submit">Search</button>
         </form>
         <div class = "home-test">
             <ul>
