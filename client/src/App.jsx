@@ -6,6 +6,9 @@ import CreateAccount from './pages/CreateAccount';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Search from './pages/Search'
+import DriverHomePage from './pages/DriverHomePage'
+import SponsorHomePage from './pages/SponsorHomePage';
+import AdminHomePage from './pages/AdminHomePage';
 import './App.css';
 
 function App() {
@@ -19,6 +22,9 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/driver-page" element = {<DriverHomePage />} />
+        <Route path="/sponsor-page" element = {<SponsorHomePage />} />
+        <Route path="/admin-page" element = {<AdminHomePage />} />
       </Routes>
     </BrowserRouter>
   );
