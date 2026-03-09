@@ -14,7 +14,7 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:3000/login", {
+      const res = await fetch("100.51.75.41/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
