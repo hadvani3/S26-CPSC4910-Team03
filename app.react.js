@@ -197,8 +197,9 @@ app.post("/login", (req, res)=> {
 			return res.status(404).json({error: "Email or password incorrect."});
 		} else {
 			const hashedPassword = userResults[0].password_hash
-			if (await bcrpyt.compare(password, hashedPassword)) {
+			if (await bcrypt.compare(password, hashedPassword)) {
 				console.log("Login Successful")
+				const userRole = userResults[0].role_type;
 				console.log("Generating accessToken")
 				const token = generateAccessToken({user: user})
 				const decoded = decodeAccessToken(token)

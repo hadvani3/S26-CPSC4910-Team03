@@ -11,7 +11,7 @@ export default function Nav() {
                 {token && <li onClick={logout}>Logout</li>}
                 <li><Link to="/about">About</Link></li>
                 <li><Link to="/home">Home</Link></li>
-                <li><Link to="/search">Search</Link></li>
+                <li><Link to="/search">Search Products</Link></li>
             </ul>
     );
 }
