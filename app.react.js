@@ -9,15 +9,21 @@ const prompt = require('prompt-sync')({ sigint: true });
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const db = mysql.createConnection({
+const db = mysql.createPool({
 	host: "cpsc4910-s26.cobd8enwsupz.us-east-1.rds.amazonaws.com",
 	user: "CPSC4911_admin",
 	password: "AmR3rnvsSJRrJaMJ5Jt2",
 	database: "Team03_DB",
-	port: 3306
+	port: 3306,
+	connectionLimit: 10,
+	queueLimit: 0,
+	waitForConnections: true,
+	enableKeepAlive: true,
+	keepAliveInitialDelay: 10000,
+	connectTimeout: 10000,
 });
 
-db.connect(err => {
+db.query('SELECT 1', (err) => {
 	if (err) {
 		console.error("MySQL connection failed:", err);
 		process.exit(1);
