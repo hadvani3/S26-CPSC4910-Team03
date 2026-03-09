@@ -54,7 +54,18 @@ body {
   flex-direction: column;
   gap: 15px;
 }
-
+.Searchcontainer {
+  max-width: 1000px;
+  margin: 30px auto;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-self: cneter;
+}
 h1 {
   margin-top: 0;
   color: #34495e;
@@ -118,4 +129,37 @@ button {
 .wrap{
   display: flex;
   gap: 10px;
+}
+
+.search-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 50px;
+}
+
+.search-bar {
+  width: 300px;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px 0 0 5px;
+  outline: none;
+}
+
+.search-bar:focus {
+  border-color: #4CAF50;
+}
+
+.search-button {
+  padding: 10px 16px;
+  font-size: 16px;
+  border: 1px solid #4CAF50;
+  background-color: #4CAF50;
+  color: white;
+  cursor: pointer;
+  border-radius: 0 5px 5px 0;
+}
+
+.search-button:hover {
+  background-color: #45a049;
 }

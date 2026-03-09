@@ -1,17 +1,20 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from "react";
+import { useContext } from "react";
+import { AuthContext } from "../components/AuthContext.jsx";
 import Nav from '../components/Nav';
 
 export default function Login() {
   const [name, setName] = useState("")
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:3000/", {
+      const res = await fetch("http://localhost:3000/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -22,30 +25,27 @@ export default function Login() {
         }),
       });
 
+      //console.log(await res.json())
       const data = await res.json()
+      console.log(data)
 
       if (res.ok) {
-        // login success
-        setMessage("Login successful!");
-
-        // store token if returned
         if (data.accessToken) {
-          localStorage.setItem("token", data.accessToken);
+          login(data.accessToken);
+          console.log(sessionStorage.getItem("token"))
         }
-      } else {
-        // error from backend
-        setMessage(data.error || "Login failed");
+        navigate('/home');
       }
     } catch (err) {
       console.error(err);
-      setMessage("Server error");
+      alert("Server error");
     }
 
   }
 
   return (
     <>
-      <Nav />
+      <Nav/>
       <div className="container">
         <h1>Login</h1>
         <form onSubmit={handleSubmit}>
@@ -56,9 +56,9 @@ export default function Login() {
                 name="email"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required />
+                required/>
           </label>
-          <br />
+          <br/>
           <label>
             Password:
             <input
@@ -67,7 +67,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 minLength={10} maxLength={20}
-                required />
+                required/>
           </label>
           <div className="container">
             <button style={{ width: '150px', height: '50px' }} type="submit">

@@ -1,10 +1,13 @@
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Nav from '../components/Nav';
 
 export default function CreateAccount() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role_type, setRole] = useState("");
+  const [role_type, setRole] = useState("driver");
+  const [loading, setLoading] = useState(false); 
+  const [message, setMessage] = useState(""); 
       
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,7 +19,7 @@ export default function CreateAccount() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email }, {password}, {role_type}),
+        body: JSON.stringify({ email, password, role_type }),
       });
 
       const data = await res.json();
@@ -56,7 +59,7 @@ export default function CreateAccount() {
           </label>
           <br />
           <label>How will you use the site:</label>
-          <select name="role" id="role" value = {role_type} onChange={(e) => setRole}>
+          <select name="role_type" id="role_type" value={role_type} onChange={(e) => setRole(e.target.value)}>
             <option value="driver">Driver</option>
             <option value="sponsor">Sponsor</option>
             <option value="admin">Admin</option>

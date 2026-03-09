@@ -36,12 +36,12 @@ app.get('/search', async (req, res) => {
 
 //this is an example on how to show images from the api
 app.get('/image', async (req, res) => {
-    const url = new URL('https://openapi.etsy.com/v3/application/listings/898077239/images');
+    const url = new URL('https://openapi.etsy.com/v3/application/listings/4391886601');
 
     const requestOptions = {
         method: 'GET',
         headers: {
-            'x-api-key': 'eygp51dfkb5pm7buhaxjtm93:str7wniisc', //I am not sure we should put the api key in the public github repo so I left it out
+            'x-api-key': '', //I am not sure we should put the api key in the public github repo so I left it out
             'Accept': 'application/json'
         },
     };
@@ -49,16 +49,7 @@ app.get('/image', async (req, res) => {
     const response = await fetch(url.toString(), requestOptions);
     const data = await response.json();
     if (response.ok) {
-        const imageUrl = data.results[0]?.url_fullxfull;
-
-        if (imageUrl) {
-            res.send(`
-                <h1>This is testing retrieving an image</h1>
-                <img src="${imageUrl}" style="width:500px;" alt="Etsy Product" />
-            `);
-        } else {
-            res.send("<h1>No images found for this listing</h1>");
-        }
+        console.log(data);
     } else {
         res.status(response.status).json({ error: data });
     }
