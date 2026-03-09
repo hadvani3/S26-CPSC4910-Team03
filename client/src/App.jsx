@@ -7,6 +7,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Search from './pages/Search'
 import DriverHomePage from './pages/DriverHomePage'
+import SponsorHomePage from './pages/SponsorHomePage';
 import './App.css';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/search" element={<Search />} />
         <Route path="/driver-page" element = {<DriverHomePage />} />
+        <Route path="/sponsor-page" element = {<SponsorHomePage />} />
       </Routes>
     </BrowserRouter>
   );
