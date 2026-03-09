@@ -130,3 +130,36 @@ button {
   display: flex;
   gap: 10px;
 }
+
+.search-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 50px;
+}
+
+.search-bar {
+  width: 300px;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px 0 0 5px;
+  outline: none;
+}
+
+.search-bar:focus {
+  border-color: #4CAF50;
+}
+
+.search-button {
+  padding: 10px 16px;
+  font-size: 16px;
+  border: 1px solid #4CAF50;
+  background-color: #4CAF50;
+  color: white;
+  cursor: pointer;
+  border-radius: 0 5px 5px 0;
+}
+
+.search-button:hover {
+  background-color: #45a049;
+}

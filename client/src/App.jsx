@@ -6,6 +6,7 @@ import CreateAccount from './pages/CreateAccount';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Search from './pages/Search'
+import DriverHomePage from './pages/DriverHomePage'
 import './App.css';
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/driver-page" element = {<DriverHomePage/>} />
       </Routes>
     </BrowserRouter>
   );
