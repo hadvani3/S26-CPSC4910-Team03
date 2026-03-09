@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Nav from '../components/Nav';
 
 export default function CreateAccount() {
@@ -8,6 +8,7 @@ export default function CreateAccount() {
   const [role_type, setRole] = useState("driver");
   const [loading, setLoading] = useState(false); 
   const [message, setMessage] = useState(""); 
+  const navigate = useNavigate();
       
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,6 +27,7 @@ export default function CreateAccount() {
 
       if (res.ok) {
         setMessage("Account Created");
+        navigate("/");
       } else {
         setMessage(data.error || "Failed to send password reset email!");
       }
