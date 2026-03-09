@@ -4,6 +4,7 @@ const bcrpyt = require('bcrypt')
 const mysql = require('mysql2');
 const path = require('path');
 const cors = require('cors')
+const bcrypt = require('bcrypt');
 const { generateAccessToken, decodeAccessToken } = require("./generateAccessToken")
 //const prompt = require('prompt-sync')({ sigint: true });
 
@@ -69,9 +70,10 @@ app.use(express.urlencoded({extended: true}));
 //API routes
 
 app.post('/create_account', async (req, res) => {
+	try{
 	const { email, password, role_type} = req.body;
 	console.log(req.body);
-	const hashedPassword = await bcrpyt.hash(password, 10);
+	const hashedPassword = await bcrypt.hash(password, 10);
 	const query = 'INSERT INTO users (email, password_hash, role_type, is_active) VALUES (?,?,?,?)';
 	const values = [email, hashedPassword, role_type, 1];
 	db.query(query, values, (err, result) => {
@@ -83,7 +85,11 @@ app.post('/create_account', async (req, res) => {
                 message: "Account created successfully",
                 user_id: result.insertId
             });
-        })
+        });
+	} catch (error){
+		console.error("Server error:", error);
+		res.status(500).json({ error: "Internal Server error" });
+	}
 });
 
 app.get('/api/search', async (req, res) => {
