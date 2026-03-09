@@ -20,7 +20,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/search" element={<Search />} />
-        <Route path="/driver-page" element = {<DriverHomePage/>} />
+        <Route path="/driver-page" element = {<DriverHomePage />} />
       </Routes>
     </BrowserRouter>
   );
