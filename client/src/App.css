@@ -213,13 +213,7 @@ button {
 }
 
 
-
-
-
-
-/* =========================================
-   GLASSMORPHISM LOGIN PAGE STYLES 
-   ========================================= */
+/*Glass Page styles
 
 /* The full-screen blue background */
 .login-wrapper {
@@ -231,7 +225,7 @@ button {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #004e92, #000428); /* Deep blue gradient */
+  background: linear-gradient(135deg, #004e92, #000428); 
   overflow: hidden;
   z-index: 10;
 }
@@ -262,14 +256,14 @@ button {
   box-shadow: inset 0 0 50px rgba(255, 255, 255, 0.1);
 }
 
-/* The translucent glass card */
+/* glass card */
 .glass-container {
   position: relative;
   z-index: 2;
   width: 100%;
   max-width: 380px;
   padding: 40px;
-  background: rgba(255, 255, 255, 0.1); /* Translucent white */
+  background: rgba(255, 255, 255, 0.1); 
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
