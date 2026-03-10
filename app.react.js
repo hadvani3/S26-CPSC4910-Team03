@@ -201,11 +201,11 @@ app.post("/login", (req, res)=> {
 				console.log("Login Successful")
 				const userRole = userResults[0].role_type;
 				console.log("Generating accessToken")
-				const token = generateAccessToken({user: user})
+				const token = generateAccessToken({user: user, role: userRole})
 				const decoded = decodeAccessToken(token)
 				console.log(token)
 				console.log(decoded)
-				return res.json({accessToken: token})
+				return res.json({accessToken: token, role: userRole})
 			} else {
 				console.log("Password Incorrect")
 				return res.status(404).json({error: "Email or password incorrect."})

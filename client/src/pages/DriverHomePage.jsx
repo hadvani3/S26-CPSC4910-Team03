@@ -17,6 +17,7 @@ export default function DriverHomePage(){
 
     return (
         <>
+        <Nav />
         <form class="search-container" onSubmit={searchCatalogue}>
             <input type="text" value = {searchQuery} onChange = {(e) => setSearchQuery(e.target.value)} class="search-bar" placeholder="Search..."></input>
             <button class="search-button" type="submit">Search</button>

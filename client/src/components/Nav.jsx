@@ -8,7 +8,7 @@ export default function Nav() {
     return (
             <ul className="nav-list">
                 {!token && <li>< Link to="/">Login</Link></li>}
-                {token && <li onClick={logout}>Logout</li>}
+                {token && <li><Link to="/" onClick={logout}>Logout</Link></li>}
                 <li><Link to="/about">About</Link></li>
                 <li><Link to="/home">Home</Link></li>
                 <li><Link to="/search">Search Products</Link></li>

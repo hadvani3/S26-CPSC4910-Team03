@@ -1,7 +1,11 @@
+import {Link} from 'react-router-dom';
+import Nav from '../components/Nav';
+
 
 export default function SponsorHomePage() {
     return (
         <>
+        <Nav />
         <div class = "home-test">
             <ul>
                 <li>Welcome back!: </li>
