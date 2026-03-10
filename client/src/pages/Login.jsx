@@ -14,7 +14,7 @@ export default function Login() {
     e.preventDefault();
 
     try {
-      const res = await fetch("https://team03.cpsc4911.com/login", {
+      const res = await fetch(/*"https://team03.cpsc4911.com/login"*/"http://localhost:3000/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -31,10 +31,23 @@ export default function Login() {
 
       if (res.ok) {
         if (data.accessToken) {
-          login(data.accessToken);
-          console.log(sessionStorage.getItem("token"))
+          login(data.accessToken, data.role);
+          console.log(sessionStorage.getItem("token"));
+          console.log(localStorage.getItem("role"));
         }
-        navigate('/home');
+
+        if (data.role === 'driver'){
+          navigate('/driver-page');
+        }
+        else if(data.role === 'sponsor'){
+          navigate('sponsor-page');
+        }
+        else if(data.role === 'admin'){
+          navigate('/admin-page');
+        }
+        else{
+          navigate('/home')
+        }
       }
     } catch (err) {
       console.error(err);
