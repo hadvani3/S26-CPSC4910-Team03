@@ -219,7 +219,7 @@ export default function DriverHomePage(){
                     type="button"
                     onClick={() => alert('Application feature coming soon!')}
                     style={{
-                        padding: '15px 40px',
+                        padding: '16px 40px',
                         fontSize: '18px',
                         fontWeight: '600',
                         border: 'none',
@@ -228,7 +228,10 @@ export default function DriverHomePage(){
                         borderRadius: '8px',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                        minWidth: '240px',
+                        whiteSpace: 'nowrap',
+                        display: 'inline-block'
                     }}
                 >
                      Apply to Sponsor

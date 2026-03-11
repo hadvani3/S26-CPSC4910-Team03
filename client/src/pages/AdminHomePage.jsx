@@ -14,8 +14,6 @@ export default function AdminHomePage() {
     });
 
     useEffect(() => {
-        // TODO: Fetch real stats from backend
-        // For now using placeholder data
         setStats({
             totalUsers: 45,
             totalDrivers: 28,
