@@ -9,6 +9,7 @@ import Search from './pages/Search'
 import DriverHomePage from './pages/DriverHomePage'
 import SponsorHomePage from './pages/SponsorHomePage';
 import AdminHomePage from './pages/AdminHomePage';
+import DriverRemovalPage from './pages/DriverRemoval';
 import './App.css';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
         <Route path="/driver-page" element = {<DriverHomePage />} />
         <Route path="/sponsor-page" element = {<SponsorHomePage />} />
         <Route path="/admin-page" element = {<AdminHomePage />} />
+        <Route path="/driver-removal" element = {<DriverRemovalPage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -362,3 +362,11 @@ button {
   color: #ffffff;
   text-decoration: underline;
 }
+
+.remove-title {
+  color: #ea6112;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: Medium;
+  margin-top: 25px;
+}
