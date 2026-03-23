@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-export default function DriverRemovalPage(){
+export default function DriverrRemovalPage(){
     const [name, setName] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     return (
         <>
-            <h1 class = "remove-title">Removal Of Driver Account</h1>
-
+        <h1 className = "remove-title">Removal Of Driver Account</h1>
+        <div className = "removal-box"> 
             <div className="glass-input-group">
-                <label>Email</label>
+                <label>Driver Email</label>
                 <input
                 type="email"
                 name="email"
@@ -22,7 +22,7 @@ export default function DriverRemovalPage(){
             </div>
 
             <div className="glass-input-group">
-                <label>Password</label>
+                <label>Driver Password</label>
                     <div className="glass-input-wrapper">
                         <input
                         type={showPassword ? "text" : "password"}
@@ -44,7 +44,7 @@ export default function DriverRemovalPage(){
                         </div>
                     </div>
             </div>
-
+            </div>
             <div style={{ 
                     paddingTop: '25px', 
                     borderTop: '2px solid #e0e0e0',
