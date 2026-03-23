@@ -1,0 +1,35 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH into EC2 and Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 1. Navigate to your project folder
+            cd S26-CPSC4910-Team03
+            
+            # 2. Pull the latest code from GitHub
+            git pull origin main
+            
+            # 3. Navigate to the client folder, install any new dependencies, and build
+            cd client
+            npm install
+            npm run build
+            
+            # 4. Go back to the root directory
+            cd ..
+            
+            # 5. Restart the PM2 process
+            pm2 restart app.react.js
