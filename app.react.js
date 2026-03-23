@@ -205,7 +205,8 @@ app.post("/AccountInfo", (req, res)=> {
 			const createDate = userResults[0].created_at
 			const updatedDate = userResults[0].updated_at
 			const username = userResults[0].username
-			return res.json()
+			return res.json({role:role, isActive:isActive, createDate:createDate, updatedDate:updatedDate,
+									username:username, email:email})
 		}
 	})
 })
