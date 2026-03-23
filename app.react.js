@@ -190,7 +190,7 @@ app.post("/AccountInfo", (req, res)=> {
 	const email = decodeAccessToken(key)
 
 	const sqlSearch = 'SELECT * FROM users WHERE email = ?';
-	const search_query = mysql.format(sqlSearch,[user])
+	const search_query = mysql.format(sqlSearch,[email])
 	db.query(search_query, async (err, userResults) => {
 		if (err) {
 			console.error(err);

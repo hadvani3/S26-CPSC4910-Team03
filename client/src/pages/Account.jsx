@@ -43,7 +43,7 @@ export default function Account() {
         e.preventDefault();
 
         try {
-            const res = await fetch("https://team03.cpsc4911.com/login", {
+            const res = await fetch("https://team03.cpsc4911.com/SetUsername", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -69,7 +69,7 @@ export default function Account() {
     }
 
     if (error) {
-        alert("Server error");
+        return <h1>Server Error</h1>;
     }
 
     if (!data) {
@@ -96,6 +96,9 @@ export default function Account() {
                         onChange={(e) => setUsername(e.target.value)}
                         required/>
                 </label>
+                <button type="submit">
+                    Update
+                </button>
             </form>
         </>
     );
