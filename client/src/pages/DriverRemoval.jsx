@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-export default function DriverrRemovalPage(){
+export default function DriverRemovalPage(){
     const [name, setName] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
