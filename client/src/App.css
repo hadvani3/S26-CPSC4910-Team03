@@ -399,3 +399,10 @@ button {
   font-weight: Medium;
   margin-top: 25px;
 }
+
+.removal-box {
+  background-color: #ed4f0b;
+  width: 450px;
+  height: 150px;
+  margin: 0 auto;
+}
