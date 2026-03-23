@@ -71,6 +71,18 @@ CREATE TABLE IF NOT EXISTS driver_points (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- sponsor user table
+CREATE TABLE IF NOT EXISTS sponsor_users (
+    user_id INT NOT NULL UNIQUE,
+    sponsor_id INT NOT NULL,
+    first_name VARCHAR(250) NOT NULL,
+    last_name VARCHAR(250) NOT NULL,
+    phone_number VARCHAR(25),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 -- password reset table
 CREATE TABLE IF NOT EXISTS reset_password_tokens (
 	token_id INT PRIMARY KEY AUTO_INCREMENT,
