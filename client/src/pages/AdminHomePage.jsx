@@ -146,7 +146,9 @@ export default function AdminHomePage() {
                              Driver Management
                         </h2>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <button style={{
+                            <button 
+                            onClick={() => navigate('/admin/users?role=driver')}
+                            style={{
                                 padding: '12px 20px',
                                 backgroundColor: '#2196f3',
                                 color: 'white',
@@ -159,7 +161,9 @@ export default function AdminHomePage() {
                             }}>
                                 View All Drivers
                             </button>
-                            <button style={{
+                            <button 
+                            onClick={() => navigate('/admin/users/create?role=driver')}
+                            style={{
                                 padding: '12px 20px',
                                 backgroundColor: '#4caf50',
                                 color: 'white',
@@ -172,7 +176,9 @@ export default function AdminHomePage() {
                             }}>
                                 Add New Driver
                             </button>
-                            <button style={{
+                            <button 
+                            onClick={() => navigate('/admin/applications')}
+                            style={{
                                 padding: '12px 20px',
                                 backgroundColor: '#ff9800',
                                 color: 'white',
@@ -203,7 +209,9 @@ export default function AdminHomePage() {
                              Sponsor Management
                         </h2>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <button style={{
+                            <button 
+                            onClick={() => navigate('/admin/users?role=sponsor')}
+                            style={{
                                 padding: '12px 20px',
                                 backgroundColor: '#4caf50',
                                 color: 'white',
@@ -216,7 +224,9 @@ export default function AdminHomePage() {
                             }}>
                                 View All Sponsors
                             </button>
-                            <button style={{
+                            <button
+                            onClick={() => navigate('/admin/users/create?role=sponsor')}
+                            style={{
                                 padding: '12px 20px',
                                 backgroundColor: '#66bb6a',
                                 color: 'white',
@@ -229,7 +239,9 @@ export default function AdminHomePage() {
                             }}>
                                 Add New Sponsor
                             </button>
-                            <button style={{
+                            <button
+                            onClick={() => navigate('/admin/reports')}
+                            style={{
                                 padding: '12px 20px',
                                 backgroundColor: '#81c784',
                                 color: 'white',

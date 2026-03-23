@@ -344,6 +344,49 @@ app.post('/api/reset-password', async (req, res) => {
 	);
 });
 
+// create new user route
+app.post('/api/admin/users', async (req, res) => {
+    const { email, password, role_type } = req.body;
+    
+    // validate fields
+    if (!email || !password || !role_type) {
+        return res.status(400).json({ error: 'All fields required' });
+    }
+    
+    if (!['driver', 'sponsor', 'admin'].includes(role_type)) {
+        return res.status(400).json({ error: 'Invalid role type' });
+    }
+    
+    if (password.length < 10) {
+        return res.status(400).json({ error: 'Password must be at least 10 characters' });
+    }
+    
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        const query = 'INSERT INTO users (email, password_hash, role_type, is_active) VALUES (?, ?, ?, 1)';
+        
+        db.query(query, [email, hashedPassword, role_type], (err, result) => {
+            if (err) {
+                if (err.code === 'ER_DUP_ENTRY') {
+                    return res.status(400).json({ error: 'Email already exists' });
+                }
+                console.error(err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            
+            res.json({ 
+                success: true, 
+                message: 'User created successfully',
+                user_id: result.insertId 
+            });
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 //Serve React build
 const clientDist = path.join(__dirname, 'client', 'dist');
 const fs = require('fs');
