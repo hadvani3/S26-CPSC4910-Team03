@@ -21,6 +21,7 @@ export default function Nav() {
                 <li><Link to={roleHomePath}>Home</Link></li>
                 <li><Link to="/home">Our Program</Link></li>
                 <li><Link to="/search">Search Products</Link></li>
+                <li><Link to="/account">Account</Link></li>
             </ul>
     );
 }

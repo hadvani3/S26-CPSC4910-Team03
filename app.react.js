@@ -211,6 +211,23 @@ app.post("/AccountInfo", (req, res)=> {
 	})
 })
 
+app.post("/SetUsername", (req, res) => {
+	const newUsername = req.body.newUsername
+	const token = req.body.token
+	const email = decodeAccessToken(token)
+
+	const sqlInsert = "update users set username = ? where email = ?"
+	const insert_query = mysql.format(sqlInsert,[newUsername, email])
+	db.query(insert_query, async (err) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({error: "Database Error"});
+		} else {
+			return res.ok
+		}
+	})
+})
+
 // Forgot Password Route
 app.post('/api/forgot-password', (req, res) => {
 	const { email } = req.body;

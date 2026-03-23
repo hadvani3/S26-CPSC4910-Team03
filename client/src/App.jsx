@@ -31,6 +31,7 @@ function App() {
         <Route path="/driver-removal" element = {<DriverRemovalPage />} />
         <Route path="/sponsor-removal" element = {<SponsorRemovalPage />} />
         <Route path="/apply" element = {<Apply />} />
+        <Route path="/account" element={<Account />} />
       </Routes>
     </BrowserRouter>
   );
