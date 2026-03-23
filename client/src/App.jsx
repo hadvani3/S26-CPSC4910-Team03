@@ -13,6 +13,7 @@ import DriverRemovalPage from './pages/DriverRemoval';
 import SponsorRemovalPage from './pages/SponsorRemoval';
 import AdminCreateUser from './pages/AdminCreateUser';
 import Apply from './pages/Apply';
+import Account from "./pages/Account.jsx";
 import './App.css';
 
 function App() {
