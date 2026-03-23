@@ -16,7 +16,7 @@ export default function Nav() {
             <ul className="nav-list">
                 {!token && <li>< Link to="/">Login</Link></li>}
                 {token && <li><Link to="/" onClick={logout}>Logout</Link></li>}
-                {token && role === "driver" && <li><Link to="/driver-page">Apply</Link></li>}
+                {token && role === "driver" && <li><Link to="/apply">Apply</Link></li>}
                 <li><Link to="/about">About</Link></li>
                 <li><Link to={roleHomePath}>Home</Link></li>
                 <li><Link to="/home">Our Program</Link></li>

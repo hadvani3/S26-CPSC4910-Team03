@@ -217,7 +217,7 @@ export default function DriverHomePage(){
                 </p>
                 <button 
                     type="button"
-                    onClick={() => alert('Application feature coming soon!')}
+                    onClick={() => navigate('/apply')}
                     style={{
                         padding: '16px 40px',
                         fontSize: '18px',

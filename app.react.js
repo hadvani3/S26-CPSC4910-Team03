@@ -33,35 +33,6 @@ db.query('SELECT 1', (err) => {
 		process.exit(1);
 	}
 	console.log("Connected to MySQL RDS");
-	/**
-	const user = prompt("Enter username: ")
-	const password = prompt("Enter password: ")
-	const sqlSearch = 'SELECT * FROM users WHERE email = ?';
-	const search_query = mysql.format(sqlSearch,[user])
-	db.query(search_query, (err, userResults) => {
-		if (err) {
-			console.error(err);
-			//return res.status(500).json({error: "Database Error"});
-		}
-		if (userResults.length === 0) {
-			console.log("User doesn't exist.")
-			//return res.status(404).json({error: "No data found"});
-		}
-		else {
-			const hashedPassword = userResults[0].password_hash
-			if (password === hashedPassword) {
-				console.log("Login Successful")
-				console.log("Generating accessToken")
-				const token = generateAccessToken({user: user})
-				console.log(token)
-				//res.json({accessToken: token})
-			}
-			else {
-				console.log("Password Incorrect")
-				//res.send("Password incorrect!")
-			}
-		}
-	})*/
 });
 
 app.use(express.json());
@@ -210,6 +181,31 @@ app.post("/login", (req, res)=> {
 				console.log("Password Incorrect")
 				return res.status(404).json({error: "Email or password incorrect."})
 			}
+		}
+	})
+})
+
+app.post("/AccountInfo", (req, res)=> {
+	const key = req.body.key
+	const email = decodeAccessToken(key)
+
+	const sqlSearch = 'SELECT * FROM users WHERE email = ?';
+	const search_query = mysql.format(sqlSearch,[user])
+	db.query(search_query, async (err, userResults) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({error: "Database Error"});
+		}
+		if (userResults.length === 0) {
+			console.log("User doesn't exist.")
+			return res.status(404).json({error: "Authentication error"});
+		} else {
+			const role = userResults[0].role_type
+			const isActive = userResults[0].is_active
+			const createDate = userResults[0].created_at
+			const updatedDate = userResults[0].updated_at
+			const username = userResults[0].username
+			return res.json()
 		}
 	})
 })
