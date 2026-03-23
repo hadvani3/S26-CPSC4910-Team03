@@ -38,7 +38,6 @@ export default function AdminCreateUser() {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-        // Clear error for this field when user types
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
@@ -55,8 +54,8 @@ export default function AdminCreateUser() {
 
         if (!formData.password) {
             newErrors.password = 'Password is required';
-        } else if (formData.password.length < 8) {
-            newErrors.password = 'Password must be at least 8 characters';
+        } else if (formData.password.length < 10) {
+            newErrors.password = 'Password must be at least 10 characters';
         }
 
         if (formData.password !== formData.confirmPassword) {
@@ -95,7 +94,7 @@ export default function AdminCreateUser() {
 
             if (res.ok) {
                 alert(`User created successfully! User ID: ${data.user_id}`);
-                navigate('/admin/users');
+                navigate('/admin-page');
             } else {
                 alert(data.error || 'Failed to create user');
             }
@@ -111,7 +110,6 @@ export default function AdminCreateUser() {
         <>
             <Nav />
             <div className="container">
-                {/* Header */}
                 <div style={{
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                     padding: '40px 30px',
@@ -129,7 +127,6 @@ export default function AdminCreateUser() {
                     </p>
                 </div>
 
-                {/* Form */}
                 <div style={{
                     backgroundColor: 'white',
                     padding: '30px',
@@ -139,7 +136,6 @@ export default function AdminCreateUser() {
                     margin: '0 auto'
                 }}>
                     <form onSubmit={handleSubmit}>
-                        {/* Email */}
                         <div style={{ marginBottom: '20px' }}>
                             <label style={{
                                 display: 'block',
@@ -169,8 +165,6 @@ export default function AdminCreateUser() {
                                 </div>
                             )}
                         </div>
-
-                        {/* Role */}
                         <div style={{ marginBottom: '20px' }}>
                             <label style={{
                                 display: 'block',
@@ -204,7 +198,6 @@ export default function AdminCreateUser() {
                             )}
                         </div>
 
-                        {/* Password */}
                         <div style={{ marginBottom: '20px' }}>
                             <label style={{
                                 display: 'block',
@@ -219,7 +212,7 @@ export default function AdminCreateUser() {
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                placeholder="Minimum 8 characters"
+                                placeholder="Minimum 10 characters"
                                 style={{
                                     width: '100%',
                                     padding: '12px',
@@ -235,7 +228,6 @@ export default function AdminCreateUser() {
                             )}
                         </div>
 
-                        {/* Confirm Password */}
                         <div style={{ marginBottom: '20px' }}>
                             <label style={{
                                 display: 'block',
@@ -266,7 +258,6 @@ export default function AdminCreateUser() {
                             )}
                         </div>
 
-                        {/* Buttons */}
                         <div style={{ display: 'flex', gap: '10px', marginTop: '30px' }}>
                             <button
                                 type="submit"
@@ -317,10 +308,10 @@ export default function AdminCreateUser() {
                     margin: '30px auto 0'
                 }}>
                     <h3 style={{ marginTop: 0, color: '#1976d2', fontSize: '1.1em' }}>
-                        ℹ️ Account Creation Tips
+                     Account Creation Tips
                     </h3>
                     <ul style={{ margin: '10px 0 0 20px', color: '#555', lineHeight: '1.6' }}>
-                        <li>Password must be at least 8 characters</li>
+                        <li>Password must be at least 10 characters</li>
                         <li>Email must be unique in the system</li>
                         <li>New accounts are automatically activated</li>
                         <li>Users can login immediately after creation</li>
