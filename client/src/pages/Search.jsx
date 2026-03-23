@@ -47,22 +47,22 @@ const SearchResults = () => {
       <form onSubmit = {handleNewSearch} style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
         <input type="text" value = {searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder='Enter a Product' style={{width: '75%', flex:1, padding: '10px'}}>
         </input>
-        <button style={{width: '75px', height:'50px', backgroundColor: 'darkblue', color: 'white'}} type="submit">
+        <button style={{width: '75px', height:'50px', backgroundColor: 'white', color: 'black'}} type="submit">
           Search
         </button>
       </form>
-      <h2>Results for "{new URLSearchParams(location.search).get('q')}"</h2>
+      <h2 style={{ color: 'white' }}>Results for "{new URLSearchParams(location.search).get('q')}"</h2>
 
       {loading && <p>Loading...</p>}
 
-      {!loading && products.length === 0 && <p>No products found.</p>}
+      {!loading && products.length === 0 && <p style={{ color: 'white' }}>No products found.</p>}
 
         {products.map((item) => (
           <div key={item.listing_id} className="container">
             <img src={item.image} alt={item.title} style={{ width: '200px'}} />
-            <h4>{item.title}</h4>
+            <h4 style={{ color: 'white' }}>{item.title}</h4>
             <p style={{
-              color: "green"
+              color: "white"
             }}> <b>Points: {item.price}</b></p>
           </div>
         ))}
