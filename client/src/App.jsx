@@ -11,6 +11,7 @@ import SponsorHomePage from './pages/SponsorHomePage';
 import AdminHomePage from './pages/AdminHomePage';
 import DriverRemovalPage from './pages/DriverRemoval';
 import SponsorRemovalPage from './pages/SponsorRemoval';
+import AdminCreateUser from './pages/AdminCreateUser';
 import './App.css';
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
         <Route path="/admin-page" element = {<AdminHomePage />} />
         <Route path="/driver-removal" element = {<DriverRemovalPage />} />
         <Route path="/sponsor-removal" element = {<SponsorRemovalPage />} />
+        <Route path="/admin/users/create" element={<AdminCreateUser />} />
       </Routes>
     </BrowserRouter>
   );
