@@ -1,5 +1,9 @@
+import { useState } from "react";
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 export default function DriverRemovalPage(){
     const [name, setName] = useState("");
+    const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     return (
         <>
             <h1 class = "remove-title">Removal Of Driver Account</h1>
@@ -46,7 +50,7 @@ export default function DriverRemovalPage(){
                     borderTop: '2px solid #e0e0e0',
                     textAlign: 'center'
                 }}>
-                <button type = "button">Submit Report</button>
+                <button type = "button">Delete Account</button>
             </div>
         </>
     )
