@@ -113,9 +113,53 @@ app.get('/api/search', async (req, res) => {
     });
 
     res.status(200).json(newData);
-}
-
+	}
 });
+
+
+//searching for product
+app.get('/api/product', async (req, res) => {
+	let product_id = parseInt(req.query.q, 10);
+	const requestOptions = {
+        method: 'GET',
+        headers: {
+            'x-api-key': 'eygp51dfkb5pm7buhaxjtm93:str7wniisc', 
+            'Accept': 'application/json'
+        },
+    };
+	const url = new URL(`https://openapi.etsy.com/v3/application/listings/batch?listing_ids=${product_id}`);
+	const response = await fetch(url.toString(), requestOptions);
+    const data = await response.json();
+	if (response.ok) {
+		const newData = data.results.map(item => ({
+			listing_id: item.listing_id,
+			title: item.title,
+			price: item.price.amount,
+			description: item.description,
+			materials: item.materials,
+			image: '',
+			ratingAvg: 0
+		}));
+
+		const imgRes = await fetch(`https://openapi.etsy.com/v3/application/listings/batch?listing_ids=${product_id}&includes=Images`, requestOptions);
+		const imgData = await imgRes.json();
+
+
+		newData.forEach((item) => {
+            
+        
+			const listingImages = imgData.results.find(img => img.listing_id === item.listing_id);
+
+			//item.ratingAvg = listingDetails.review_average || 0;
+			item.image = listingImages.images[0].url_fullxfull;
+		});
+
+		res.status(200).json(newData);
+	}
+	
+});
+
+
 app.get('/api/about', (req, res) => {
 	const query = 'SELECT team_number, version_number, release_date, product_name, product_desc FROM about_info WHERE is_curr = 1';
 	const query2 = 'SELECT product_desc FROM about_info WHERE id = 2';
