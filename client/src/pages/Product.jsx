@@ -80,6 +80,24 @@ return (
             <p style={{ font: 'ariel', fontSize: '30px', fontWeight: 'bold', color: '#059C0E'}}>Points: {product[0]?.price}</p>
             <label for="quantity" style={{ font: 'ariel', fontSize: '20px', color: 'white'}}>Quantity: </label>
             <input type="number" id="quantity" name="quantity" step="1" min="1"/>
+            <br/>
+            <br/>
+            <button 
+                        type="submit"
+                        style={{
+                            padding: '12px 30px',
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            border: 'none',
+                            backgroundColor: '#667eea',
+                            color: 'white',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s'
+                        }}
+                    >
+                        Add to Cart
+             </button>
             <p style={{font: 'ariel', color: 'white'}}> {product[0]?.description}</p>
             <p style={{font: 'ariel', color: 'white'}}>Materials: {product[0]?.materials[0]}</p>
           </div>
