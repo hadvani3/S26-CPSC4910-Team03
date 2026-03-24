@@ -15,6 +15,7 @@ import AdminCreateUser from './pages/AdminCreateUser';
 import Apply from './pages/Apply';
 import Account from "./pages/Account.jsx";
 import Product from './pages/Product.jsx';
+import Cart from './pages/Cart.jsx';
 import './App.css';
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
         <Route path="/apply" element = {<Apply />} />
         <Route path="/account" element={<Account />} />
         <Route path="/product" element={<Product />} />
+        <Route path="/cart" element={<Cart />} />
       </Routes>
     </BrowserRouter>
   );
