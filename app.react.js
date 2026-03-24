@@ -120,6 +120,7 @@ app.get('/api/search', async (req, res) => {
 //searching for product
 app.get('/api/product', async (req, res) => {
 	let product_id = parseInt(req.query.q, 10);
+	//api spec stuff
 	const requestOptions = {
         method: 'GET',
         headers: {
@@ -127,9 +128,12 @@ app.get('/api/product', async (req, res) => {
             'Accept': 'application/json'
         },
     };
+	//first api call to listing
 	const url = new URL(`https://openapi.etsy.com/v3/application/listings/batch?listing_ids=${product_id}`);
 	const response = await fetch(url.toString(), requestOptions);
     const data = await response.json();
+
+	//format the response that we want
 	if (response.ok) {
 		const newData = data.results.map(item => ({
 			listing_id: item.listing_id,
@@ -141,10 +145,11 @@ app.get('/api/product', async (req, res) => {
 			ratingAvg: 0
 		}));
 
+		//second api call for the image
 		const imgRes = await fetch(`https://openapi.etsy.com/v3/application/listings/batch?listing_ids=${product_id}&includes=Images`, requestOptions);
 		const imgData = await imgRes.json();
 
-
+		//add the image link to final response
 		newData.forEach((item) => {
             
         
