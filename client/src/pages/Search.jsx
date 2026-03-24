@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import { useLocation, useNavigate } from 'react-router-dom'
 import Nav from '../components/Nav';
 
@@ -59,11 +60,13 @@ const SearchResults = () => {
 
         {products.map((item) => (
           <div key={item.listing_id} className="container">
+          <a href= {`/product?q=${item.listing_id}`}>
             <img src={item.image} alt={item.title} style={{ width: '200px'}} />
             <h4 style={{ color: 'white' }}>{item.title}</h4>
             <p style={{
               color: "white"
             }}> <b>Points: {item.price}</b></p>
+            </a>
           </div>
         ))}
       </div>
