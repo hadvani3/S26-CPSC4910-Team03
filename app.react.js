@@ -321,7 +321,7 @@ app.post("/AccountInfo", (req, res)=> {
 
 app.post("/SetUsername", (req, res) => {
 	const newUsername = req.body.newUsername
-	const token = req.body.token
+	const token = req.body.key
 	const email = decodeAccessToken(token)
 
 	const sqlInsert = "update users set username = ? where email = ?"
@@ -332,6 +332,97 @@ app.post("/SetUsername", (req, res) => {
 			return res.status(500).json({error: "Database Error"});
 		} else {
 			return res.ok
+		}
+	})
+})
+
+app.post("/GetSponsorDrivers", (req, res) => {
+	const sponsorID = req.body.sponsorID
+	console.log(sponsorID)
+
+	const sqlSearch = "select * from drivers where sponsor_id = ?"
+	const search_query = mysql.format(sqlSearch, [sponsorID])
+	db.query(search_query, async (err, driverResults) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({error: "Database Error"});
+		}
+		if (driverResults.length === 0) {
+			console.log("No drivers")
+			return res.status(404).json({error: "There are no drivers for this sponsor"});
+		} else {
+			return res.json(driverResults.map(d => ({
+				driver_id: d.driver_id,
+				firstname: d.first_name,
+				lastname: d.last_name,
+				phone: d.phone_number,
+				points: d.total_points,
+				createDate: d.created_at,
+				updatedDate: d.updated_at
+			})));
+		}
+	})
+})
+
+app.post("/GetSponsor", (req, res) => {
+	const token = req.body.key
+	console.log(token)
+	const email = decodeAccessToken(token)
+	console.log(email)
+
+	const sqlSearch = "select * from users where email = ?"
+	const search_query = mysql.format(sqlSearch, [email])
+	db.query(search_query, async (err, userResults) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({error: "Database Error"});
+		}
+		if (userResults.length === 0) {
+			console.log("No user with that email")
+			return res.status(404).json({error: "No user with that email"});
+		} else {
+			const user_id = userResults[0].user_id
+			const sqlSearch2 = "select * from sponsor_users where user_id = ?"
+			const search_query2 = mysql.format(sqlSearch2, [user_id])
+			db.query(search_query2, async (err, sponsorResults) => {
+				if (err) {
+					console.error(err);
+					return res.status(500).json({error: "Database Error"});
+				}
+				if (sponsorResults.length === 0) {
+					console.log("No sponsor user with that id")
+					return res.status(404).json({error: "No sponsor user with that id"});
+				} else {
+					const sponsor_id = sponsorResults[0].sponsor_id
+					return res.json({sponsor_id:sponsor_id})
+				}
+			})
+		}
+	})
+})
+
+app.post('/ChangePoints', (req, res) => {
+	const driverID = req.body.driver_id
+	const change = req.body.change
+	const sponsor_id = req.body.sponsor_id
+
+	const update = "UPDATE drivers SET total_points = total_points + ? WHERE driver_id = ?"
+	const update_query = mysql.format(update, [change, driverID])
+	db.query(update_query, async (err) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({error: "Database Error"});
+		} else {
+			insert = "INSERT INTO driver_points (driver_id, sponsor_id, points_change) VALUES (?, ?, ?);"
+			insert_query = mysql.format(insert, [driverID, sponsor_id, change])
+			db.query(insert_query, async (err) => {
+				if (err) {
+					console.error(err);
+					return res.status(500).json({error: "Database Error"});
+				} else {
+					return res.json({ success: true });
+				}
+			})
 		}
 	})
 })
