@@ -586,6 +586,97 @@ app.post('/api/admin/users', async (req, res) => {
     }
 });
 
+// get all users
+app.get('/api/admin/users', (req, res) => {
+    const { role, status, search } = req.query;
+    
+    let query = 'SELECT user_id, email, role_type, is_active, created_at FROM users WHERE 1=1';
+    const params = [];
+    
+    // filter by role
+    if (role && role !== 'all') {
+        query += ' AND role_type = ?';
+        params.push(role);
+    }
+    
+    // filter by status
+    if (status && status !== 'all') {
+        query += ' AND is_active = ?';
+        params.push(status === 'active' ? 1 : 0);
+    }
+    
+    // search by email
+    if (search) {
+        query += ' AND email LIKE ?';
+        params.push(`%${search}%`);
+    }
+    
+    query += ' ORDER BY created_at DESC';
+    
+    db.query(query, params, (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        
+        res.json({ 
+            success: true,
+            users: results 
+        });
+    });
+});
+
+// toggle user active status
+app.post('/api/admin/users/:id/toggle-status', (req, res) => {
+    const { id } = req.params;
+    const { is_active } = req.body;
+    
+    if (is_active === undefined) {
+        return res.status(400).json({ error: 'is_active field required' });
+    }
+    
+    db.query(
+        'UPDATE users SET is_active = ? WHERE user_id = ?',
+        [is_active, id],
+        (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            
+            res.json({ 
+                success: true, 
+                message: `User ${is_active ? 'activated' : 'deactivated'} successfully` 
+            });
+        }
+    );
+});
+
+// Delete user
+app.delete('/api/admin/users/:id', (req, res) => {
+    const { id } = req.params;
+    
+    db.query('DELETE FROM users WHERE user_id = ?', [id], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        res.json({ 
+            success: true, 
+            message: 'User deleted successfully' 
+        });
+    });
+});
+
 // admin dashboard route
 app.get('/api/admin/stats', (req, res) => {
     const query = `
