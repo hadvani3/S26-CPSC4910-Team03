@@ -586,6 +586,31 @@ app.post('/api/admin/users', async (req, res) => {
     }
 });
 
+// admin dashboard route
+app.get('/api/admin/stats', (req, res) => {
+    const query = `
+        SELECT 
+            (SELECT COUNT(*) FROM users) as totalUsers,
+            (SELECT COUNT(*) FROM users WHERE role_type = 'driver') as totalDrivers,
+            (SELECT COUNT(*) FROM users WHERE role_type = 'sponsor') as totalSponsors,
+            (SELECT COUNT(*) FROM driver_applications WHERE application_status = 'PENDING') as pendingApplications
+    `;
+    
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Database error' });
+        }
+        
+        res.json({
+            totalUsers: results[0].totalUsers || 0,
+            totalDrivers: results[0].totalDrivers || 0,
+            totalSponsors: results[0].totalSponsors || 0,
+            pendingApplications: results[0].pendingApplications || 0
+        });
+    });
+});
+
 //Serve React build
 const clientDist = path.join(__dirname, 'client', 'dist');
 const fs = require('fs');
