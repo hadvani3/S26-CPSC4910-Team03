@@ -14,13 +14,29 @@ export default function AdminHomePage() {
     });
 
     useEffect(() => {
-        setStats({
+
+       fetch('/api/admin/stats')
+        .then(res => res.json())
+        .then(data => {
+            setStats({
+                totalUsers: data.totalUsers,
+                totalDrivers: data.totalDrivers,
+                totalSponsors: data.totalSponsors,
+                pendingApplications: data.pendingApplications
+            });
+        })
+        .catch(err => {
+            console.error('Error fetching stats:', err);
+            // Keep default values if fetch fails
+        });
+}, [navigate]); 
+       /* setStats({
             totalUsers: 45,
             totalDrivers: 28,
             totalSponsors: 12,
             pendingApplications: 5
         });
-    }, []);
+    }, []);*/
 
     const handleLogout = () => {
         localStorage.removeItem("token");
