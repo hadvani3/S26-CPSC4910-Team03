@@ -350,6 +350,21 @@ export default function AdminHomePage() {
                         gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
                         gap: '15px'
                     }}>
+                        <button 
+                            onClick={() => navigate('/admin/bulk-upload')}
+                            style={{
+                                padding: '15px 20px',
+                                backgroundColor: '#ff9800',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontSize: '15px',
+                                fontWeight: '500'
+                            }}>
+                                Bulk Upload
+                            </button>
+
                         <button style={{
                             padding: '15px 20px',
                             backgroundColor: '#ff9800',
