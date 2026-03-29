@@ -17,6 +17,8 @@ import Account from "./pages/Account.jsx";
 import Product from './pages/Product.jsx';
 import Cart from './pages/Cart.jsx';
 import AdminUserManagement from './pages/AdminUserManagement';
+import AdminApplications from './pages/AdminApplications';
+import AdminBulkUpload from './pages/AdminBulkUpload';
 import './App.css';
 
 function App() {
@@ -41,6 +43,9 @@ function App() {
         <Route path="/product" element={<Product />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/admin/users" element={<AdminUserManagement />} />
+        <Route path="/admin/applications" element={<AdminApplications />} />
+        <Route path="/admin/bulk-upload" element={<AdminBulkUpload />} />
+
       </Routes>
     </BrowserRouter>
   );
