@@ -42,7 +42,10 @@ app.use(express.urlencoded({extended: true}));
 
 app.post('/create_account', async (req, res) => {
 	try{
-	const { email, password, role_type} = req.body;
+	const { email, password, role_type, first_name, last_name } = req.body;
+	if (role_type !== 'driver') {
+		return res.status(400).json({ error: "Only driver accounts can be created through the homepage." });
+	}
 	console.log(req.body);
 	const hashedPassword = await bcrypt.hash(password, 10);
 	const query = 'INSERT INTO users (email, password_hash, role_type, is_active) VALUES (?,?,?,?)';
@@ -52,10 +55,30 @@ app.post('/create_account', async (req, res) => {
                 console.error(err);
                 return res.status(500).json({ error: "Database insert failed" });
             }
-            res.json({
-                message: "Account created successfully",
-                user_id: result.insertId
-            });
+
+			const newUserId = result.insertId;
+
+			if (role_type === 'driver') {
+				db.query(
+					'INSERT INTO drivers (user_id, first_name, last_name) VALUES (?, ?, ?)',
+					[newUserId, first_name || '', last_name || ''],
+					(err2) => {
+						if (err2) {
+                        console.error(err2);
+                        return res.status(500).json({ error: "Driver profile creation failed" });
+                    }
+                    res.json({
+                        message: "Account created successfully",
+                        user_id: newUserId
+                    });
+                }
+            );
+		}else {
+			res.json({
+				message: "Account created successfully",
+				user_id: newUserId
+			});
+		}
         });
 	} catch (error){
 		console.error("Server error:", error);
@@ -545,7 +568,7 @@ app.post('/api/reset-password', async (req, res) => {
 
 // create new user route
 app.post('/api/admin/users', async (req, res) => {
-    const { email, password, role_type } = req.body;
+    const { email, password, role_type, first_name, last_name, sponsor_id } = req.body;
     
     // validate fields
     if (!email || !password || !role_type) {
@@ -564,8 +587,57 @@ app.post('/api/admin/users', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         
         const query = 'INSERT INTO users (email, password_hash, role_type, is_active) VALUES (?, ?, ?, 1)';
-        
+
         db.query(query, [email, hashedPassword, role_type], (err, result) => {
+            if (err) {
+                if (err.code === 'ER_DUP_ENTRY') {
+                    return res.status(400).json({ error: 'Email already exists' });
+                }
+                console.error(err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+
+            const newUserId = result.insertId;
+
+            if (role_type === 'sponsor') {
+                const sponsorQuery = 'INSERT INTO sponsor_users (user_id, sponsor_id, first_name, last_name) VALUES (?, ?, ?, ?)';
+                db.query(sponsorQuery, [newUserId, sponsor_id, first_name, last_name], (err2) => {
+                    if (err2) {
+                        console.error(err2);
+                        return res.status(500).json({ error: 'User created but sponsor profile failed' });
+                    }
+                    return res.json({
+                        success: true,
+                        message: 'Sponsor user created successfully',
+                        user_id: newUserId
+                    });
+                });
+            } else if (role_type === 'driver') {
+                const driverQuery = 'INSERT INTO drivers (user_id, first_name, last_name) VALUES (?, ?, ?)';
+                db.query(driverQuery, [newUserId, first_name, last_name], (err2) => {
+                    if (err2) {
+                        console.error(err2);
+                        return res.status(500).json({ error: 'User created but driver profile failed' });
+                    }
+                    return res.json({
+                        success: true,
+                        message: 'Driver user created successfully',
+                        user_id: newUserId
+                    });
+                });
+            } else {
+                return res.json({
+                    success: true,
+                    message: 'User created successfully',
+                    user_id: newUserId
+                });
+            }
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+        /*db.query(query, [email, hashedPassword, role_type], (err, result) => {
             if (err) {
                 if (err.code === 'ER_DUP_ENTRY') {
                     return res.status(400).json({ error: 'Email already exists' });
@@ -583,7 +655,7 @@ app.post('/api/admin/users', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error' });
-    }
+    }*/
 });
 
 // get all users
@@ -700,6 +772,20 @@ app.get('/api/admin/stats', (req, res) => {
             pendingApplications: results[0].pendingApplications || 0
         });
     });
+});
+
+// get sponsors
+app.get('/api/sponsors', (req, res) => {
+    db.query(
+        'SELECT sponsor_id, company_name FROM sponsors WHERE is_active = 1',
+        (err, results) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            res.json(results);
+        }
+    );
 });
 
 //Serve React build
