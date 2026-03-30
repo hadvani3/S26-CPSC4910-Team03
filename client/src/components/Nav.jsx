@@ -17,6 +17,8 @@ export default function Nav() {
                 {!token && <li>< Link to="/">Login</Link></li>}
                 {token && <li><Link to="/" onClick={logout}>Logout</Link></li>}
                 {token && role === "driver" && <li><Link to="/apply">Apply</Link></li>}
+                {token && role === "admin" && <li><Link to="/admin/applications">Applications</Link></li>}
+                {token && role === "sponsor" && <li><Link to="/sponsor/applications">Applications</Link></li>}
                 <li><Link to="/about">About</Link></li>
                 <li><Link to={roleHomePath}>Home</Link></li>
                 <li><Link to="/home">Our Program</Link></li>
