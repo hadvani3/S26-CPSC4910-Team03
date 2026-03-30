@@ -19,7 +19,6 @@ import Cart from './pages/Cart.jsx';
 import AdminUserManagement from './pages/AdminUserManagement';
 import AdminApplications from './pages/AdminApplications';
 import AdminBulkUpload from './pages/AdminBulkUpload';
-import Catlog from './pages/catalog.jsx'
 import './App.css';
 import Catalog from './pages/catalog.jsx';
 
