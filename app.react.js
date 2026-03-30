@@ -788,6 +788,155 @@ app.get('/api/sponsors', (req, res) => {
     );
 });
 
+// driver submits sponsor application (user_id + sponsor_id resolved in SQL)
+app.post('/api/driver-applications', (req, res) => {
+    const {
+        first_name,
+        last_name,
+        birth_date,
+        email_address,
+        phone_number,
+        street_address,
+        city,
+        zip_code,
+        reason,
+        company_name,
+    } = req.body;
+
+    const emailTrim = typeof email_address === 'string' ? email_address.trim() : '';
+    const companyTrim = typeof company_name === 'string' ? company_name.trim() : '';
+
+    if (
+        !first_name ||
+        !last_name ||
+        !birth_date ||
+        !emailTrim ||
+        !phone_number ||
+        !street_address ||
+        !city ||
+        !zip_code ||
+        !reason ||
+        !companyTrim
+    ) {
+        return res.status(400).json({ error: 'All application fields are required' });
+    }
+
+    const fn = String(first_name).trim();
+    const ln = String(last_name).trim();
+    const phone = String(phone_number).trim();
+    const street = String(street_address).trim();
+    const cityVal = String(city).trim();
+    const zip = String(zip_code).trim();
+    const reasonVal = String(reason).trim();
+
+    if (fn.length > 50 || ln.length > 50) {
+        return res.status(400).json({ error: 'Name fields exceed maximum length' });
+    }
+    if (emailTrim.length > 100) {
+        return res.status(400).json({ error: 'Email exceeds maximum length' });
+    }
+    if (phone.length > 25) {
+        return res.status(400).json({ error: 'Phone number exceeds maximum length' });
+    }
+    if (street.length > 255 || cityVal.length > 100 || zip.length > 20) {
+        return res.status(400).json({ error: 'Address fields exceed maximum length' });
+    }
+
+    db.query(
+        'SELECT user_id FROM users WHERE email = ? AND role_type = ? LIMIT 1',
+        [emailTrim, 'driver'],
+        (err, userRows) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            if (!userRows || userRows.length === 0) {
+                return res.status(404).json({
+                    error: 'No active driver account found for that email address',
+                });
+            }
+
+            const user_id = userRows[0].user_id;
+
+            db.query(
+                'SELECT sponsor_id FROM sponsors WHERE company_name = ? AND is_active = 1 LIMIT 1',
+                [companyTrim],
+                (err2, sponsorRows) => {
+                    if (err2) {
+                        console.error(err2);
+                        return res.status(500).json({ error: 'Database error' });
+                    }
+                    if (!sponsorRows || sponsorRows.length === 0) {
+                        return res.status(404).json({ error: 'Sponsor not found or inactive' });
+                    }
+
+                    const sponsor_id = sponsorRows[0].sponsor_id;
+
+                    const insertSql = `
+                        INSERT INTO driver_applications (
+                            user_id,
+                            sponsor_id,
+                            first_name,
+                            last_name,
+                            birth_date,
+                            email_address,
+                            phone_number,
+                            license_number,
+                            street_address,
+                            city,
+                            state,
+                            zip_code,
+                            reason,
+                            application_status,
+                            notes,
+                            reviewed_at,
+                            created_at,
+                            updated_at
+                        ) VALUES (
+                            ?, ?, ?, ?, ?, ?, ?,
+                            NULL,
+                            ?, ?, NULL, ?,
+                            ?,
+                            'PENDING',
+                            NULL,
+                            NULL,
+                            NOW(),
+                            NOW()
+                        )
+                    `;
+
+                    db.query(
+                        insertSql,
+                        [
+                            user_id,
+                            sponsor_id,
+                            fn,
+                            ln,
+                            birth_date,
+                            emailTrim,
+                            phone,
+                            street,
+                            cityVal,
+                            zip,
+                            reasonVal,
+                        ],
+                        (err3, result) => {
+                            if (err3) {
+                                console.error(err3);
+                                return res.status(500).json({ error: 'Failed to save application' });
+                            }
+                            res.status(201).json({
+                                success: true,
+                                application_id: result.insertId,
+                            });
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
 //Serve React build
 const clientDist = path.join(__dirname, 'client', 'dist');
 const fs = require('fs');
