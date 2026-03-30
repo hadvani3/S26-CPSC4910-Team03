@@ -44,6 +44,7 @@ function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/admin/users" element={<AdminUserManagement />} />
         <Route path="/admin/applications" element={<AdminApplications />} />
+        <Route path="/sponsor/applications" element={<AdminApplications />} />
         <Route path="/admin/bulk-upload" element={<AdminBulkUpload />} />
 
       </Routes>

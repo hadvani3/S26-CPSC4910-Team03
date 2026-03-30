@@ -371,7 +371,9 @@ export default function SponsorHomePage() {
                             Application Management
                         </h2>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <button style={{
+                            <button type="button"
+                                onClick={() => navigate('/sponsor/applications')}
+                                style={{
                                 padding: '12px 20px',
                                 backgroundColor: '#4caf50',
                                 color: 'white',

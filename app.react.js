@@ -38,6 +38,14 @@ db.query('SELECT 1', (err) => {
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
+function getBearerToken(req) {
+	const auth = req.headers.authorization;
+	if (!auth || typeof auth !== 'string') return null;
+	const parts = auth.trim().split(/\s+/);
+	if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') return null;
+	return parts[1];
+}
+
 //API routes
 
 app.post('/create_account', async (req, res) => {
@@ -935,6 +943,211 @@ app.post('/api/driver-applications', (req, res) => {
             );
         }
     );
+});
+
+// List driver applications for review (admin: all sponsors; sponsor: own org only)
+app.get('/api/applications/review', (req, res) => {
+	const token = getBearerToken(req);
+	if (!token) {
+		return res.status(401).json({ error: 'Authorization required' });
+	}
+	const email = decodeAccessToken(token);
+	if (!email) {
+		return res.status(401).json({ error: 'Invalid or expired token' });
+	}
+
+	db.query(
+		'SELECT user_id, role_type FROM users WHERE email = ? AND is_active = 1 LIMIT 1',
+		[email],
+		(err, urows) => {
+			if (err) {
+				console.error(err);
+				return res.status(500).json({ error: 'Database error' });
+			}
+			if (!urows.length) {
+				return res.status(401).json({ error: 'User not found' });
+			}
+
+			const { user_id, role_type } = urows[0];
+
+			const selectBase = `
+				SELECT
+					da.application_id,
+					da.user_id,
+					da.sponsor_id,
+					da.first_name,
+					da.last_name,
+					da.birth_date,
+					da.email_address,
+					da.phone_number,
+					da.license_number,
+					da.street_address,
+					da.city,
+					da.state,
+					da.zip_code,
+					da.reason,
+					da.application_status,
+					da.notes,
+					da.reviewed_at,
+					da.created_at,
+					s.company_name AS sponsor_name
+				FROM driver_applications da
+				JOIN sponsors s ON s.sponsor_id = da.sponsor_id
+			`;
+
+			if (role_type === 'admin') {
+				db.query(
+					`${selectBase} ORDER BY da.created_at DESC`,
+					(e2, results) => {
+						if (e2) {
+							console.error(e2);
+							return res.status(500).json({ error: 'Database error' });
+						}
+						res.json(results);
+					}
+				);
+				return;
+			}
+
+			if (role_type === 'sponsor') {
+				db.query(
+					'SELECT sponsor_id FROM sponsor_users WHERE user_id = ? LIMIT 1',
+					[user_id],
+					(e3, srows) => {
+						if (e3) {
+							console.error(e3);
+							return res.status(500).json({ error: 'Database error' });
+						}
+						if (!srows.length) {
+							return res.status(403).json({
+								error: 'No sponsor organization linked to this account',
+							});
+						}
+						const sponsorId = srows[0].sponsor_id;
+						db.query(
+							`${selectBase} WHERE da.sponsor_id = ? ORDER BY da.created_at DESC`,
+							[sponsorId],
+							(e4, results) => {
+								if (e4) {
+									console.error(e4);
+									return res.status(500).json({ error: 'Database error' });
+								}
+								res.json(results);
+							}
+						);
+					}
+				);
+				return;
+			}
+
+			return res.status(403).json({ error: 'Access denied' });
+		}
+	);
+});
+
+// Approve or reject an application (admin or owning sponsor only)
+app.patch('/api/applications/:id/review', (req, res) => {
+	const applicationId = parseInt(req.params.id, 10);
+	if (Number.isNaN(applicationId)) {
+		return res.status(400).json({ error: 'Invalid application id' });
+	}
+
+	const { application_status, notes } = req.body;
+	if (!['APPROVED', 'REJECTED'].includes(application_status)) {
+		return res.status(400).json({ error: 'application_status must be APPROVED or REJECTED' });
+	}
+
+	const token = getBearerToken(req);
+	if (!token) {
+		return res.status(401).json({ error: 'Authorization required' });
+	}
+	const email = decodeAccessToken(token);
+	if (!email) {
+		return res.status(401).json({ error: 'Invalid or expired token' });
+	}
+
+	db.query(
+		'SELECT user_id, role_type FROM users WHERE email = ? AND is_active = 1 LIMIT 1',
+		[email],
+		(err, urows) => {
+			if (err) {
+				console.error(err);
+				return res.status(500).json({ error: 'Database error' });
+			}
+			if (!urows.length) {
+				return res.status(401).json({ error: 'User not found' });
+			}
+
+			const reviewer = urows[0];
+			if (reviewer.role_type !== 'admin' && reviewer.role_type !== 'sponsor') {
+				return res.status(403).json({ error: 'Access denied' });
+			}
+
+			db.query(
+				'SELECT * FROM driver_applications WHERE application_id = ? LIMIT 1',
+				[applicationId],
+				(e2, apps) => {
+					if (e2) {
+						console.error(e2);
+						return res.status(500).json({ error: 'Database error' });
+					}
+					if (!apps.length) {
+						return res.status(404).json({ error: 'Application not found' });
+					}
+
+					const row = apps[0];
+					if (row.application_status !== 'PENDING') {
+						return res.status(400).json({ error: 'Application is no longer pending' });
+					}
+
+					const notesVal =
+						notes != null && String(notes).trim() !== ''
+							? String(notes).trim().slice(0, 500)
+							: null;
+
+					const runUpdate = () => {
+						db.query(
+							`UPDATE driver_applications
+							 SET application_status = ?, notes = ?, reviewed_at = NOW(), updated_at = NOW()
+							 WHERE application_id = ?`,
+							[application_status, notesVal, applicationId],
+							(e3, result) => {
+								if (e3) {
+									console.error(e3);
+									return res.status(500).json({ error: 'Update failed' });
+								}
+								if (result.affectedRows === 0) {
+									return res.status(404).json({ error: 'Application not found' });
+								}
+								res.json({ success: true });
+							}
+						);
+					};
+
+					if (reviewer.role_type === 'admin') {
+						return runUpdate();
+					}
+
+					db.query(
+						'SELECT sponsor_id FROM sponsor_users WHERE user_id = ? LIMIT 1',
+						[reviewer.user_id],
+						(e4, srows) => {
+							if (e4) {
+								console.error(e4);
+								return res.status(500).json({ error: 'Database error' });
+							}
+							if (!srows.length || srows[0].sponsor_id !== row.sponsor_id) {
+								return res.status(403).json({
+									error: 'You can only review applications for your organization',
+								});
+							}
+							runUpdate();
+						}
+					);
+				}
+			);
+		}
+	);
 });
 
 //Serve React build
