@@ -1,6 +1,5 @@
 require("dotenv").config();
 const express = require('express');
-const bcrpyt = require('bcrypt')
 const mysql = require('mysql2');
 const path = require('path');
 const cors = require('cors')
@@ -194,6 +193,62 @@ app.get('/api/product', async (req, res) => {
 	}
 	
 });
+
+//show the catalogue for a given sponsor
+app.get('/api/:sponsor_id/catalog', async (req, res) =>{
+	const { sponsor_id } = req.params;
+	//get the list of ids from the sponsor catalog
+	const query = 'SELECT catalog FROM sponsors WHERE sponsor_id = ?';
+	db.query(query, [sponsor_id], async (err, results) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({ error: "Database Error" });
+		}
+		if (results.length === 0) {
+			return res.status(404).json({ error: "No data found" });
+		}
+		const prodList = String(results[0].catalog);
+
+		let cleanList = prodList.slice(1);
+
+		const requestOptions = {
+        method: 'GET',
+        headers: {
+            'x-api-key': 'eygp51dfkb5pm7buhaxjtm93:str7wniisc', 
+            'Accept': 'application/json'
+        },
+		};
+		const listingIds = cleanList.split(',').map(id => id.trim()).join(',');
+		const url = `https://openapi.etsy.com/v3/application/listings/batch?listing_ids=${listingIds}&includes=Images`;
+        const response = await fetch(url, requestOptions);
+        const data = await response.json();
+
+		const newData = data.results.map(item => ({
+			listing_id: item.listing_id,
+			title: item.title,
+			price: item.price.amount,
+			image: '',
+			ratingAvg: 0
+		}));
+
+		//second api call for the image
+		const imgRes = await fetch(`https://openapi.etsy.com/v3/application/listings/batch?listing_ids=${listingIds}&includes=Images`, requestOptions);
+		const imgData = await imgRes.json();
+
+		//add the image link to final response
+		newData.forEach((item) => {
+            
+        
+			const listingImages = imgData.results.find(img => img.listing_id === item.listing_id);
+
+			//item.ratingAvg = listingDetails.review_average || 0;
+			item.image = listingImages.images[0].url_fullxfull;
+		});
+
+		res.status(200).json(newData);
+	} );
+});
+
 
 //showing the details of you cart
 app.get('/api/cart', async (req, res) =>{
