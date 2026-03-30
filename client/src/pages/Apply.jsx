@@ -20,6 +20,9 @@ export default function Apply() {
     cdlNumber: ""
   });
   const [message, setMessage] = useState("");
+  const [sponsors, setSponsors] = useState([]);
+  const [sponsorsLoading, setSponsorsLoading] = useState(true);
+  const [sponsorsError, setSponsorsError] = useState(null);
 
   useEffect(() => {
     if (!token) {
@@ -38,12 +41,36 @@ export default function Apply() {
     }
   }, [token, role, navigate]);
 
-  const sponsorOptions = [
-    "Sponsor 1",
-    "Sponsor 2",
-    "Sponsor 3",
-    "Sponsor 4"
-  ];
+  useEffect(() => {
+    if (!token || role !== "driver") return;
+
+    let cancelled = false;
+    setSponsorsLoading(true);
+    setSponsorsError(null);
+
+    fetch("/api/sponsors")
+      .then((res) => {
+        if (!res.ok) throw new Error("Could not load sponsors");
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        setSponsors(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setSponsorsError(err.message || "Could not load sponsors");
+          setSponsors([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setSponsorsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, role]);
   const fieldStyle = {
     width: "100%",
     padding: "14px 16px",
@@ -91,16 +118,28 @@ export default function Apply() {
         </p>
         <form onSubmit={handleSubmit}>
           <label style={{ color: "white", fontWeight: "bold" }}>Select Sponsor</label>
+          {sponsorsLoading && (
+            <p style={{ color: "white", margin: "0 0 8px 0" }}>Loading sponsors…</p>
+          )}
+          {sponsorsError && (
+            <p style={{ color: "#ffb3b3", margin: "0 0 8px 0" }}>{sponsorsError}</p>
+          )}
+          {!sponsorsLoading && !sponsorsError && sponsors.length === 0 && (
+            <p style={{ color: "#ffe082", margin: "0 0 8px 0" }}>
+              No active sponsors are available right now.
+            </p>
+          )}
           <select
             value={selectedSponsor}
             onChange={(event) => setSelectedSponsor(event.target.value)}
             style={fieldStyle}
-            required
+            required={sponsors.length > 0}
+            disabled={sponsorsLoading || !!sponsorsError || sponsors.length === 0}
           >
             <option value="">Choose a sponsor...</option>
-            {sponsorOptions.map((sponsor) => (
-              <option key={sponsor} value={sponsor}>
-                {sponsor}
+            {sponsors.map((s) => (
+              <option key={s.sponsor_id} value={String(s.sponsor_id)}>
+                {s.company_name}
               </option>
             ))}
           </select>
