@@ -100,9 +100,13 @@ export default function Apply() {
       streetAddress: "",
       city: "",
       state: "",
-      zipcode: ""
+      zipcode: "",
+      cdlNumber: ""
     });
   };
+
+  const sponsorSelectEnabled =
+    !sponsorsLoading && !sponsorsError && sponsors.length > 0;
 
   if (!token || role !== "driver") {
     return null;
@@ -133,8 +137,8 @@ export default function Apply() {
             value={selectedSponsor}
             onChange={(event) => setSelectedSponsor(event.target.value)}
             style={fieldStyle}
-            required={sponsors.length > 0}
-            disabled={sponsorsLoading || !!sponsorsError || sponsors.length === 0}
+            required={sponsorSelectEnabled}
+            disabled={!sponsorSelectEnabled}
           >
             <option value="">Choose a sponsor...</option>
             {sponsors.map((s) => (
@@ -235,7 +239,19 @@ export default function Apply() {
             required
           />
 
-          <button type="submit">Submit Application</button>
+          <label style={{ color: "white", fontWeight: "bold" }}>CDL Number</label>
+          <input
+            type="text"
+            name="cdlNumber"
+            value={formData.cdlNumber}
+            onChange={handleFieldChange}
+            style={fieldStyle}
+            required
+          />
+
+          <button type="submit" disabled={!sponsorSelectEnabled}>
+            Submit Application
+          </button>
         </form>
         {message && <p style={{ color: "#d8fdd8", marginTop: "6px" }}>{message}</p>}
       </div>
