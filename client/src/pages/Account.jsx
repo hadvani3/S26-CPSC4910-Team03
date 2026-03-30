@@ -70,37 +70,65 @@ export default function Account() {
     }
 
     if (error) {
-        return <h1>Server Error</h1>;
+        return (
+            <>
+                <Nav />
+                <div className="container">
+                    <h1>Server Error</h1>
+                    <p className="item">{error}</p>
+                </div>
+            </>
+        );
     }
 
     if (!data) {
-        return <h1>Loading...</h1>;
+        return (
+            <>
+                <Nav />
+                <div className="container">
+                    <h1>Loading...</h1>
+                </div>
+            </>
+        );
     }
 
     return (
         <>
             <Nav />
-            {data.username && <h1>Welcome, {data.username}</h1>}
-            <p>
-                Role: {data.role}<br/>
-                Email: {data.email}<br/>
-                Account created: {data.createDate}<br/>
-                Account updated: {data.updatedDate}<br/>
-            </p>
-            <form onSubmit={handleSubmit}>
-                <label>
-                    Change username:
-                    <input
-                        type="username"
-                        name="username"
-                        value={newUsername}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required/>
-                </label>
-                <button type="submit">
-                    Update
-                </button>
-            </form>
+            <div className="container">
+                <p className="glass-subtitle">Truckers United</p>
+                <h1>Account</h1>
+                {data.username && <h2>Welcome, {data.username}</h2>}
+                <div className="item">
+                    <span className="label">Role:</span> {data.role}
+                </div>
+                <div className="item">
+                    <span className="label">Email:</span> {data.email}
+                </div>
+                <div className="item">
+                    <span className="label">Account created:</span> {data.createDate}
+                </div>
+                <div className="item">
+                    <span className="label">Account updated:</span> {data.updatedDate}
+                </div>
+                <form onSubmit={handleSubmit} className="glass-form">
+                    <div className="glass-input-group">
+                        <label htmlFor="account-username">Change username:</label>
+                        <input
+                            id="account-username"
+                            type="username"
+                            name="username"
+                            className="glass-input"
+                            value={newUsername}
+                            onChange={(e) => setUsername(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <button type="submit" className="glass-btn">
+                        Update
+                    </button>
+                </form>
+            </div>
         </>
     );
 }
