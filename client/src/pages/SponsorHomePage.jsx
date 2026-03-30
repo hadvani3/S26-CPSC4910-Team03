@@ -1,17 +1,24 @@
 import {Link} from 'react-router-dom';
-import {useState, useEffect} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import { useNavigate } from 'react-router-dom';
 import Nav from '../components/Nav';
+import {AuthContext} from "../components/AuthContext.jsx";
 
 
 export default function SponsorHomePage() {
     const navigate = useNavigate();
+    const { token, role } = useContext(AuthContext);
     const [stats, setStats] = useState({
         totalDrivers: 0,
         activeDrivers: 0,
         pendingApplications: 0,
         totalPointsAwarded: 0
     });
+    const [data, setData] = useState(null);
+    const [error, setError] = useState(null);
+    const [sponsorID, setID] = useState(null);
+    const [drivers, setDrivers] = useState(null);
+    const [pointsChanges, setPointsChanges] = useState({});
 
     useEffect(() => {
         setStats({
@@ -22,11 +29,172 @@ export default function SponsorHomePage() {
         });
     }, [navigate]);
 
+    useEffect(() => {
+        async function fetchAccount() {
+            try {
+                const res = await fetch("https://team03.cpsc4911.com/AccountInfo", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        key: token,
+                    }),
+                });
+
+                const result = await res.json();
+
+                if (res.ok) {
+                    setData(result);
+                } else {
+                    setError("Failed to fetch account info");
+                }
+            } catch (err) {
+                console.error(err);
+                setError("Server error");
+            }
+        }
+
+        if (token) {
+            fetchAccount();
+        }
+
+        async function fetchSponsor() {
+            try {
+                const res = await fetch("https://team03.cpsc4911.com/GetSponsor", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        key: token,
+                    }),
+                });
+
+                const result = await res.json();
+
+                if (res.ok) {
+                    setID(result.sponsor_id);
+                } else {
+                    setError("Failed to fetch sponsor ID");
+                }
+            } catch (err) {
+                console.error(err);
+                setError("Server error");
+            }
+        }
+
+        if (role === "sponsor") {
+            fetchSponsor()
+        }
+        console.log(sponsorID)
+
+        async function fetchSponsorDrivers() {
+            try {
+                const res = await fetch("https://team03.cpsc4911.com/GetSponsorDrivers", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        sponsorID: sponsorID,
+                    }),
+                });
+
+                const result = await res.json();
+
+                if (res.ok) {
+                    setDrivers(result);
+                } else {
+                    setError("Failed to fetch sponsor drivers");
+                }
+            } catch (err) {
+                console.error(err);
+                setError("Server error");
+            }
+        }
+
+        if (sponsorID) {
+            fetchSponsorDrivers()
+            console.log("Fetching drivers")
+        }
+        console.log(drivers)
+    }, [token, role]);
+
+    useEffect(() => {
+        async function fetchSponsorDrivers() {
+            try {
+                const res = await fetch("https://team03.cpsc4911.com/GetSponsorDrivers", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        sponsorID: sponsorID,
+                    }),
+                });
+
+                const result = await res.json();
+
+                if (res.ok) {
+                    setDrivers(result);
+                } else {
+                    setError("Failed to fetch sponsor drivers");
+                }
+            } catch (err) {
+                console.error(err);
+                setError("Server error");
+            }
+        }
+
+        if (sponsorID && drivers === null) {
+            fetchSponsorDrivers()
+            console.log("Fetching drivers")
+        }
+        console.log(drivers)
+    }, [sponsorID, drivers])
+
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         sessionStorage.clear();
         navigate("/");
+    };
+
+    const handleChangePoints = async (driver_id) => {
+        const change = pointsChanges[driver_id];
+
+        if (!change) return alert("Enter a value");
+
+        try {
+            const res = await fetch("https://team03.cpsc4911.com/ChangePoints", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    driver_id,
+                    change,
+                    sponsor_id: sponsorID,
+                }),
+            });
+
+            const result = await res.json();
+
+            if (res.ok && result.success) {
+                setDrivers((prev) =>
+                    prev.map((d) =>
+                        d.driver_id === driver_id
+                            ? { ...d, points: d.points + change }
+                            : d
+                    )
+                );
+                setPointsChanges((prev) => ({ ...prev, [driver_id]: "" }));
+            } else {
+                alert("Failed to update points");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Server error");
+        }
     };
 
 
@@ -373,7 +541,52 @@ export default function SponsorHomePage() {
                     </div>
                 </div>
 
-                <div style={{ 
+                {drivers && drivers.length > 0 && (
+                    <>
+                        <h2>Your Drivers</h2>
+                        <table border="1" cellPadding="8">
+                            <thead>
+                            <tr>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Phone</th>
+                                <th>Points</th>
+                                <th>Points Change Value</th>
+                                <th>Update Points</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {drivers.length > 0 && drivers.map((driver, index) => (
+                                <tr key={index}>
+                                    <td>{driver.firstname}</td>
+                                    <td>{driver.lastname}</td>
+                                    <td>{driver.phone}</td>
+                                    <td>{driver.points}</td>
+                                    <td><input
+                                        type="number"
+                                        value={pointsChanges[driver.driver_id] || ""}
+                                        onChange={(e) =>
+                                            setPointsChanges({
+                                                ...pointsChanges,
+                                                [driver.driver_id]: Number(e.target.value),
+                                            })
+                                        }
+                                    /></td>
+                                    <td>
+                                        <button
+                                            onClick={() => handleChangePoints(driver.driver_id)}
+                                        >
+                                            Update
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </>
+                )}
+
+                <div style={{
                     paddingTop: '25px', 
                     borderTop: '2px solid #e0e0e0',
                     textAlign: 'center'
