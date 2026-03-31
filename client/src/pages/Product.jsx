@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'
 import Nav from '../components/Nav';
+import {AuthContext} from "../components/AuthContext.jsx";
+
 
 const Product = () => {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const [loading, setLoading] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
+  const { token, role } = useContext(AuthContext);
 	const [product, setProduct] = useState([]);
 
 	//get the queries passed we want to retrieve produc with
