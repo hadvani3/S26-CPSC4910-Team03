@@ -5,14 +5,17 @@ export default function Home() {
     return (
         <>
             <Nav />
-             <div className="container">
+             <div className="admin-dashboard">
                 <div style={{
                     textAlign: 'center',
                     padding: '50px 20px',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    background: 'rgba(255, 255, 255, 0.16)',
+                    border: '1px solid rgba(255, 255, 255, 0.24)',
+                    backdropFilter: 'blur(8px)',
                     color: 'white',
                     borderRadius: '10px',
-                    marginBottom: '40px'
+                    marginBottom: '40px',
+                    boxShadow: '0 10px 24px rgba(0,0,0,0.2)'
                 }}>
                     <h1 style={{ fontSize: '2.5em', margin: '0 0 15px 0' }}>
                         Good Driver Incentive Program
@@ -30,19 +33,21 @@ export default function Home() {
                 }}>
                     <div style={{
                         padding: '30px',
-                        backgroundColor: '#e3f2fd',
+                        background: 'rgba(255, 255, 255, 0.16)',
+                        border: '1px solid rgba(255, 255, 255, 0.22)',
+                        backdropFilter: 'blur(8px)',
                         borderRadius: '10px',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                        boxShadow: '0 8px 18px rgba(0,0,0,0.18)',
                         transition: 'transform 0.2s'
                     }}>
-                        <h2 style={{ color: '#1976d2', marginTop: '0', fontSize: '1.5em' }}>
+                        <h2 style={{ color: '#f4f8ff', marginTop: '0', fontSize: '1.5em' }}>
                              For Drivers
                         </h2>
                         <ul style={{ 
                             textAlign: 'left', 
                             lineHeight: '2',
                             paddingLeft: '20px',
-                            color: '#333'
+                            color: '#f4f8ff'
                         }}>
                             <li>Earn points for safe driving</li>
                             <li>Redeem rewards from catalog</li>
@@ -53,19 +58,21 @@ export default function Home() {
 
                     <div style={{
                         padding: '30px',
-                        backgroundColor: '#e8f5e9',
+                        background: 'rgba(255, 255, 255, 0.16)',
+                        border: '1px solid rgba(255, 255, 255, 0.22)',
+                        backdropFilter: 'blur(8px)',
                         borderRadius: '10px',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                        boxShadow: '0 8px 18px rgba(0,0,0,0.18)',
                         transition: 'transform 0.2s'
                     }}>
-                        <h2 style={{ color: '#388e3c', marginTop: '0', fontSize: '1.5em' }}>
+                        <h2 style={{ color: '#f4f8ff', marginTop: '0', fontSize: '1.5em' }}>
                             For Sponsors
                         </h2>
                         <ul style={{ 
                             textAlign: 'left', 
                             lineHeight: '2',
                             paddingLeft: '20px',
-                            color: '#333'
+                            color: '#f4f8ff'
                         }}>
                             <li>Manage your drivers</li>
                             <li>Award & track points</li>
@@ -76,12 +83,15 @@ export default function Home() {
                 </div>
 
                 <div style={{
-                    backgroundColor: '#f5f5f5',
+                    background: 'rgba(255, 255, 255, 0.16)',
+                    border: '1px solid rgba(255, 255, 255, 0.22)',
+                    backdropFilter: 'blur(8px)',
                     padding: '40px 30px',
                     borderRadius: '10px',
-                    marginBottom: '40px'
+                    marginBottom: '40px',
+                    boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                 }}>
-                    <h2 style={{ textAlign: 'center', color: '#34495e', fontSize: '2em', marginTop: '0' }}>
+                    <h2 style={{ textAlign: 'center', color: '#f4f8ff', fontSize: '2em', marginTop: '0' }}>
                         How It Works
                     </h2>
                     <div style={{
@@ -95,8 +105,8 @@ export default function Home() {
                             <div style={{
                                 width: '70px',
                                 height: '70px',
-                                backgroundColor: '#4caf50',
-                                color: 'white',
+                                backgroundColor: '#f4efe1',
+                                color: '#1f2937',
                                 borderRadius: '50%',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -105,10 +115,10 @@ export default function Home() {
                                 fontWeight: 'bold',
                                 margin: '0 auto 15px'
                             }}>1</div>
-                            <h3 style={{ fontSize: '18px', margin: '10px 0', color: '#34495e' }}>
+                            <h3 style={{ fontSize: '18px', margin: '10px 0', color: '#f4f8ff' }}>
                                 Sign Up
                             </h3>
-                            <p style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>
+                            <p style={{ fontSize: '14px', color: '#dbe6ff', lineHeight: '1.6' }}>
                                 Create your driver account and apply to join a sponsor
                             </p>
                         </div>
@@ -117,8 +127,8 @@ export default function Home() {
                             <div style={{
                                 width: '70px',
                                 height: '70px',
-                                backgroundColor: '#2196f3',
-                                color: 'white',
+                                backgroundColor: '#f4efe1',
+                                color: '#1f2937',
                                 borderRadius: '50%',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -127,10 +137,10 @@ export default function Home() {
                                 fontWeight: 'bold',
                                 margin: '0 auto 15px'
                             }}>2</div>
-                            <h3 style={{ fontSize: '18px', margin: '10px 0', color: '#34495e' }}>
+                            <h3 style={{ fontSize: '18px', margin: '10px 0', color: '#f4f8ff' }}>
                                 Drive Safe
                             </h3>
-                            <p style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>
+                            <p style={{ fontSize: '14px', color: '#dbe6ff', lineHeight: '1.6' }}>
                                 Earn points for good driving behavior and performance
                             </p>
                         </div>
@@ -139,8 +149,8 @@ export default function Home() {
                             <div style={{
                                 width: '70px',
                                 height: '70px',
-                                backgroundColor: '#ff9800',
-                                color: 'white',
+                                backgroundColor: '#f4efe1',
+                                color: '#1f2937',
                                 borderRadius: '50%',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -149,10 +159,10 @@ export default function Home() {
                                 fontWeight: 'bold',
                                 margin: '0 auto 15px'
                             }}>3</div>
-                            <h3 style={{ fontSize: '18px', margin: '10px 0', color: '#34495e' }}>
+                            <h3 style={{ fontSize: '18px', margin: '10px 0', color: '#f4f8ff' }}>
                                 Redeem Rewards
                             </h3>
-                            <p style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>
+                            <p style={{ fontSize: '14px', color: '#dbe6ff', lineHeight: '1.6' }}>
                                 Use your points to purchase items from the catalog
                             </p>
                         </div>
@@ -161,13 +171,15 @@ export default function Home() {
 
                 <div style={{
                     padding: '30px',
-                    backgroundColor: '#fff',
+                    background: 'rgba(255, 255, 255, 0.16)',
                     borderRadius: '10px',
-                    border: '1px solid #e0e0e0',
-                    marginBottom: '40px'
+                    border: '1px solid rgba(255, 255, 255, 0.22)',
+                    backdropFilter: 'blur(8px)',
+                    marginBottom: '40px',
+                    boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                 }}>
-                    <h2 style={{ color: '#34495e', marginTop: '0' }}>About Our Program</h2>
-                    <p style={{ lineHeight: '1.8', color: '#555', fontSize: '16px' }}>
+                    <h2 style={{ color: '#f4f8ff', marginTop: '0' }}>About Our Program</h2>
+                    <p style={{ lineHeight: '1.8', color: '#f4f8ff', fontSize: '16px' }}>
                         The Good Driver Incentive Program rewards good driving habits and 
                         performance in the form of points. Points can be used to 
                         purchase rewards that are listed within the product catalog. Sponsor 
@@ -179,9 +191,12 @@ export default function Home() {
                 <div style={{
                     textAlign: 'center',
                     padding: '50px 20px',
-                    backgroundColor: '#34495e',
+                    background: 'rgba(255, 255, 255, 0.16)',
+                    border: '1px solid rgba(255, 255, 255, 0.24)',
+                    backdropFilter: 'blur(8px)',
                     color: 'white',
-                    borderRadius: '10px'
+                    borderRadius: '10px',
+                    boxShadow: '0 10px 24px rgba(0,0,0,0.2)'
                 }}>
                     <h2 style={{ margin: '0 0 25px 0', fontSize: '2em' }}>
                         Ready to Start?
@@ -194,10 +209,11 @@ export default function Home() {
                     }}>
                         <Link to="/create_account" style={{
                             padding: '15px 40px',
-                            backgroundColor: '#4caf50',
-                            color: 'white',
+                            backgroundColor: '#f4efe1',
+                            color: '#1f2937',
                             textDecoration: 'none',
-                            borderRadius: '5px',
+                            borderRadius: '10px',
+                            border: '1px solid rgba(15, 23, 42, 0.2)',
                             fontWeight: 'bold',
                             fontSize: '16px',
                             transition: 'background-color 0.2s'
@@ -206,11 +222,11 @@ export default function Home() {
                         </Link>
                         <Link to="/" style={{
                             padding: '15px 40px',
-                            backgroundColor: 'transparent',
-                            color: 'white',
+                            backgroundColor: '#f4efe1',
+                            color: '#1f2937',
                             textDecoration: 'none',
-                            borderRadius: '5px',
-                            border: '2px solid white',
+                            borderRadius: '10px',
+                            border: '1px solid rgba(15, 23, 42, 0.2)',
                             fontWeight: 'bold',
                             fontSize: '16px',
                             transition: 'background-color 0.2s'
