@@ -12,7 +12,8 @@ export default function AdminCreateUser() {
         role_type: searchParams.get('role') || 'driver',
         first_name: '',
         last_name: '',
-        sponsor_id: ''
+        sponsor_id: '',
+        phone_number: ''
 
     });
     const [errors, setErrors] = useState({});
@@ -75,6 +76,19 @@ export default function AdminCreateUser() {
             newErrors.role_type = 'Please select a role';
         }
 
+        if (formData.role_type === 'sponsor' || formData.role_type === 'driver') {
+            if (!formData.first_name.trim()) {
+                newErrors.first_name = 'First name is required';
+            }
+            if (!formData.last_name.trim()) {
+                newErrors.last_name = 'Last name is required';
+            }
+        }
+
+        if (formData.role_type === 'sponsor' && !String(formData.sponsor_id).trim()) {
+            newErrors.sponsor_id = 'Select a sponsor organization';
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -98,7 +112,8 @@ export default function AdminCreateUser() {
                     role_type: formData.role_type,
                     first_name: formData.first_name,
                     last_name: formData.last_name,
-                    sponsor_id: formData.sponsor_id
+                    sponsor_id: formData.sponsor_id,
+                    phone_number: formData.phone_number
                 })
             });
 
@@ -274,6 +289,25 @@ export default function AdminCreateUser() {
                                     </select>
                                     {errors.sponsor_id && <div style={{ color: '#dc3545', fontSize: '14px', marginTop: '5px' }}>{errors.sponsor_id}</div>}
                                 </div>
+                                )}
+                                {formData.role_type === 'sponsor' && (
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#333' }}>
+                                            Phone (optional)
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            name="phone_number"
+                                            value={formData.phone_number}
+                                            onChange={handleChange}
+                                            placeholder="Phone number"
+                                            style={{
+                                                width: '100%', padding: '12px',
+                                                border: '1px solid #ddd',
+                                                borderRadius: '6px', fontSize: '16px'
+                                            }}
+                                        />
+                                    </div>
                                 )}
                             </>
                         )}

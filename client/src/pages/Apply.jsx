@@ -10,7 +10,7 @@ import { AuthContext } from "../components/AuthContext";
 
 export default function Apply() {
 
-  const { token, role } = useContext(AuthContext);
+  const { token, role, authReady } = useContext(AuthContext);
 
   const navigate = useNavigate();
 
@@ -54,6 +54,8 @@ export default function Apply() {
 
   useEffect(() => {
 
+    if (!authReady) return;
+
     if (!token) {
 
       navigate("/");
@@ -62,15 +64,15 @@ export default function Apply() {
 
     }
 
+    const r = String(role ?? "").trim().toLowerCase();
 
+    if (r !== "driver") {
 
-    if (role !== "driver") {
-
-      if (role === "sponsor") {
+      if (r === "sponsor") {
 
         navigate("/sponsor-page");
 
-      } else if (role === "admin") {
+      } else if (r === "admin") {
 
         navigate("/admin-page");
 
@@ -82,13 +84,13 @@ export default function Apply() {
 
     }
 
-  }, [token, role, navigate]);
+  }, [authReady, token, role, navigate]);
 
 
 
   useEffect(() => {
 
-    if (!token || role !== "driver") return;
+    if (!authReady || !token || String(role ?? "").trim().toLowerCase() !== "driver") return;
 
 
 
@@ -144,7 +146,7 @@ export default function Apply() {
 
     };
 
-  }, [token, role]);
+  }, [authReady, token, role]);
 
   const fieldStyle = {
 
@@ -298,7 +300,7 @@ export default function Apply() {
 
 
 
-  if (!token || role !== "driver") {
+  if (!authReady || !token || String(role ?? "").trim().toLowerCase() !== "driver") {
 
     return null;
 
