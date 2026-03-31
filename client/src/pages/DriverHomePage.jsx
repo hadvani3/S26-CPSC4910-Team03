@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom'
 import Nav from '../components/Nav';
 
 
@@ -18,15 +18,17 @@ export default function DriverHomePage(){
       return (
         <>
         <Nav />
-        <div className="container">
+        <div className="admin-dashboard">
             <div style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'rgba(255, 255, 255, 0.16)',
+                border: '1px solid rgba(255, 255, 255, 0.24)',
+                backdropFilter: 'blur(8px)',
                 padding: '40px 30px',
                 borderRadius: '12px',
                 color: 'white',
                 textAlign: 'center',
                 marginBottom: '30px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                boxShadow: '0 10px 24px rgba(0,0,0,0.2)'
             }}>
                 <h1 style={{ 
                     margin: '0 0 10px 0', 
@@ -64,16 +66,18 @@ export default function DriverHomePage(){
             </div>
 
             <div style={{
-                backgroundColor: '#f8f9fa',
+                background: 'rgba(255, 255, 255, 0.16)',
+                border: '1px solid rgba(255, 255, 255, 0.22)',
+                backdropFilter: 'blur(8px)',
                 padding: '25px',
                 borderRadius: '10px',
                 marginBottom: '30px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
             }}>
                 <h2 style={{ 
                     marginTop: '0', 
                     marginBottom: '15px',
-                    color: '#34495e',
+                    color: '#f4f8ff',
                     fontSize: '1.3em'
                 }}>
                      Search Product Catalog
@@ -92,9 +96,11 @@ export default function DriverHomePage(){
                             flex: '1',
                             padding: '12px 15px',
                             fontSize: '16px',
-                            border: '2px solid #ddd',
+                            border: '1px solid rgba(255,255,255,0.35)',
                             borderRadius: '8px',
                             outline: 'none',
+                            background: 'rgba(255,255,255,0.92)',
+                            color: '#1f2937',
                             transition: 'border-color 0.2s'
                         }}
                     />
@@ -103,11 +109,11 @@ export default function DriverHomePage(){
                         style={{
                             padding: '12px 30px',
                             fontSize: '16px',
-                            fontWeight: '600',
-                            border: 'none',
-                            backgroundColor: '#667eea',
-                            color: 'white',
-                            borderRadius: '8px',
+                            fontWeight: '700',
+                            border: '1px solid rgba(15, 23, 42, 0.18)',
+                            backgroundColor: '#f4efe1',
+                            color: '#1f2937',
+                            borderRadius: '10px',
                             cursor: 'pointer',
                             transition: 'background-color 0.2s'
                         }}
@@ -124,14 +130,16 @@ export default function DriverHomePage(){
                 marginBottom: '30px'
             }}>
                 <div style={{
-                    backgroundColor: '#e8f5e9',
+                    background: 'rgba(255, 255, 255, 0.16)',
+                    border: '1px solid rgba(255, 255, 255, 0.22)',
+                    backdropFilter: 'blur(8px)',
                     padding: '25px',
                     borderRadius: '10px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                 }}>
                     <h2 style={{ 
                         marginTop: '0',
-                        color: '#2e7d32',
+                        color: '#f4f8ff',
                         fontSize: '1.3em',
                         marginBottom: '15px'
                     }}>
@@ -144,37 +152,42 @@ export default function DriverHomePage(){
                     }}>
                         <li style={{ 
                             padding: '10px',
-                            backgroundColor: 'white',
+                            background: 'rgba(255, 255, 255, 0.18)',
                             borderRadius: '6px',
                             marginBottom: '8px',
-                            color: '#555'
+                            color: '#f4f8ff',
+                            border: '1px solid rgba(255,255,255,0.18)'
                         }}>Sponsor A</li>
                         <li style={{ 
                             padding: '10px',
-                            backgroundColor: 'white',
+                            background: 'rgba(255, 255, 255, 0.18)',
                             borderRadius: '6px',
                             marginBottom: '8px',
-                            color: '#555'
+                            color: '#f4f8ff',
+                            border: '1px solid rgba(255,255,255,0.18)'
                         }}>Sponsor B</li>
                         <li style={{ 
                             padding: '10px',
-                            backgroundColor: 'white',
+                            background: 'rgba(255, 255, 255, 0.18)',
                             borderRadius: '6px',
                             marginBottom: '8px',
-                            color: '#555'
+                            color: '#f4f8ff',
+                            border: '1px solid rgba(255,255,255,0.18)'
                         }}>Sponsor C</li>
                     </ul>
                 </div>
 
                 <div style={{
-                    backgroundColor: '#fff3e0',
+                    background: 'rgba(255, 255, 255, 0.16)',
+                    border: '1px solid rgba(255, 255, 255, 0.22)',
+                    backdropFilter: 'blur(8px)',
                     padding: '25px',
                     borderRadius: '10px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                 }}>
                     <h2 style={{ 
                         marginTop: '0',
-                        color: '#e65100',
+                        color: '#f4f8ff',
                         fontSize: '1.3em',
                         marginBottom: '15px'
                     }}>
@@ -183,7 +196,7 @@ export default function DriverHomePage(){
                     <ol style={{
                         margin: '0',
                         padding: '0 0 0 25px',
-                        color: '#555'
+                        color: '#f4f8ff'
                     }}>
                         <li style={{ padding: '8px 0' }}>Thomas Jefferson - 1,250 pts</li>
                         <li style={{ padding: '8px 0' }}>George Washington - 1,100 pts</li>
@@ -195,12 +208,14 @@ export default function DriverHomePage(){
             </div>
 
             <div style={{
-                backgroundColor: '#4caf50',
+                background: 'rgba(255, 255, 255, 0.16)',
+                border: '1px solid rgba(255, 255, 255, 0.24)',
+                backdropFilter: 'blur(8px)',
                 padding: '35px',
                 borderRadius: '10px',
                 textAlign: 'center',
                 color: 'white',
-                boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
+                boxShadow: '0 10px 24px rgba(0,0,0,0.2)'
             }}>
                 <h2 style={{ 
                     margin: '0 0 15px 0',
@@ -221,11 +236,11 @@ export default function DriverHomePage(){
                     style={{
                         padding: '16px 40px',
                         fontSize: '18px',
-                        fontWeight: '600',
-                        border: 'none',
-                        backgroundColor: 'white',
-                        color: '#4caf50',
-                        borderRadius: '8px',
+                        fontWeight: '700',
+                        border: '1px solid rgba(15, 23, 42, 0.18)',
+                        backgroundColor: '#f4efe1',
+                        color: '#1f2937',
+                        borderRadius: '10px',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
