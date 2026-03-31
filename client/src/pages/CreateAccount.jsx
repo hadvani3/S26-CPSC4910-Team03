@@ -24,7 +24,7 @@ export default function CreateAccount() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:3000/create_account", {
+      const res = await fetch("https://team03.cpsc4911.com/create_account", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
