@@ -21,7 +21,10 @@ function formatAddress(app) {
 
 export default function AdminApplications() {
     const navigate = useNavigate();
-    const { token, role } = useContext(AuthContext);
+    const { token, role, authReady } = useContext(AuthContext);
+    const roleNorm = String(role ?? '')
+        .trim()
+        .toLowerCase();
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState('');
@@ -40,7 +43,9 @@ export default function AdminApplications() {
     );
 
     useEffect(() => {
-        if (!token || (role !== 'admin' && role !== 'sponsor')) {
+        if (!authReady) return;
+
+        if (!token || (roleNorm !== 'admin' && roleNorm !== 'sponsor')) {
             navigate('/');
             return;
         }
@@ -52,14 +57,21 @@ export default function AdminApplications() {
         fetch('/api/applications/review', {
             headers: { Authorization: `Bearer ${token}` },
         })
-            .then((res) => {
-                if (res.status === 401) throw new Error('Session expired. Please log in again.');
-                if (res.status === 403) throw new Error('You do not have access to this page.');
-                if (!res.ok) throw new Error('Failed to load applications');
-                return res.json();
+            .then(async (res) => {
+                const data = await res.json().catch(() => null);
+                if (!res.ok) {
+                    const msg =
+                        data && typeof data === 'object' && data.error
+                            ? data.error
+                            : res.status === 401
+                              ? 'Session expired. Please log in again.'
+                              : `Failed to load applications (${res.status})`;
+                    throw new Error(msg);
+                }
+                return Array.isArray(data) ? data : [];
             })
             .then((data) => {
-                if (!cancelled) setApplications(Array.isArray(data) ? data : []);
+                if (!cancelled) setApplications(data);
             })
             .catch((err) => {
                 if (!cancelled) setLoadError(err.message || 'Failed to load applications');
@@ -71,7 +83,7 @@ export default function AdminApplications() {
         return () => {
             cancelled = true;
         };
-    }, [token, role, navigate]);
+    }, [authReady, token, roleNorm, navigate]);
 
     const toggleExpand = (id) => {
         setExpandedId((prev) => (prev === id ? null : id));
@@ -137,9 +149,20 @@ export default function AdminApplications() {
         return { background: '#fff3cd', color: '#856404' };
     };
 
-    const dashboardPath = role === 'admin' ? '/admin-page' : '/sponsor-page';
+    const dashboardPath = roleNorm === 'admin' ? '/admin-page' : '/sponsor-page';
 
-    if (!token || (role !== 'admin' && role !== 'sponsor')) {
+    if (!authReady) {
+        return (
+            <>
+                <Nav />
+                <div className="container" style={{ maxWidth: '900px' }}>
+                    <p style={{ color: 'white' }}>Loading…</p>
+                </div>
+            </>
+        );
+    }
+
+    if (!token || (roleNorm !== 'admin' && roleNorm !== 'sponsor')) {
         return null;
     }
 
@@ -187,7 +210,7 @@ export default function AdminApplications() {
                         Driver Applications
                     </h1>
                     <p style={{ margin: 0, opacity: 0.9 }}>
-                        {role === 'admin'
+                        {roleNorm === 'admin'
                             ? 'Review requests across all sponsors'
                             : 'Review requests for your organization only'}
                     </p>

@@ -82,9 +82,9 @@ CREATE TABLE IF NOT EXISTS driver_points (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- sponsor user table
+-- sponsor user table (one row per sponsor login; links users.user_id to sponsors.sponsor_id)
 CREATE TABLE IF NOT EXISTS sponsor_users (
-    user_id INT NOT NULL UNIQUE,
+    user_id INT NOT NULL PRIMARY KEY,
     sponsor_id INT NOT NULL,
     first_name VARCHAR(250) NOT NULL,
     last_name VARCHAR(250) NOT NULL,

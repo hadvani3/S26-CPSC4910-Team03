@@ -779,94 +779,129 @@ app.post('/api/reset-password', async (req, res) => {
 
 // create new user route
 app.post('/api/admin/users', async (req, res) => {
-    const { email, password, role_type, first_name, last_name, sponsor_id } = req.body;
-    
-    // validate fields
+    const { email, password, role_type, first_name, last_name, sponsor_id, phone_number } = req.body;
+
     if (!email || !password || !role_type) {
         return res.status(400).json({ error: 'All fields required' });
     }
-    
+
     if (!['driver', 'sponsor', 'admin'].includes(role_type)) {
         return res.status(400).json({ error: 'Invalid role type' });
     }
-    
+
     if (password.length < 10) {
         return res.status(400).json({ error: 'Password must be at least 10 characters' });
     }
-    
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        
-        const query = 'INSERT INTO users (email, password_hash, role_type, is_active) VALUES (?, ?, ?, 1)';
 
-        db.query(query, [email, hashedPassword, role_type], (err, result) => {
-            if (err) {
-                if (err.code === 'ER_DUP_ENTRY') {
-                    return res.status(400).json({ error: 'Email already exists' });
+    if (role_type === 'sponsor' || role_type === 'driver') {
+        if (!first_name || !String(first_name).trim()) {
+            return res.status(400).json({ error: 'First name is required' });
+        }
+        if (!last_name || !String(last_name).trim()) {
+            return res.status(400).json({ error: 'Last name is required' });
+        }
+    }
+
+    const fn = first_name != null ? String(first_name).trim() : '';
+    const ln = last_name != null ? String(last_name).trim() : '';
+    const phoneVal =
+        phone_number != null && String(phone_number).trim() !== ''
+            ? String(phone_number).trim().slice(0, 25)
+            : null;
+
+    let sponsorSid = null;
+    if (role_type === 'sponsor') {
+        sponsorSid = parseInt(sponsor_id, 10);
+        if (Number.isNaN(sponsorSid) || sponsorSid < 1) {
+            return res.status(400).json({ error: 'Sponsor organization is required for sponsor accounts' });
+        }
+    }
+
+    const finishProfiles = (newUserId) => {
+        if (role_type === 'sponsor') {
+            const sponsorQuery =
+                'INSERT INTO sponsor_users (user_id, sponsor_id, first_name, last_name, phone_number, is_active) VALUES (?, ?, ?, ?, ?, 1)';
+            db.query(sponsorQuery, [newUserId, sponsorSid, fn, ln, phoneVal], (err2) => {
+                if (err2) {
+                    console.error(err2);
+                    return res.status(500).json({
+                        error: 'User created but sponsor_users row could not be inserted',
+                    });
                 }
-                console.error(err);
-                return res.status(500).json({ error: 'Database error' });
-            }
-
-            const newUserId = result.insertId;
-
-            if (role_type === 'sponsor') {
-                const sponsorQuery = 'INSERT INTO sponsor_users (user_id, sponsor_id, first_name, last_name) VALUES (?, ?, ?, ?)';
-                db.query(sponsorQuery, [newUserId, sponsor_id, first_name, last_name], (err2) => {
-                    if (err2) {
-                        console.error(err2);
-                        return res.status(500).json({ error: 'User created but sponsor profile failed' });
-                    }
-                    return res.json({
-                        success: true,
-                        message: 'Sponsor user created successfully',
-                        user_id: newUserId
-                    });
-                });
-            } else if (role_type === 'driver') {
-                const driverQuery = 'INSERT INTO drivers (user_id, first_name, last_name) VALUES (?, ?, ?)';
-                db.query(driverQuery, [newUserId, first_name, last_name], (err2) => {
-                    if (err2) {
-                        console.error(err2);
-                        return res.status(500).json({ error: 'User created but driver profile failed' });
-                    }
-                    return res.json({
-                        success: true,
-                        message: 'Driver user created successfully',
-                        user_id: newUserId
-                    });
-                });
-            } else {
                 return res.json({
                     success: true,
-                    message: 'User created successfully',
-                    user_id: newUserId
+                    message: 'Sponsor user created and linked to organization',
+                    user_id: newUserId,
+                    sponsor_id: sponsorSid,
                 });
-            }
+            });
+            return;
+        }
+        if (role_type === 'driver') {
+            const driverQuery = 'INSERT INTO drivers (user_id, first_name, last_name) VALUES (?, ?, ?)';
+            db.query(driverQuery, [newUserId, fn, ln], (err2) => {
+                if (err2) {
+                    console.error(err2);
+                    return res.status(500).json({ error: 'User created but driver profile failed' });
+                }
+                return res.json({
+                    success: true,
+                    message: 'Driver user created successfully',
+                    user_id: newUserId,
+                });
+            });
+            return;
+        }
+        return res.json({
+            success: true,
+            message: 'User created successfully',
+            user_id: newUserId,
         });
+    };
+
+    const runInsertUser = (hashedPassword) => {
+        db.query(
+            'INSERT INTO users (email, password_hash, role_type, is_active) VALUES (?, ?, ?, 1)',
+            [email, hashedPassword, role_type],
+            (err, result) => {
+                if (err) {
+                    if (err.code === 'ER_DUP_ENTRY') {
+                        return res.status(400).json({ error: 'Email already exists' });
+                    }
+                    console.error(err);
+                    return res.status(500).json({ error: 'Database error' });
+                }
+                finishProfiles(result.insertId);
+            }
+        );
+    };
+
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        if (role_type === 'sponsor') {
+            db.query(
+                'SELECT sponsor_id FROM sponsors WHERE sponsor_id = ? AND is_active = 1 LIMIT 1',
+                [sponsorSid],
+                (chkErr, srows) => {
+                    if (chkErr) {
+                        console.error(chkErr);
+                        return res.status(500).json({ error: 'Database error' });
+                    }
+                    if (!srows.length) {
+                        return res.status(400).json({ error: 'Invalid or inactive sponsor organization' });
+                    }
+                    runInsertUser(hashedPassword);
+                }
+            );
+            return;
+        }
+
+        runInsertUser(hashedPassword);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error' });
     }
-        /*db.query(query, [email, hashedPassword, role_type], (err, result) => {
-            if (err) {
-                if (err.code === 'ER_DUP_ENTRY') {
-                    return res.status(400).json({ error: 'Email already exists' });
-                }
-                console.error(err);
-                return res.status(500).json({ error: 'Database error' });
-            }
-            
-            res.json({ 
-                success: true, 
-                message: 'User created successfully',
-                user_id: result.insertId 
-            });
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Server error' });
-    }*/
 });
 
 // get all users

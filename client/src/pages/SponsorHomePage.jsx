@@ -1,5 +1,4 @@
-import {Link} from 'react-router-dom';
-import React, {useState, useEffect, useContext} from 'react';
+import {useState, useEffect, useContext} from 'react';
 import { useNavigate } from 'react-router-dom';
 import Nav from '../components/Nav';
 import {AuthContext} from "../components/AuthContext.jsx";
@@ -205,15 +204,17 @@ export default function SponsorHomePage() {
     return (
         <>
             <Nav />
-            <div className="container">
+            <div className="admin-dashboard">
                 <div style={{
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    background: 'rgba(255, 255, 255, 0.16)',
+                    border: '1px solid rgba(255, 255, 255, 0.24)',
+                    backdropFilter: 'blur(8px)',
                     padding: '40px 30px',
                     borderRadius: '12px',
                     color: 'white',
                     textAlign: 'center',
                     marginBottom: '30px',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                    boxShadow: '0 10px 24px rgba(0,0,0,0.2)'
                 }}>
                     <h1 style={{ 
                         margin: '0 0 10px 0', 
@@ -238,11 +239,13 @@ export default function SponsorHomePage() {
                     marginBottom: '30px'
                 }}>
                     <div style={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        background: 'rgba(255, 255, 255, 0.16)',
+                        border: '1px solid rgba(255, 255, 255, 0.24)',
+                        backdropFilter: 'blur(8px)',
                         padding: '25px',
                         borderRadius: '10px',
                         color: 'white',
-                        boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
+                        boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
                         <div style={{ fontSize: '3em', fontWeight: 'bold', margin: '0' }}>
                             {stats.totalDrivers}
@@ -252,11 +255,13 @@ export default function SponsorHomePage() {
                         </div>
                     </div>
                     <div style={{
-                        background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                        background: 'rgba(255, 255, 255, 0.16)',
+                        border: '1px solid rgba(255, 255, 255, 0.24)',
+                        backdropFilter: 'blur(8px)',
                         padding: '25px',
                         borderRadius: '10px',
                         color: 'white',
-                        boxShadow: '0 4px 12px rgba(79, 172, 254, 0.3)'
+                        boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
                         <div style={{ fontSize: '3em', fontWeight: 'bold', margin: '0' }}>
                             {stats.activeDrivers}
@@ -267,11 +272,13 @@ export default function SponsorHomePage() {
                     </div>
 
                     <div style={{
-                        background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                        background: 'rgba(255, 255, 255, 0.16)',
+                        border: '1px solid rgba(255, 255, 255, 0.24)',
+                        backdropFilter: 'blur(8px)',
                         padding: '25px',
                         borderRadius: '10px',
                         color: 'white',
-                        boxShadow: '0 4px 12px rgba(67, 233, 123, 0.3)'
+                        boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
                         <div style={{ fontSize: '3em', fontWeight: 'bold', margin: '0' }}>
                             {stats.pendingApplications}
@@ -282,11 +289,13 @@ export default function SponsorHomePage() {
                     </div>
 
                     <div style={{
-                        background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                        background: 'rgba(255, 255, 255, 0.16)',
+                        border: '1px solid rgba(255, 255, 255, 0.24)',
+                        backdropFilter: 'blur(8px)',
                         padding: '25px',
                         borderRadius: '10px',
                         color: 'white',
-                        boxShadow: '0 4px 12px rgba(250, 112, 154, 0.3)'
+                        boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
                         <div style={{ fontSize: '3em', fontWeight: 'bold', margin: '0' }}>
                             {stats.totalPointsAwarded.toLocaleString()}
@@ -304,55 +313,54 @@ export default function SponsorHomePage() {
                     marginBottom: '30px'
                 }}>
                     <div style={{
-                        backgroundColor: '#e3f2fd',
+                        background: 'rgba(255, 255, 255, 0.16)',
+                        border: '1px solid rgba(255, 255, 255, 0.22)',
+                        backdropFilter: 'blur(8px)',
                         padding: '25px',
                         borderRadius: '10px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                        boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
                         <h2 style={{ 
                             marginTop: '0',
-                            color: '#1976d2',
+                            color: '#f4f8ff',
                             fontSize: '1.3em',
                             marginBottom: '20px'
                         }}>
                             Driver Management
                         </h2>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <button style={{
+                            <button className="admin-cream-btn" style={{
                                 padding: '12px 20px',
-                                backgroundColor: '#2196f3',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
+                                color: '#1f2937',
+                                border: '1px solid rgba(15, 23, 42, 0.18)',
+                                borderRadius: '10px',
                                 cursor: 'pointer',
                                 fontSize: '15px',
-                                fontWeight: '500',
+                                fontWeight: '700',
                                 transition: 'background-color 0.2s'
                             }}>
                                 View All Drivers
                             </button>
-                            <button style={{
+                            <button className="admin-cream-btn" style={{
                                 padding: '12px 20px',
-                                backgroundColor: '#4caf50',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
+                                color: '#1f2937',
+                                border: '1px solid rgba(15, 23, 42, 0.18)',
+                                borderRadius: '10px',
                                 cursor: 'pointer',
                                 fontSize: '15px',
-                                fontWeight: '500',
+                                fontWeight: '700',
                                 transition: 'background-color 0.2s'
                             }}>
                                 Award Points
                             </button>
-                            <button style={{
+                            <button className="admin-cream-btn" style={{
                                 padding: '12px 20px',
-                                backgroundColor: '#ff9800',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
+                                color: '#1f2937',
+                                border: '1px solid rgba(15, 23, 42, 0.18)',
+                                borderRadius: '10px',
                                 cursor: 'pointer',
                                 fontSize: '15px',
-                                fontWeight: '500',
+                                fontWeight: '700',
                                 transition: 'background-color 0.2s'
                             }}>
                                 Deduct Points
@@ -361,14 +369,16 @@ export default function SponsorHomePage() {
                     </div>
 
                     <div style={{
-                        backgroundColor: '#e8f5e9',
+                        background: 'rgba(255, 255, 255, 0.16)',
+                        border: '1px solid rgba(255, 255, 255, 0.22)',
+                        backdropFilter: 'blur(8px)',
                         padding: '25px',
                         borderRadius: '10px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                        boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
                         <h2 style={{ 
                             marginTop: '0',
-                            color: '#388e3c',
+                            color: '#f4f8ff',
                             fontSize: '1.3em',
                             marginBottom: '20px'
                         }}>
@@ -377,41 +387,39 @@ export default function SponsorHomePage() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             <button type="button"
                                 onClick={() => navigate('/sponsor/applications')}
+                                className="admin-cream-btn"
                                 style={{
                                 padding: '12px 20px',
-                                backgroundColor: '#4caf50',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
+                                color: '#1f2937',
+                                border: '1px solid rgba(15, 23, 42, 0.18)',
+                                borderRadius: '10px',
                                 cursor: 'pointer',
                                 fontSize: '15px',
-                                fontWeight: '500',
+                                fontWeight: '700',
                                 transition: 'background-color 0.2s'
                             }}>
                                 Review Applications
                             </button>
-                            <button style={{
+                            <button className="admin-cream-btn" style={{
                                 padding: '12px 20px',
-                                backgroundColor: '#66bb6a',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
+                                color: '#1f2937',
+                                border: '1px solid rgba(15, 23, 42, 0.18)',
+                                borderRadius: '10px',
                                 cursor: 'pointer',
                                 fontSize: '15px',
-                                fontWeight: '500',
+                                fontWeight: '700',
                                 transition: 'background-color 0.2s'
                             }}>
                                 Approved Drivers
                             </button>
-                            <button style={{
+                            <button className="admin-cream-btn" style={{
                                 padding: '12px 20px',
-                                backgroundColor: '#81c784',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
+                                color: '#1f2937',
+                                border: '1px solid rgba(15, 23, 42, 0.18)',
+                                borderRadius: '10px',
                                 cursor: 'pointer',
                                 fontSize: '15px',
-                                fontWeight: '500',
+                                fontWeight: '700',
                                 transition: 'background-color 0.2s'
                             }}>
                                 Rejected Applications
@@ -421,15 +429,16 @@ export default function SponsorHomePage() {
                 </div>
 
                 <div style={{
-                    backgroundColor: '#fff',
+                    background: 'rgba(255, 255, 255, 0.16)',
                     padding: '25px',
                     borderRadius: '10px',
-                    border: '1px solid #e0e0e0',
+                    border: '1px solid rgba(255, 255, 255, 0.22)',
+                    backdropFilter: 'blur(8px)',
                     marginBottom: '30px'
                 }}>
                     <h2 style={{ 
                         marginTop: '0',
-                        color: '#34495e',
+                        color: '#f4f8ff',
                         fontSize: '1.3em',
                         marginBottom: '20px'
                     }}>
@@ -442,34 +451,37 @@ export default function SponsorHomePage() {
                     }}>
                         <div style={{
                             padding: '15px',
-                            backgroundColor: '#f8f9fa',
+                            background: 'rgba(255, 255, 255, 0.18)',
                             borderRadius: '6px',
-                            borderLeft: '4px solid #4caf50'
+                            borderLeft: '4px solid #f4efe1',
+                            color: '#f4f8ff'
                         }}>
                             <strong>New application:</strong> Mike Jones
-                            <div style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
+                            <div style={{ fontSize: '0.9em', color: '#dbe6ff', marginTop: '5px' }}>
                                 2 hours ago
                             </div>
                         </div>
                         <div style={{
                             padding: '15px',
-                            backgroundColor: '#f8f9fa',
+                            background: 'rgba(255, 255, 255, 0.18)',
                             borderRadius: '6px',
-                            borderLeft: '4px solid #2196f3'
+                            borderLeft: '4px solid #f4efe1',
+                            color: '#f4f8ff'
                         }}>
                             <strong>Points awarded:</strong> 100 pts to Maxx Crosby
-                            <div style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
+                            <div style={{ fontSize: '0.9em', color: '#dbe6ff', marginTop: '5px' }}>
                                 5 hours ago
                             </div>
                         </div>
                         <div style={{
                             padding: '15px',
-                            backgroundColor: '#f8f9fa',
+                            background: 'rgba(255, 255, 255, 0.18)',
                             borderRadius: '6px',
-                            borderLeft: '4px solid #ff9800'
+                            borderLeft: '4px solid #f4efe1',
+                            color: '#f4f8ff'
                         }}>
                             <strong>Driver approved:</strong> Edward Kenway
-                            <div style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
+                            <div style={{ fontSize: '0.9em', color: '#dbe6ff', marginTop: '5px' }}>
                                 1 day ago
                             </div>
                         </div>
@@ -477,15 +489,17 @@ export default function SponsorHomePage() {
                 </div>
 
                 <div style={{
-                    backgroundColor: '#fff3e0',
+                    background: 'rgba(255, 255, 255, 0.16)',
+                    border: '1px solid rgba(255, 255, 255, 0.22)',
+                    backdropFilter: 'blur(8px)',
                     padding: '25px',
                     borderRadius: '10px',
                     marginBottom: '30px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                    boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                 }}>
                     <h2 style={{ 
                         marginTop: '0',
-                        color: '#e65100',
+                        color: '#f4f8ff',
                         fontSize: '1.3em',
                         marginBottom: '20px'
                     }}>
@@ -496,27 +510,25 @@ export default function SponsorHomePage() {
                         gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
                         gap: '15px'
                     }}>
-                        <button style={{
+                        <button className="admin-cream-btn" style={{
                             padding: '15px 20px',
-                            backgroundColor: '#ff9800',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
+                            color: '#1f2937',
+                            border: '1px solid rgba(15, 23, 42, 0.18)',
+                            borderRadius: '10px',
                             cursor: 'pointer',
                             fontSize: '15px',
-                            fontWeight: '500'
+                            fontWeight: '700'
                         }}>
                             View Analytics
                         </button>
-                        <button style={{
+                        <button className="admin-cream-btn" style={{
                             padding: '15px 20px',
-                            backgroundColor: '#9c27b0',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
+                            color: '#1f2937',
+                            border: '1px solid rgba(15, 23, 42, 0.18)',
+                            borderRadius: '10px',
                             cursor: 'pointer',
                             fontSize: '15px',
-                            fontWeight: '500'
+                            fontWeight: '700'
                         }}>
                             Generate Reports
                         </button>
@@ -524,25 +536,23 @@ export default function SponsorHomePage() {
                             onClick={() => navigate(`/sponsor/${encodeURIComponent(sponsorID)}/catalog`)} 
                             style={{
                             padding: '15px 20px',
-                            backgroundColor: '#00bcd4',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
+                            color: '#1f2937',
+                            border: '1px solid rgba(15, 23, 42, 0.18)',
+                            borderRadius: '10px',
                             cursor: 'pointer',
                             fontSize: '15px',
-                            fontWeight: '500'
+                            fontWeight: '700'
                         }}>
                             Manage Catalog
                         </button>
-                        <button style={{
+                        <button className="admin-cream-btn" style={{
                             padding: '15px 20px',
-                            backgroundColor: '#607d8b',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
+                            color: '#1f2937',
+                            border: '1px solid rgba(15, 23, 42, 0.18)',
+                            borderRadius: '10px',
                             cursor: 'pointer',
                             fontSize: '15px',
-                            fontWeight: '500'
+                            fontWeight: '700'
                         }}>
                             Export Data
                         </button>
@@ -605,19 +615,17 @@ export default function SponsorHomePage() {
                 }}>
                     <button
                         onClick={handleLogout}
+                        className="admin-cream-btn"
                         style={{
                             padding: '12px 30px',
-                            backgroundColor: '#dc3545',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
+                            color: '#1f2937',
+                            border: '1px solid rgba(15, 23, 42, 0.18)',
+                            borderRadius: '10px',
                             cursor: 'pointer',
                             fontSize: '16px',
-                            fontWeight: '600',
+                            fontWeight: '700',
                             transition: 'background-color 0.2s'
                         }}
-                        onMouseOver={(e) => e.target.style.backgroundColor = '#c82333'}
-                        onMouseOut={(e) => e.target.style.backgroundColor = '#dc3545'}
                     >
                         Logout
                     </button>

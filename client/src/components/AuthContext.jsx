@@ -5,15 +5,18 @@ export const AuthContext = createContext();
 export function AuthProvider({ children }) {
     const [token, setToken] = useState(null);
     const [role, setRole] = useState(null);
+    /** False until localStorage has been read once (avoids refresh race on protected routes). */
+    const [authReady, setAuthReady] = useState(false);
 
     useEffect(() => {
         const storedToken = localStorage.getItem("token");
-        const storedRole =localStorage.getItem("role");
+        const storedRole = localStorage.getItem("role");
         if (storedToken) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setToken(storedToken);
             setRole(storedRole);
         }
+        setAuthReady(true);
     }, []);
 
     const login = (newToken, userRole) => {
@@ -31,7 +34,7 @@ export function AuthProvider({ children }) {
     }
     
     return (
-        <AuthContext.Provider value={{ token, role, login, logout }} >
+        <AuthContext.Provider value={{ token, role, authReady, login, logout }} >
             {children}
         </AuthContext.Provider>
     )
