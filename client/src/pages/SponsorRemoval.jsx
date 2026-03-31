@@ -47,7 +47,7 @@ export default function SponsorRemovalPage(){
             </div>
             <div style={{ 
                     paddingTop: '25px', 
-                    borderTop: '2px solid #e0e0e0',
+                    borderTop: '2px solid #f27f33',
                     textAlign: 'center'
                 }}>
                 <button type = "button">Delete Account</button>
