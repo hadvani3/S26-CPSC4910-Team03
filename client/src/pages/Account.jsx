@@ -6,7 +6,8 @@ export default function Account() {
     const { token, role } = useContext(AuthContext);
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
-    const [newUsername, setUsername] = useState("");
+    const [newValue, setValue] = useState("");
+    const [field, setField] = useState("username");
 
     useEffect(() => {
         async function fetchAccount() {
@@ -18,6 +19,7 @@ export default function Account() {
                     },
                     body: JSON.stringify({
                         key: token,
+                        role: role,
                     }),
                 });
 
@@ -43,14 +45,17 @@ export default function Account() {
         e.preventDefault();
 
         try {
-            const res = await fetch("https://team03.cpsc4911.com/SetUsername", {
+            const res = await fetch("https://team03.cpsc4911.com/UpdateUser", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    newUsername: newUsername,
+                    newValue: newValue,
+                    toUpdate: field,
                     key: token,
+                    user_id: data.user_id,
+                    role: role,
                 }),
             });
 
@@ -119,8 +124,8 @@ export default function Account() {
                             type="username"
                             name="username"
                             className="glass-input"
-                            value={newUsername}
-                            onChange={(e) => setUsername(e.target.value)}
+                            value={newValue}
+                            onChange={(e) => setValue(e.target.value)}
                             required
                         />
                     </div>
@@ -129,6 +134,40 @@ export default function Account() {
                     </button>
                 </form>
             </div>
+            <Nav/>
+            {data.username && <h1>Welcome, {data.username}</h1>}
+            <p>
+                {data.first_name && (<>Name: {data.first_name} {data.last_name}<br/></>)}
+                {data.phone && (<>Phone: {data.phone}<br/></>)}
+                Role: {data.role}<br/>
+                Email: {data.email}<br/>
+                Account created: {data.createDate}<br/>
+                Account updated: {data.updatedDate}<br/>
+            </p>
+            <form onSubmit={handleSubmit}>
+                <label>
+                    Update Account:
+                    <input
+                        type="username"
+                        name="username"
+                        value={newValue}
+                        onChange={(e) => setValue(e.target.value)}
+                        required/>
+                </label>
+                <button type="submit">
+                    Update
+                </button>
+            </form>
+            <label>
+                Select field to update:
+                <select value={field} onChange={(e) => setField(e.target.value)}>
+                    <option value="username">Username</option>
+                    <option value="email">Email</option>
+                    {data.first_name && <option value="first_name">First Name</option>}
+                    {data.last_name && <option value="last_name">Last Name</option>}
+                    {data.phone && <option value="phone_number">Phone Number</option>}
+                </select>
+            </label>
         </>
     );
 }
