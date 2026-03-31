@@ -19,6 +19,7 @@ export default function SponsorHomePage() {
     const [sponsorID, setID] = useState(null);
     const [drivers, setDrivers] = useState(null);
     const [pointsChanges, setPointsChanges] = useState({});
+    const [pointsReason, setPointsReason] = useState("");
 
     useEffect(() => {
         setStats({
@@ -39,6 +40,7 @@ export default function SponsorHomePage() {
                     },
                     body: JSON.stringify({
                         key: token,
+                        role: role,
                     }),
                 });
 
@@ -165,6 +167,7 @@ export default function SponsorHomePage() {
         const change = pointsChanges[driver_id];
 
         if (!change) return alert("Enter a value");
+        if (!pointsReason) return alert("Enter a reason");
 
         try {
             const res = await fetch("https://team03.cpsc4911.com/ChangePoints", {
@@ -174,6 +177,7 @@ export default function SponsorHomePage() {
                     driver_id,
                     change,
                     sponsor_id: sponsorID,
+                    reason: pointsReason,
                 }),
             });
 
@@ -585,15 +589,19 @@ export default function SponsorHomePage() {
                             ))}
                             </tbody>
                         </table>
+                        <input
+                            type="text"
+                            value={pointsReason}
+                            onChange={(e) => setPointsReason(e.target.value)}
+                        />
                     </>
                 )}
-
                 <div style={{
-                    paddingTop: '25px', 
+                    paddingTop: '25px',
                     borderTop: '2px solid #e0e0e0',
                     textAlign: 'center'
                 }}>
-                    <button 
+                    <button
                         onClick={handleLogout}
                         style={{
                             padding: '12px 30px',
