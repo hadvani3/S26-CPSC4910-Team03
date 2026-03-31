@@ -520,7 +520,9 @@ export default function SponsorHomePage() {
                         }}>
                             Generate Reports
                         </button>
-                        <button style={{
+                        <button
+                            onClick={() => navigate(`/sponsor/${encodeURIComponent(sponsorID)}/catalog`)} 
+                            style={{
                             padding: '15px 20px',
                             backgroundColor: '#00bcd4',
                             color: 'white',

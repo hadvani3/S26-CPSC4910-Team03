@@ -613,7 +613,6 @@ app.post("/GetSponsor", (req, res) => {
 		}
 	})
 })
-
 app.post('/ChangePoints', (req, res) => {
 	const driverID = req.body.driver_id
 	const change = req.body.change
