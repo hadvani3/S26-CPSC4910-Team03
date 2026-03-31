@@ -455,6 +455,15 @@ button {
   background: #193D6D;
 }
 
+.admin-cream-btn {
+  background-color: #f4efe1 !important;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.admin-cream-btn:hover {
+  background-color: #b6b6b6 !important;
+}
+
 .glass-link {
   color: #e0e0e0;
   text-decoration: none;
