@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-
-import { useLocation, useNavigate } from 'react-router-dom'
+import React, { useState, useEffect, useContext } from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom'
 import Nav from '../components/Nav';
+import { AuthContext } from "../components/AuthContext.jsx";
 
 const SearchResults = () => {
   const [products, setProducts] = useState([]);
@@ -10,6 +10,14 @@ const SearchResults = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
+  const { token, role } = useContext(AuthContext);
+
+  //check the token
+  useEffect(() => {
+    if (!token) {
+      navigate("/"); 
+    }
+  }, [token, navigate]);
 
   //get the queries passed we want to search with
   useEffect(() => {
@@ -41,6 +49,14 @@ const SearchResults = () => {
     navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
   };
 
+  //send to the specific type of product page
+  const getProductPath = (id) => {
+    return role === 'sponsor' 
+      ? `/sponsor_product?q=${id}` 
+      : `/product?q=${id}`;
+  };
+
+
   return (
     <>
     <Nav />
@@ -60,13 +76,13 @@ const SearchResults = () => {
 
         {products.map((item) => (
           <div key={item.listing_id} className="container">
-          <a href= {`/product?q=${item.listing_id}`}>
+          <Link to={getProductPath(item.listing_id)} style={{ textDecoration: 'none' }}>
             <img src={item.image} alt={item.title} style={{ width: '200px'}} />
             <h4 style={{ color: 'white' }}>{item.title}</h4>
             <p style={{
               color: "white"
             }}> <b>Points: {item.price}</b></p>
-            </a>
+            </Link>
           </div>
         ))}
       </div>
