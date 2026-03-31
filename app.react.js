@@ -1,6 +1,5 @@
 require("dotenv").config();
 const express = require('express');
-const bcrpyt = require('bcrypt')
 const mysql = require('mysql2');
 const path = require('path');
 const cors = require('cors')
@@ -195,6 +194,62 @@ app.get('/api/product', async (req, res) => {
 	
 });
 
+//show the catalogue for a given sponsor
+app.get('/api/:sponsor_id/catalog', async (req, res) =>{
+	const { sponsor_id } = req.params;
+	//get the list of ids from the sponsor catalog
+	const query = 'SELECT catalog FROM sponsors WHERE sponsor_id = ?';
+	db.query(query, [sponsor_id], async (err, results) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({ error: "Database Error" });
+		}
+		if (results.length === 0) {
+			return res.status(404).json({ error: "No data found" });
+		}
+		const prodList = String(results[0].catalog);
+
+		let cleanList = prodList.slice(1);
+
+		const requestOptions = {
+        method: 'GET',
+        headers: {
+            'x-api-key': 'eygp51dfkb5pm7buhaxjtm93:str7wniisc', 
+            'Accept': 'application/json'
+        },
+		};
+		const listingIds = cleanList.split(',').map(id => id.trim()).join(',');
+		const url = `https://openapi.etsy.com/v3/application/listings/batch?listing_ids=${listingIds}&includes=Images`;
+        const response = await fetch(url, requestOptions);
+        const data = await response.json();
+
+		const newData = data.results.map(item => ({
+			listing_id: item.listing_id,
+			title: item.title,
+			price: item.price.amount,
+			image: '',
+			ratingAvg: 0
+		}));
+
+		//second api call for the image
+		const imgRes = await fetch(`https://openapi.etsy.com/v3/application/listings/batch?listing_ids=${listingIds}&includes=Images`, requestOptions);
+		const imgData = await imgRes.json();
+
+		//add the image link to final response
+		newData.forEach((item) => {
+            
+        
+			const listingImages = imgData.results.find(img => img.listing_id === item.listing_id);
+
+			//item.ratingAvg = listingDetails.review_average || 0;
+			item.image = listingImages.images[0].url_fullxfull;
+		});
+
+		res.status(200).json(newData);
+	} );
+});
+
+
 //showing the details of you cart
 app.get('/api/cart', async (req, res) =>{
 	const user_id = req.query.user_id;
@@ -326,6 +381,7 @@ app.post("/login", (req, res)=> {
 
 app.post("/AccountInfo", (req, res)=> {
 	const key = req.body.key
+	const role = req.body.role
 	const email = decodeAccessToken(key)
 
 	const sqlSearch = 'SELECT * FROM users WHERE email = ?';
@@ -337,34 +393,160 @@ app.post("/AccountInfo", (req, res)=> {
 		}
 		if (userResults.length === 0) {
 			console.log("User doesn't exist.")
-			return res.status(404).json({error: "Authentication error"});
+			return res.status(404).json({error: "User not found"});
 		} else {
-			const role = userResults[0].role_type
-			const isActive = userResults[0].is_active
-			const createDate = userResults[0].created_at
-			const updatedDate = userResults[0].updated_at
-			const username = userResults[0].username
-			return res.json({role:role, isActive:isActive, createDate:createDate, updatedDate:updatedDate,
-									username:username, email:email})
+			if (role === "admin") {
+				const role = userResults[0].role_type
+				const isActive = userResults[0].is_active
+				const createDate = userResults[0].created_at
+				const updatedDate = userResults[0].updated_at
+				const username = userResults[0].username
+				const user_id = userResults[0].user_id
+				return res.json({
+					role: role, isActive: isActive, createDate: createDate, updatedDate: updatedDate,
+					username: username, email: email, user_id:user_id, first_name:null, last_name:null, phone:null
+				})
+			}
+			if (role === "sponsor") {
+				const role = userResults[0].role_type
+				const isActive = userResults[0].is_active
+				const createDate = userResults[0].created_at
+				const updatedDate = userResults[0].updated_at
+				const username = userResults[0].username
+				const user_id = userResults[0].user_id
+				const sponsorSearch = 'SELECT * FROM sponsor_users WHERE user_id = ?';
+				const sponsor_query = mysql.format(sponsorSearch,[user_id])
+				db.query(sponsor_query, async (err,sponsorResults) => {
+					if (err) {
+						console.error(err);
+						return res.status(500).json({error: "Database Error"});
+					}
+					if (userResults.length === 0) {
+						console.log("User doesn't exist.")
+						return res.status(404).json({error: "User not found"});
+					} else {
+						const first_name = sponsorResults[0].first_name
+						const last_name = sponsorResults[0].last_name
+						const phone = sponsorResults[0].phone_number
+						return res.json({
+							role: role, isActive: isActive, createDate: createDate, updatedDate: updatedDate,
+							username: username, email: email, user_id:user_id, first_name:first_name, last_name:last_name, phone:phone
+						})
+					}
+				});
+			}
+			if (role === "driver") {
+				const role = userResults[0].role_type
+				const isActive = userResults[0].is_active
+				const createDate = userResults[0].created_at
+				const updatedDate = userResults[0].updated_at
+				const username = userResults[0].username
+				const user_id = userResults[0].user_id
+				const driverSearch = 'SELECT * FROM drivers WHERE user_id = ?';
+				const driver_query = mysql.format(driverSearch,[user_id])
+				db.query(driver_query, async (err,driverResults) => {
+					if (err) {
+						console.error(err);
+						return res.status(500).json({error: "Database Error"});
+					}
+					if (userResults.length === 0) {
+						console.log("User doesn't exist.")
+						return res.status(404).json({error: "User not found"});
+					} else {
+						const first_name = driverResults[0].first_name
+						const last_name = driverResults[0].last_name
+						const phone = driverResults[0].phone_number
+						return res.json({
+							role: role, isActive: isActive, createDate: createDate, updatedDate: updatedDate,
+							username: username, email: email, user_id:user_id, first_name:first_name, last_name:last_name, phone:phone
+						})
+					}
+				});
+			}
 		}
 	})
 })
 
-app.post("/SetUsername", (req, res) => {
-	const newUsername = req.body.newUsername
+app.post("/UpdateUser", (req, res) => {
+	const newValue = req.body.newValue
+	const toUpdate = req.body.toUpdate
 	const token = req.body.key
 	const email = decodeAccessToken(token)
+	const user_id = req.body.user_id
+	const role = req.body.role
 
-	const sqlInsert = "update users set username = ? where email = ?"
-	const insert_query = mysql.format(sqlInsert,[newUsername, email])
-	db.query(insert_query, async (err) => {
-		if (err) {
-			console.error(err);
-			return res.status(500).json({error: "Database Error"});
-		} else {
-			return res.ok
+	if (toUpdate === "username") {
+		const sqlInsert = "update users set username = ? where email = ?"
+		const insert_query = mysql.format(sqlInsert, [newValue, email])
+		db.query(insert_query, async (err) => {
+			if (err) {
+				console.error(err);
+				return res.status(500).json({error: "Database Error"});
+			} else {
+				return res.json({success:true})
+			}
+		})
+	}
+	else if (toUpdate === "email") {
+		const sqlInsert = "update users set email = ? where user_id = ?"
+		const insert_query = mysql.format(sqlInsert, [newValue, user_id])
+		db.query(insert_query, async (err) => {
+			if (err) {
+				console.error(err);
+				return res.status(500).json({error: "Database Error"});
+			} else {
+				return res.ok
+			}
+		})
+	}
+	else if (role === "driver") {
+		let sql;
+		switch (toUpdate) {
+			case "first_name":
+				sql = "UPDATE drivers SET first_name = ? WHERE user_id = ?";
+				break;
+			case "last_name":
+				sql = "UPDATE drivers SET last_name = ? WHERE user_id = ?";
+				break;
+			case "phone_number":
+				sql = "UPDATE drivers SET phone_number = ? WHERE user_id = ?";
+				break;
+			default:
+				return res.status(400).json({ error: "Invalid field" });
 		}
-	})
+		const query = mysql.format(sql, [newValue, user_id]);
+		db.query(query, (err) => {
+			if (err) {
+				console.error(err);
+				return res.status(500).json({ error: "Database Error" });
+			}
+			return res.json({ success: true });
+		});
+	}
+	else if (role === "sponsor") {
+		let sql;
+		switch (toUpdate) {
+			case "first_name":
+				sql = "UPDATE sponsor_users SET first_name = ? WHERE user_id = ?";
+				break;
+			case "last_name":
+				sql = "UPDATE sponsor_users SET last_name = ? WHERE user_id = ?";
+				break;
+			case "phone_number":
+				sql = "UPDATE sponsor_users SET phone_number = ? WHERE user_id = ?";
+				break;
+			default:
+				return res.status(400).json({ error: "Invalid field" });
+		}
+		const query = mysql.format(sql, [newValue, user_id]);
+		db.query(query, (err) => {
+			if (err) {
+				console.error(err);
+				return res.status(500).json({ error: "Database Error" });
+			}
+			return res.json({ success: true });
+		});
+	}
 })
 
 app.post("/GetSponsorDrivers", (req, res) => {
@@ -431,11 +613,11 @@ app.post("/GetSponsor", (req, res) => {
 		}
 	})
 })
-
 app.post('/ChangePoints', (req, res) => {
 	const driverID = req.body.driver_id
 	const change = req.body.change
 	const sponsor_id = req.body.sponsor_id
+	const reason = req.body.reason
 
 	const update = "UPDATE drivers SET total_points = total_points + ? WHERE driver_id = ?"
 	const update_query = mysql.format(update, [change, driverID])
@@ -444,8 +626,8 @@ app.post('/ChangePoints', (req, res) => {
 			console.error(err);
 			return res.status(500).json({error: "Database Error"});
 		} else {
-			insert = "INSERT INTO driver_points (driver_id, sponsor_id, points_change) VALUES (?, ?, ?);"
-			insert_query = mysql.format(insert, [driverID, sponsor_id, change])
+			insert = "INSERT INTO driver_points (driver_id, sponsor_id, points_change, reason) VALUES (?, ?, ?, ?);"
+			insert_query = mysql.format(insert, [driverID, sponsor_id, change, reason])
 			db.query(insert_query, async (err) => {
 				if (err) {
 					console.error(err);
@@ -509,6 +691,27 @@ app.post('/api/forgot-password', (req, res) => {
 				res.json(successResponse);
 			}
 		);
+	});
+});
+
+//adding something to the sponsor catalog
+app.post('/api/add-to-catalog', async (req, res) => {
+	const {sponsor_id, listing_id} = req.body;
+	const formattedId = `,${listing_id}`;
+	const query = 'UPDATE sponsors SET catalog = CONCAT (catalog, ?) WHERE sponsor_id = ?';
+	db.query(query, [formattedId, sponsor_id], async (err, results) => {
+		if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ error: "Failed to update catalog" });
+        }
+
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ error: "Sponsor not found" });
+        }
+
+       
+        return res.status(200).json({ success: true, message: "Catalog updated" });
 	});
 });
 
