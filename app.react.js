@@ -567,6 +567,27 @@ app.post('/api/forgot-password', (req, res) => {
 	});
 });
 
+//adding something to the sponsor catalog
+app.post('/api/add-to-catalog', async (req, res) => {
+	const {sponsor_id, listing_id} = req.body;
+	const formattedId = `,${listing_id}`;
+	const query = 'UPDATE sponsors SET catalog = CONCAT (catalog, ?) WHERE sponsor_id = ?';
+	db.query(query, [formattedId, sponsor_id], async (err, results) => {
+		if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ error: "Failed to update catalog" });
+        }
+
+
+        if (results.affectedRows === 0) {
+            return res.status(404).json({ error: "Sponsor not found" });
+        }
+
+       
+        return res.status(200).json({ success: true, message: "Catalog updated" });
+	});
+});
+
 // Reset Password Route
 app.post('/api/reset-password', async (req, res) => {
 	const { token, password, confirmPassword } = req.body;

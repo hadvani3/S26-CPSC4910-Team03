@@ -19,8 +19,10 @@ import Cart from './pages/Cart.jsx';
 import AdminUserManagement from './pages/AdminUserManagement';
 import AdminApplications from './pages/AdminApplications';
 import AdminBulkUpload from './pages/AdminBulkUpload';
-import './App.css';
 import Catalog from './pages/catalog.jsx';
+import SponsorProduct from './pages/SponsorProduct.jsx';
+import './App.css';
+
 
 function App() {
   return (
@@ -48,6 +50,7 @@ function App() {
         <Route path="/sponsor/applications" element={<AdminApplications />} />
         <Route path="/admin/bulk-upload" element={<AdminBulkUpload />} />
         <Route path= "/sponsor/:sponsor_id/catalog" element={<Catalog />} />
+        <Route path= "/sponsor_product" element={<SponsorProduct/>} />
 
       </Routes>
     </BrowserRouter>
