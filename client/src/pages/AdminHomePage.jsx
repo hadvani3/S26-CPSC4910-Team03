@@ -345,7 +345,7 @@ export default function AdminHomePage() {
                         className="admin-dashboard-actions"
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+                            gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
                             gap: '12px',
                         }}
                     >
@@ -365,6 +365,24 @@ export default function AdminHomePage() {
                         >
                             Bulk Upload
                         </button>
+                        <button
+                                type="button"
+                                onClick={() => navigate('/admin/users/create?role=admin')}
+                                className="admin-cream-btn"
+                                style={{
+                                    padding: '12px 14px',
+                                    color: '#1f2937',
+                                    border: '1px solid rgba(15, 23, 42, 0.18)',
+                                    borderRadius: '10px',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    fontWeight: '700',
+                                }}
+                            >
+                                Add New Admin
+                            </button>
+
+
                         <button
                             type="button"
                             className="admin-cream-btn"
