@@ -1412,6 +1412,36 @@ app.post('/api/admin/sponsors', (req, res) => {
     );
 });
 
+// recent activities
+app.get('/api/admin/recent-activity', async(req,res) => {
+	const sql = `
+	SELECT 'login' AS type, username AS label, success, attempted_at AS timestamp
+    FROM login_attempts
+    UNION ALL
+    SELECT 'application' AS type,
+        CONCAT(da.first_name, ' ', da.last_name, ' applied to ', s.company_name) AS label,
+        NULL AS success, da.created_at AS timestamp
+    FROM driver_applications da
+    JOIN sponsors s ON da.sponsor_id = s.sponsor_id
+    UNION ALL
+    SELECT 'points' AS type,
+        CONCAT(d.first_name, ' ', d.last_name, ' (', dp.points_change, ' pts)') AS label,
+        NULL AS success, dp.created_at AS timestamp
+    FROM driver_points dp
+    JOIN drivers d ON dp.driver_id = d.driver_id
+    ORDER BY timestamp DESC
+    LIMIT 10
+`;
+	
+	db.query(sql, (err, results) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({ error: 'Database error' });
+		}
+		res.json(results);
+	});
+});
+
 //Serve React build
 const clientDist = path.join(__dirname, 'client', 'dist');
 const fs = require('fs');
