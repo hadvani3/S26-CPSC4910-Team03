@@ -359,11 +359,13 @@ app.post("/login", (req, res)=> {
 		}
 		if (userResults.length === 0) {
 			console.log("User doesn't exist.")
+			db.query('INSERT INTO login_attempts (username, success) VALUES (?, 0)', [user]);
 			return res.status(404).json({error: "Email or password incorrect."});
 		} else {
 			const hashedPassword = userResults[0].password_hash
 			if (await bcrypt.compare(password, hashedPassword)) {
 				console.log("Login Successful")
+				db.query('INSERT INTO login_attempts (username, success) VALUES (?, 1)', [user]);
 				const userRole = userResults[0].role_type;
 				console.log("Generating accessToken")
 				const token = generateAccessToken({user: user, role: userRole})
@@ -373,6 +375,7 @@ app.post("/login", (req, res)=> {
 				return res.json({accessToken: token, role: userRole})
 			} else {
 				console.log("Password Incorrect")
+				db.query('INSERT INTO login_attempts (username, success) VALUES (?, 0)', [user]);
 				return res.status(404).json({error: "Email or password incorrect."})
 			}
 		}
@@ -1432,15 +1435,68 @@ app.get('/api/admin/recent-activity', async(req,res) => {
     ORDER BY timestamp DESC
     LIMIT 10
 `;
+db.query(sql, (err,results) => {
+	if (err) {
+		console.error(err);
+		return res.status(500).json({error: 'Database error!'});
+	}
+	res.json(results);
+});
+});
+
+// audit log endpoint
+app.get('/api/admin/audit-log',async (req,res) => {
+	const type = req.query.type || 'all';
 	
+	let sql = '';
+
+	if (type == 'login') {
+		sql = `SELECT 'login' AS type, username AS label, success, attempted_at AS timestamp
+		FROM login_attempts
+		ORDER BY timestamp DESC LIMIT 50`;
+	}
+	else if (type === 'application') {
+		sql = `SELECT 'application' AS type,
+		CONCAT(da.first_name, ' ', da.last_name, ' applied to ', s.company_name) AS label,
+		NULL AS success, da.created_at AS timestamp
+		FROM driver_applications da
+		JOIN sponsors s ON da.sponsor_id = s.sponsor_id
+		ORDER BY timestamp DESC LIMIT 50`;
+	}
+	else if (type === 'points') {
+		sql = `SELECT 'points' AS type,
+		CONCAT(d.first_name, ' ', d.last_name, ' (', dp.points_change, ' pts)') AS label,
+		NULL AS success, dp.created_at AS timestamp
+		FROM driver_points dp
+		JOIN drivers d ON dp.driver_id = d.driver_id
+		ORDER BY timestamp DESC LIMIT 50`;
+	}
+	else {
+		sql = `SELECT 'login' AS type, username AS label, success, attempted_at AS timestamp
+		FROM login_attempts
+		UNION ALL
+		SELECT 'application' AS type,
+		CONCAT(da.first_name, ' ', da.last_name, ' applied to ', s.company_name) AS label,
+		NULL AS success, da.created_at AS timestamp
+		FROM driver_applications da
+		JOIN sponsors s ON da.sponsor_id = s.sponsor_id
+		UNION ALL
+		SELECT 'points' AS type,
+		CONCAT(d.first_name, ' ', d.last_name, ' (', dp.points_change, ' pts)') AS label,
+		NULL AS success, dp.created_at AS timestamp
+		FROM driver_points dp
+		JOIN drivers d on dp.driver_id = d.driver_id
+		ORDER BY timestamp DESC LIMIT 50`;
+	}
 	db.query(sql, (err, results) => {
 		if (err) {
 			console.error(err);
-			return res.status(500).json({ error: 'Database error' });
+			return res.status(500).json({error: 'Database error!'});
 		}
 		res.json(results);
-	});
 });
+});
+
 
 //Serve React build
 const clientDist = path.join(__dirname, 'client', 'dist');
