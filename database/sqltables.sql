@@ -103,3 +103,11 @@ CREATE TABLE IF NOT EXISTS reset_password_tokens (
     used BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- login attempts table
+CREATE TABLE IF NOT EXISTS login_attempts (
+    attempt_id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(255) NOT NULL,
+    success BOOLEAN NOT NULL,
+    attempted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

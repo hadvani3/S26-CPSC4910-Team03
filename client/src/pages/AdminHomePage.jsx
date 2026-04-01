@@ -47,6 +47,19 @@ export default function AdminHomePage() {
         });
     }, []);
 
+    const [recentActivity, setRecentActivity] = useState([]);
+
+    useEffect(() => {
+        fetch('/api/admin/recent-activity')
+            .then(res => res.json())
+            .then(data => {
+                setRecentActivity(data);
+            })
+            .catch(err => {
+                console.error('Error fetching recent activity:', err);
+            });
+    }, []);
+
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("role");
@@ -252,8 +265,16 @@ export default function AdminHomePage() {
                                 className="admin-cream-btn"
                                 style={btnBase}
                             >
-                                Add New Sponsor
+                                Add New Sponsor User
                             </button>
+                            <button
+                                type="button"
+                                onClick={() => navigate('/admin/sponsors/create')}
+                                className="admin-cream-btn"
+                                style={btnBase}
+                            >
+                                Create Sponsor Organization
+                                </button>
                             <button
                                 type="button"
                                 onClick={() => navigate('/admin/reports')}
@@ -284,49 +305,31 @@ export default function AdminHomePage() {
                             overflowY: 'auto',
                             flex: 1,
                         }}>
-                            <div style={{
-                                padding: '12px',
-                                background: 'rgba(255, 255, 255, 0.16)',
-                                borderRadius: '6px',
-                                borderLeft: '4px solid #f4efe1',
-                                color: '#f4f8ff'
-                            }}>
-                                <strong>New driver registered:</strong> John Doe
-                                <div style={{ fontSize: '0.85em', color: '#dbe6ff', marginTop: '4px' }}>
-                                    2 hours ago
+                            {recentActivity.length === 0 ? (
+                                <div style={{ padding: '12px', color: '#dbe6ff' }}>
+                                    No recent activity
                                 </div>
-                            </div>
-                            <div style={{
-                                padding: '12px',
-                                background: 'rgba(255, 255, 255, 0.16)',
-                                borderRadius: '6px',
-                                borderLeft: '4px solid #f4efe1',
-                                color: '#f4f8ff'
-                            }}>
-                                <strong>Application approved:</strong> Jane Smith
-                                <div style={{ fontSize: '0.85em', color: '#dbe6ff', marginTop: '4px' }}>
-                                    5 hours ago
-                                </div>
-                            </div>
-                            <div style={{
-                                padding: '12px',
-                                background: 'rgba(255, 255, 255, 0.16)',
-                                borderRadius: '6px',
-                                borderLeft: '4px solid #f4efe1',
-                                color: '#f4f8ff'
-                            }}>
-                                <strong>New sponsor joined:</strong> ABC Transport Co.
-                                <div style={{ fontSize: '0.85em', color: '#dbe6ff', marginTop: '4px' }}>
-                                    1 day ago
-                                </div>
-                            </div>
+                            ) : (
+                                recentActivity.map((item, index) => (
+                                    <div key={index} style={{
+                                        padding: '12px',
+                                        background: 'rgba(255, 255, 255, 0.16)',
+                                        borderRadius: '6px',
+                                        borderLeft: '4px solid #f4efe1',
+                                        color: '#f4f8ff'
+                                    }}>
+                                        <strong>{item.type}:</strong> {item.label}
+                                        <div style={{ fontSize: '0.85em', color: '#dbe6ff', marginTop: '4px' }}>
+                                            {new Date(item.timestamp).toLocaleString()}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>
 
                 <div style={{
-                    background: 'rgba(255, 255, 255, 0.16)',
-                    border: '1px solid rgba(255, 255, 255, 0.22)',
                     backdropFilter: 'blur(8px)',
                     padding: '18px',
                     borderRadius: '10px',
@@ -337,7 +340,7 @@ export default function AdminHomePage() {
                         className="admin-dashboard-actions"
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+                            gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
                             gap: '12px',
                         }}
                     >
@@ -357,6 +360,24 @@ export default function AdminHomePage() {
                         >
                             Bulk Upload
                         </button>
+                        <button
+                                type="button"
+                                onClick={() => navigate('/admin/users/create?role=admin')}
+                                className="admin-cream-btn"
+                                style={{
+                                    padding: '12px 14px',
+                                    color: '#1f2937',
+                                    border: '1px solid rgba(15, 23, 42, 0.18)',
+                                    borderRadius: '10px',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    fontWeight: '700',
+                                }}
+                            >
+                                Add New Admin
+                            </button>
+
+
                         <button
                             type="button"
                             className="admin-cream-btn"
