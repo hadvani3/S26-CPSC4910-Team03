@@ -252,8 +252,16 @@ export default function AdminHomePage() {
                                 className="admin-cream-btn"
                                 style={btnBase}
                             >
-                                Add New Sponsor
+                                Add New Sponsor User
                             </button>
+                            <button
+                                type="button"
+                                onClick={() => navigate('/admin/sponsors/create')}
+                                className="admin-cream-btn"
+                                style={btnBase}
+                            >
+                                Create Sponsor Organization
+                                </button>
                             <button
                                 type="button"
                                 onClick={() => navigate('/admin/reports')}

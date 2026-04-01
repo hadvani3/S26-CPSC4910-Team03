@@ -21,6 +21,7 @@ import AdminApplications from './pages/AdminApplications';
 import AdminBulkUpload from './pages/AdminBulkUpload';
 import Catalog from './pages/catalog.jsx';
 import SponsorProduct from './pages/SponsorProduct.jsx';
+import AdminCreateSponsor from './pages/AdminCreateSponsor';
 import './App.css';
 
 
@@ -51,6 +52,7 @@ function App() {
         <Route path="/admin/bulk-upload" element={<AdminBulkUpload />} />
         <Route path= "/sponsor/:sponsor_id/catalog" element={<Catalog />} />
         <Route path= "/sponsor_product" element={<SponsorProduct/>} />
+        <Route path= "/admin/sponsors/create" element={<AdminCreateSponsor />} />
 
       </Routes>
     </BrowserRouter>

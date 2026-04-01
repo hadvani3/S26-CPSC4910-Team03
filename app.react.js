@@ -1388,6 +1388,30 @@ app.patch('/api/applications/:id/review', (req, res) => {
 	);
 });
 
+// add sponsor organization
+app.post('/api/admin/sponsors', (req, res) => {
+    const { company_name, point_value_usd } = req.body;
+
+    if (!company_name) {
+        return res.status(400).json({ error: 'Company name required' });
+    }
+
+    db.query(
+        'INSERT INTO sponsors (company_name, point_value_usd, is_active) VALUES (?, ?, 1)',
+        [company_name, point_value_usd || 0.0100],
+        (err, result) => {
+            if (err) {
+                if (err.code === 'ER_DUP_ENTRY') {
+                    return res.status(400).json({ error: 'Organization already exists' });
+                }
+                console.error(err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            res.json({ success: true, sponsor_id: result.insertId });
+        }
+    );
+});
+
 //Serve React build
 const clientDist = path.join(__dirname, 'client', 'dist');
 const fs = require('fs');
