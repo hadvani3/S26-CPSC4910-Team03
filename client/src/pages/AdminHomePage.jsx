@@ -318,7 +318,15 @@ export default function AdminHomePage() {
                                         borderLeft: '4px solid #f4efe1',
                                         color: '#f4f8ff'
                                     }}>
-                                        <strong>{item.type}:</strong> {item.label}
+                                        <strong>{item.type === 'login' ? 'Login attempt' : item.type === 'application' ? 'Application' : 'Points change'}:</strong> {item.label}
+                                        {item.type === 'login' && (
+                                            <span style={{marginLeft: '8px', color: item.success ? '#86efac' : '#fca5a5'}}>
+                                                {item.success ? 'Success' : 'Failed'}
+                                                </span>
+
+                                        )
+
+                                        }
                                         <div style={{ fontSize: '0.85em', color: '#dbe6ff', marginTop: '4px' }}>
                                             {new Date(item.timestamp).toLocaleString()}
                                         </div>
@@ -380,6 +388,7 @@ export default function AdminHomePage() {
 
                         <button
                             type="button"
+                            onClick={() => navigate('/admin/audit-log')}
                             className="admin-cream-btn"
                             style={{
                                 padding: '12px 14px',
