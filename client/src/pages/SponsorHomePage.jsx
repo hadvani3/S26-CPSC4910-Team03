@@ -520,7 +520,23 @@ export default function SponsorHomePage() {
                             fontWeight: '700'
                         }}>
                             View Analytics
-                        </button>
+                            </button>   
+                            <button
+                            type = "button"
+                            onClick ={() => navigate(`/sponsor/bulk-upload`)}
+                            className = "admin-cream-btn"
+                            style ={{
+                                padding: '15px 20px',
+                                color: '#1f2937',
+                                border: '1px solid rgba(15, 23, 42, 0.18)',
+                                borderRadius: '10px',
+                                cursor: 'pointer',
+                                fontSize: '15px',
+                                fontWeight: '700'
+                            }}  
+                            >
+                            Bulk Upload
+                            </button>
                         <button className="admin-cream-btn" style={{
                             padding: '15px 20px',
                             color: '#1f2937',

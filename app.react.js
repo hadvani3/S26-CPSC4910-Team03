@@ -1004,7 +1004,7 @@ app.get('/api/admin/stats', (req, res) => {
         SELECT 
             (SELECT COUNT(*) FROM users) as totalUsers,
             (SELECT COUNT(*) FROM users WHERE role_type = 'driver') as totalDrivers,
-            (SELECT COUNT(*) FROM users WHERE role_type = 'sponsor') as totalSponsors,
+            (SELECT COUNT(*) FROM sponsors WHERE is_active = 1) as totalSponsors,
             (SELECT COUNT(*) FROM driver_applications WHERE application_status = 'PENDING') as pendingApplications
     `;
     
@@ -1496,6 +1496,425 @@ app.get('/api/admin/audit-log',async (req,res) => {
 		res.json(results);
 });
 });
+
+// bulk upload endpoint
+app.post('/api/admin/bulk-upload', async (req, res) => {
+    const { rows } = req.body;
+    if (!rows || !Array.isArray(rows)) {
+        return res.status(400).json({ error: 'No rows provided' });
+    }
+
+    let created = 0;
+    const errors = [];
+
+    // Pass 1 - process O rows first to build org map
+    const orgMap = {};
+    for (const { line, content } of rows) {
+        const parts = content.split('|');
+        if (parts[0].toUpperCase() !== 'O') continue;
+
+        const company_name = parts[1]?.trim();
+        if (!company_name) {
+            errors.push({ line, content, reason: 'Organization name is required' });
+            continue;
+        }
+
+        // check if org already exists
+        const existing = await new Promise((resolve) => {
+            db.query('SELECT sponsor_id FROM sponsors WHERE company_name = ?', [company_name], (err, results) => {
+                resolve(err ? null : results);
+            });
+        });
+
+        if (existing && existing.length > 0) {
+            orgMap[company_name] = existing[0].sponsor_id;
+            continue;
+        }
+
+        const result = await new Promise((resolve) => {
+            db.query(
+                'INSERT INTO sponsors (company_name, point_value_usd, is_active) VALUES (?, 0.01, 1)',
+                [company_name],
+                (err, result) => resolve(err ? null : result)
+            );
+        });
+
+        if (!result) {
+            errors.push({ line, content, reason: 'Failed to create organization' });
+            continue;
+        }
+
+        orgMap[company_name] = result.insertId;
+        created++;
+    }
+
+    // Pass 2 - process D and S rows
+    for (const { line, content } of rows) {
+        const parts = content.split('|');
+        const type = parts[0].toUpperCase();
+
+        if (type === 'O') continue;
+
+        if (type === 'D') {
+            const org = parts[1]?.trim();
+            const first_name = parts[2]?.trim();
+            const last_name = parts[3]?.trim();
+            const email = parts[4]?.trim();
+            const points = parts[5]?.trim();
+            const reason = parts[6]?.trim();
+
+            if (!org || !first_name || !last_name || !email) {
+                errors.push({ line, content, reason: 'Missing required fields (org, first name, last name, email)' });
+                continue;
+            }
+
+            const sponsor_id = orgMap[org];
+            if (!sponsor_id) {
+                errors.push({ line, content, reason: `Organization "${org}" not found` });
+                continue;
+            }
+
+            if (points && !reason) {
+                errors.push({ line, content, reason: 'Points provided but reason is missing' });
+                continue;
+            }
+
+            // check if user already exists
+            const existingUser = await new Promise((resolve) => {
+                db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, results) => {
+                    resolve(err ? null : results);
+                });
+            });
+
+            let user_id;
+            if (existingUser && existingUser.length > 0) {
+                user_id = existingUser[0].user_id;
+            } else {
+                const tempPassword = await bcrypt.hash('ChangeMe123!', 10);
+                const newUser = await new Promise((resolve) => {
+                    db.query(
+                        'INSERT INTO users (email, password_hash, role_type, is_active) VALUES (?, ?, "driver", 1)',
+                        [email, tempPassword],
+                        (err, result) => resolve(err ? null : result)
+                    );
+                });
+
+                if (!newUser) {
+                    errors.push({ line, content, reason: 'Failed to create user account' });
+                    continue;
+                }
+
+                user_id = newUser.insertId;
+
+                await new Promise((resolve) => {
+                    db.query(
+                        'INSERT INTO drivers (user_id, first_name, last_name) VALUES (?, ?, ?)',
+                        [user_id, first_name, last_name],
+                        (err) => resolve(!err)
+                    );
+                });
+
+                created++;
+            }
+
+
+            // add points if provided
+            if (points && reason) {
+                const driver = await new Promise((resolve) => {
+                    db.query('SELECT driver_id FROM drivers WHERE user_id = ?', [user_id], (err, results) => {
+                        resolve(err ? null : results);
+                    });
+                });
+
+                if (driver && driver.length > 0) {
+                    const driver_id = driver[0].driver_id;
+                    await new Promise((resolve) => {
+                        db.query(
+                            'UPDATE drivers SET total_points = total_points + ? WHERE driver_id = ?',
+                            [parseInt(points), driver_id],
+                            (err) => resolve(!err)
+                        );
+                    });
+                    await new Promise((resolve) => {
+                        db.query(
+                            'INSERT INTO driver_points (driver_id, sponsor_id, points_change, reason) VALUES (?, ?, ?, ?)',
+                            [driver_id, sponsor_id, parseInt(points), reason],
+                            (err) => resolve(!err)
+                        );
+                    });
+                }
+            }
+
+        } else if (type === 'S') {
+            const org = parts[1]?.trim();
+            const first_name = parts[2]?.trim();
+            const last_name = parts[3]?.trim();
+            const email = parts[4]?.trim();
+
+            if (!org || !first_name || !last_name || !email) {
+                errors.push({ line, content, reason: 'Missing required fields (org, first name, last name, email)' });
+                continue;
+            }
+
+            const sponsor_id = orgMap[org];
+            if (!sponsor_id) {
+                errors.push({ line, content, reason: `Organization "${org}" not found` });
+                continue;
+            }
+
+            const existingUser = await new Promise((resolve) => {
+                db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, results) => {
+                    resolve(err ? null : results);
+                });
+            });
+
+            if (existingUser && existingUser.length > 0) {
+                errors.push({ line, content, reason: 'Email already exists' });
+                continue;
+            }
+
+            const tempPassword = await bcrypt.hash('ChangeMe123!', 10);
+            const newUser = await new Promise((resolve) => {
+                db.query(
+                    'INSERT INTO users (email, password_hash, role_type, is_active) VALUES (?, ?, "sponsor", 1)',
+                    [email, tempPassword],
+                    (err, result) => resolve(err ? null : result)
+                );
+            });
+
+            if (!newUser) {
+                errors.push({ line, content, reason: 'Failed to create user account' });
+                continue;
+            }
+
+            await new Promise((resolve) => {
+                db.query(
+                    'INSERT INTO sponsor_users (user_id, sponsor_id, first_name, last_name, is_active) VALUES (?, ?, ?, ?, 1)',
+                    [newUser.insertId, sponsor_id, first_name, last_name],
+                    (err) => resolve(!err)
+                );
+            });
+
+            created++;
+        } else {
+            errors.push({ line, content, reason: `Unknown row type "${parts[0]}"` });
+        }
+    }
+
+    res.json({ created, updated: 0, errors });
+});
+
+// sponsor bulk upload enpoint
+app.post('/api/sponsor/bulk-upload', async (req,res) => {
+	const  {rows} = req.body;
+	const token = getBearerToken(req);
+
+	if (!token) return res.status(401).json({error: 'Authorization is required!'});
+	if (!rows || !Array.isArray(rows)) return res.status(400).json({error: 'No rows provided or invalid format!'});
+
+	const email = decodeAccessToken(token);
+
+	// get sponsor id from the token
+	const sponsorUser = await new Promise((resolve ) => {
+		db.query(
+			`SELECT sa.sponsor_id FROM users s
+			JOIN sponsor_users sa on s.user_id = sa.user_id
+			WHERE  s.email = ? LIMIT 1`,
+			[email],
+			(err, results) => resolve(err ? null : results)
+
+		);
+	});
+
+	if (!sponsorUser || sponsorUser.length === 0) {
+		return res.status(403).json({ error: 'Sponsor organization could not be found.' });
+	}
+
+	const sponsor_id = sponsorUser[0].sponsor_id;
+	let created = 0;
+	const errors = [];
+
+	for (const { line, content } of rows) {
+		const parts = content.split('|');
+		const type = parts[0].toUpperCase();
+
+		// ensure 0 type not allowed
+		if (type === "O") {
+			errors.push({ line, content, reason: 'Organization rows are not allowed in sponsor uploads' });
+			continue;
+		}
+
+		if (type === 'D') {
+			const first_name = parts[1]?.trim();
+			const last_name = parts[2] ?.trim();
+			const email = parts[3]?.trim();
+			const points = parts[4]?.trim();
+			const reason = parts[5]?.trim();
+
+			// check for missing fields
+			if (!first_name || !last_name || !email) {
+				errors.push({ line, content, reason: 'Missing required fields!' });
+				continue;
+			}
+
+			// check for missing reason
+			if (points && !reason) {
+				errors.push({ line, content, reason: 'Missing reason field!' });
+				continue;
+			}
+
+			// make sure that user exists
+			const existingUser = await new Promise((resolve) => {
+				db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, results) => {
+					resolve(err ? null : results);
+
+				});
+			});
+			let user_id;
+            if (existingUser && existingUser.length > 0) {
+                user_id = existingUser[0].user_id;
+
+                // update points if provided
+                if (points && reason) {
+                    const driver = await new Promise((resolve) => {
+                        db.query('SELECT driver_id FROM drivers WHERE user_id = ?', [user_id], (err, results) => {
+                            resolve(err ? null : results);
+                        });
+                    });
+
+                    if (driver && driver.length > 0) {
+                        const driver_id = driver[0].driver_id;
+                        await new Promise((resolve) => {
+                            db.query(
+                                'UPDATE drivers SET total_points = total_points + ? WHERE driver_id = ?',
+                                [parseInt(points), driver_id],
+                                (err) => resolve(!err)
+                            );
+                        });
+                        await new Promise((resolve) => {
+                            db.query(
+                                'INSERT INTO driver_points (driver_id, sponsor_id, points_change, reason) VALUES (?, ?, ?, ?)',
+                                [driver_id, sponsor_id, parseInt(points), reason],
+                                (err) => resolve(!err)
+                            );
+                        });
+                    }
+                }
+            } 
+			else {
+                const tempPassword = await bcrypt.hash('ChangeMe123!', 10);
+                const newUser = await new Promise((resolve) => {
+                    db.query(
+                        'INSERT INTO users (email, password_hash, role_type, is_active) VALUES (?, ?, "driver", 1)',
+                        [email, tempPassword],
+                        (err, result) => resolve(err ? null : result)
+                    );
+                });
+
+                if (!newUser) {
+                    errors.push({ line, content, reason: 'Failed to create user account' });
+                    continue;
+                }
+
+                user_id = newUser.insertId;
+
+                await new Promise((resolve) => {
+                    db.query(
+                        'INSERT INTO drivers (user_id, first_name, last_name) VALUES (?, ?, ?)',
+                        [user_id, first_name, last_name],
+                        (err) => resolve(!err)
+                    );
+                });
+
+                created++;
+
+                if (points && reason) {
+                    const driver = await new Promise((resolve) => {
+                        db.query('SELECT driver_id FROM drivers WHERE user_id = ?', [user_id], (err, results) => {
+                            resolve(err ? null : results);
+                        });
+                    });
+
+                    if (driver && driver.length > 0) {
+                        const driver_id = driver[0].driver_id;
+                        await new Promise((resolve) => {
+                            db.query(
+                                'UPDATE drivers SET total_points = total_points + ? WHERE driver_id = ?',
+                                [parseInt(points), driver_id],
+                                (err) => resolve(!err)
+                            );
+                        });
+                        await new Promise((resolve) => {
+                            db.query(
+                                'INSERT INTO driver_points (driver_id, sponsor_id, points_change, reason) VALUES (?, ?, ?, ?)',
+                                [driver_id, sponsor_id, parseInt(points), reason],
+                                (err) => resolve(!err)
+                            );
+                        });
+                    }
+                }
+            }
+
+        } 
+		else if (type === 'S') {
+            const first_name = parts[1]?.trim();
+            const last_name = parts[2]?.trim();
+            const email = parts[3]?.trim();
+            const points = parts[4]?.trim();
+
+            if (!first_name || !last_name || !email) {
+                errors.push({ line, content, reason: 'Missing required fields (first name, last name, email)' });
+                continue;
+            }
+
+            //  points not allowed for sponsor users, but still create user if they don't exist
+            if (points) {
+                errors.push({ line, content, reason: 'Points cannot be assigned to sponsor users' });
+            
+            }
+
+            const existingUser = await new Promise((resolve) => {
+                db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, results) => {
+                    resolve(err ? null : results);
+                });
+            });
+
+            if (existingUser && existingUser.length > 0) continue;
+
+            const tempPassword = await bcrypt.hash('ChangeMe123!', 10);
+            const newUser = await new Promise((resolve) => {
+                db.query(
+                    'INSERT INTO users (email, password_hash, role_type, is_active) VALUES (?, ?, "sponsor", 1)',
+                    [email, tempPassword],
+                    (err, result) => resolve(err ? null : result)
+                );
+            });
+
+            if (!newUser) {
+                errors.push({ line, content, reason: 'Failed to create user account' });
+                continue;
+            }
+
+            await new Promise((resolve) => {
+                db.query(
+                    'INSERT INTO sponsor_users (user_id, sponsor_id, first_name, last_name, is_active) VALUES (?, ?, ?, ?, 1)',
+                    [newUser.insertId, sponsor_id, first_name, last_name],
+                    (err) => resolve(!err)
+                );
+            });
+
+            created++;
+
+        } 
+		else {
+            errors.push({ line, content, reason: `Unknown row type "${parts[0]}"` });
+        }
+    }
+
+    res.json({ created, updated: 0, errors });
+});
+
+
 
 
 //Serve React build
