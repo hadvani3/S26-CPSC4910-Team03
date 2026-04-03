@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, Link } from 'react-router-dom'
 import Nav from '../components/Nav';
 import {AuthContext} from "../components/AuthContext.jsx";
 
@@ -9,8 +9,17 @@ const Product = () => {
 	const location = useLocation();
 	const [loading, setLoading] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
-  const { token, role } = useContext(AuthContext);
+  const { token} = useContext(AuthContext);
 	const [product, setProduct] = useState([]);
+  const [quantity, setQuantity] = useState(1);
+
+  //check the token
+    useEffect(() => {
+      if (!token) {
+        navigate("/"); 
+      }
+    }, [token, navigate]);
+
 
 	//get the queries passed we want to retrieve produc with
   useEffect(() => {
@@ -42,7 +51,33 @@ const Product = () => {
     navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
   };
    
+  const handleAddToCart = async () => {
+        if (!token) {
+            alert("Identity not verified. Please log in again.");
+            return;
+        }
 
+        try {
+            const res = await fetch("/api/addToCart", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    key: token,
+                    product_id: product[0]?.listing_id,
+                    count: quantity
+                }),
+            });
+
+            if (res.ok) {
+                alert("Successfully added to your cart!");
+            } else {
+                alert("Failed to add product.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Server error while adding product.");
+        }
+    };
 
 return (
     <>
@@ -82,11 +117,11 @@ return (
             <h2>{product[0]?.title}</h2>
             <p style={{ font: 'ariel', fontSize: '30px', fontWeight: 'bold', color: '#059C0E'}}>Points: {product[0]?.price}</p>
             <label for="quantity" style={{ font: 'ariel', fontSize: '20px', color: 'white'}}>Quantity: </label>
-            <input type="number" id="quantity" name="quantity" step="1" min="1"/>
+            <input type="number" id="quantity" name="quantity" step="1" min="1" onChange={(e) => setQuantity(parseInt(e.target.value))}/>
             <br/>
             <br/>
             <button 
-                        type="submit"
+                        onClick={handleAddToCart}
                         style={{
                             padding: '12px 30px',
                             fontSize: '16px',
