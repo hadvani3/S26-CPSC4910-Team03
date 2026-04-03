@@ -259,10 +259,10 @@ app.post('/api/cart', async (req, res) =>{
 	db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, userResults) => {
 		if (err) {
             console.error("Database Error:", err);
-            return res.status(500).json({ error: "Failed to update catalog" });
+            return res.status(500).json({ error: "Database Error" });
         }
         if (userResults.length === 0) {
-            return res.status(404).json({ error: "cart not found not found" });
+            return res.status(404).json({ error: "user_id not found not found" });
         }
 
 		const user_id = userResults[0].user_id;
@@ -312,13 +312,12 @@ app.post('/api/cart', async (req, res) =>{
                     return uniqueProducts.find(p => p.listing_id == id);
                 }).filter(p => p !== undefined); 
 
-                console.log("Cart with duplicates:", finalCart);
                 return res.status(200).json(finalCart);
 		});
 	});
 });
 
-app.post('/api/addToCart', (req, res) => {
+app.post('/api/addToCart', async (req, res) => {
 	const product = req.body.product_id;
 	const count = req.body.count;
 	const token = req.body.key
@@ -1969,7 +1968,48 @@ app.post('/api/sponsor/bulk-upload', async (req,res) => {
     res.json({ created, updated: 0, errors });
 });
 
+//purchase your cart as a driver
+app.post('/api/purchase', async (req, res) => {
+	const token = req.body.key
+	const total = req.body.total
+	const email = decodeAccessToken(token)
 
+	//get the user_id from email
+	db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, userResults) => {
+		if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ error: "Error with database" });
+        }
+        if (userResults.length === 0) {
+            return res.status(404).json({ error: "user not found not found" });
+        }
+
+		const user_id = userResults[0].user_id;
+		//get the info we need from the driver table
+		db.query('SELECT * FROM drivers WHERE user_id = ?', [user_id], (err, driverResults) => {
+
+			const points = driverResults[0].total_points;
+			const cart = driverResults[0].cart;
+
+			//check if the purchase can be made
+			if (points - total < 0){
+				return res.status(403).json({ error: "You do not have enough points"});
+
+			}else{
+				//if the points are enough make a new purchase in table
+				db.query('INSERT INTO purchases (user_id, cost, cart) VALUES (?, ?, ?)', [user_id, total, cart], (err, purchaseResults) => {
+					
+					//then we need to update the driver table
+					db.query('UPDATE drivers SET cart = "", total_points = ? WHERE user_id = ?', [points - total, user_id], (err, finalResults) => {
+
+						return res.status(200).json({ success: true, message: "Purchase Completed" });
+					})
+				});
+			}
+		});
+
+	});
+})
 
 
 //Serve React build

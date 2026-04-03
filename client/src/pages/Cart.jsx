@@ -45,6 +45,33 @@ const Cart = () =>{
     }
   };
   
+  const handlePurchase = async () => {
+        if (!token) {
+            alert("Identity not verified. Please log in again.");
+            return;
+        }
+
+        try {
+            const res = await fetch("/api/purchase", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    key: token,
+                    total: pointTotal
+                }),
+            });
+
+            if (res.ok) {
+                alert("Purchased!");
+            } else {
+                alert("You do not have enough points");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Server error while adding product.");
+        }
+    };
+
   const pointTotal = products.reduce((sum, item) => sum + Number(item.price || 0), 0);
    return (
     <>
@@ -67,7 +94,7 @@ const Cart = () =>{
         ))}
         <p style={{ font: 'ariel', fontSize: '30px', fontWeight: 'bold', color: '#059C0E', textAlign: 'center'}}>Total: {pointTotal}</p>
         <button 
-                        type="submit"
+                        onClick = {handlePurchase}
                         style={{
                             alignItem: 'center',
                             justifyContent: 'center',
