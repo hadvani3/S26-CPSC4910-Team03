@@ -16,7 +16,16 @@ import Apply from './pages/Apply';
 import Account from "./pages/Account.jsx";
 import Product from './pages/Product.jsx';
 import Cart from './pages/Cart.jsx';
+import AdminUserManagement from './pages/AdminUserManagement';
+import AdminApplications from './pages/AdminApplications';
+import AdminBulkUpload from './pages/AdminBulkUpload';
+import Catalog from './pages/catalog.jsx';
+import SponsorProduct from './pages/SponsorProduct.jsx';
+import AdminCreateSponsor from './pages/AdminCreateSponsor';
+import AdminAuditLog from './pages/AdminAuditLog.jsx';
+import SponsorBulkUpload from './pages/SponsorBulkUpload.jsx';
 import './App.css';
+
 
 function App() {
   return (
@@ -39,6 +48,16 @@ function App() {
         <Route path="/account" element={<Account />} />
         <Route path="/product" element={<Product />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path="/admin/users" element={<AdminUserManagement />} />
+        <Route path="/admin/applications" element={<AdminApplications />} />
+        <Route path="/sponsor/applications" element={<AdminApplications />} />
+        <Route path="/admin/bulk-upload" element={<AdminBulkUpload />} />
+        <Route path= "/sponsor/:sponsor_id/catalog" element={<Catalog />} />
+        <Route path= "/sponsor_product" element={<SponsorProduct/>} />
+        <Route path= "/admin/sponsors/create" element={<AdminCreateSponsor />} />
+        <Route path= "/admin/audit-log" element={<AdminAuditLog />} />
+        <Route path= "/sponsor/bulk-upload" element={<SponsorBulkUpload />} />
+
       </Routes>
     </BrowserRouter>
   );

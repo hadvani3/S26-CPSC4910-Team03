@@ -1,16 +1,47 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom'
 import Nav from '../components/Nav';
-import {AuthContext} from "../components/AuthContext.jsx";
+import { AuthContext } from "../components/AuthContext.jsx";
 
-
-const Product = () => {
+const SponsorProduct = () => {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const [loading, setLoading] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
-  const { token, role } = useContext(AuthContext);
 	const [product, setProduct] = useState([]);
+    const { token, role } = useContext(AuthContext);
+    const [sponsorID, setSponsorID] = useState(null);
+    const [isVerified, setIsVerified] = useState(false);
+
+    //verify the auth token
+    useEffect(() => {
+        async function verifyUser() {
+            if (!token) {
+                navigate("/"); 
+                return;
+            }
+
+            try {
+                const res = await fetch("https://team03.cpsc4911.com/GetSponsor", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ key: token }),
+                });
+
+                const result = await res.json();
+
+                if (res.ok) {
+                    setSponsorID(result.sponsor_id);
+                    setIsVerified(true);
+                } else {
+                    navigate("/");
+                }
+            } catch (err) {
+                console.error("Verification error:", err);
+            }
+        }
+        verifyUser();
+    }, [token, navigate]);
 
 	//get the queries passed we want to retrieve produc with
   useEffect(() => {
@@ -21,6 +52,33 @@ const Product = () => {
       fetchResults(product_id);
     }
   }, [location.search]);
+
+  const handleAddToCatalog = async () => {
+        if (!isVerified || !sponsorID) {
+            alert("Identity not verified. Please log in again.");
+            return;
+        }
+
+        try {
+            const res = await fetch("/api/add-to-catalog", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    sponsor_id: sponsorID,
+                    listing_id: product[0]?.listing_id
+                }),
+            });
+
+            if (res.ok) {
+                alert("Successfully added to your catalog!");
+            } else {
+                alert("Failed to add product.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Server error while adding product.");
+        }
+    };
 
 	//recieve the data from the backend with these queries
   const fetchResults = async (query) => {
@@ -81,12 +139,11 @@ return (
           <div className="content-wrapper">
             <h2>{product[0]?.title}</h2>
             <p style={{ font: 'ariel', fontSize: '30px', fontWeight: 'bold', color: '#059C0E'}}>Points: {product[0]?.price}</p>
-            <label for="quantity" style={{ font: 'ariel', fontSize: '20px', color: 'white'}}>Quantity: </label>
-            <input type="number" id="quantity" name="quantity" step="1" min="1"/>
             <br/>
             <br/>
             <button 
-                        type="submit"
+                        onClick={handleAddToCatalog}
+                        disabled={!isVerified}
                         style={{
                             padding: '12px 30px',
                             fontSize: '16px',
@@ -99,7 +156,7 @@ return (
                             transition: 'background-color 0.2s'
                         }}
                     >
-                        Add to Cart
+                        Add to Catalog
              </button>
             <p style={{font: 'ariel', color: 'white'}}> {product[0]?.description}</p>
             <p style={{font: 'ariel', color: 'white'}}>Materials: {product[0]?.materials[0]}</p>
@@ -110,4 +167,4 @@ return (
   );
 };
 
-export default Product;
+export default SponsorProduct;

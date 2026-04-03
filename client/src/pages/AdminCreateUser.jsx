@@ -9,10 +9,16 @@ export default function AdminCreateUser() {
         email: '',
         password: '',
         confirmPassword: '',
-        role_type: searchParams.get('role') || 'driver'
+        role_type: searchParams.get('role') || 'driver',
+        first_name: '',
+        last_name: '',
+        sponsor_id: '',
+        phone_number: ''
+
     });
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
+    const [sponsors, setSponsors] = useState([]);
 
     useEffect(() => {
         // Check admin authentication
@@ -33,6 +39,10 @@ export default function AdminCreateUser() {
             navigate("/");
             return;
         } */
+       fetch('/api/sponsors')
+            .then(res => res.json())
+            .then(data => setSponsors(data))
+            .catch(err => console.error(err));
     }, [navigate]);
 
     const handleChange = (e) => {
@@ -66,6 +76,19 @@ export default function AdminCreateUser() {
             newErrors.role_type = 'Please select a role';
         }
 
+        if (formData.role_type === 'sponsor' || formData.role_type === 'driver') {
+            if (!formData.first_name.trim()) {
+                newErrors.first_name = 'First name is required';
+            }
+            if (!formData.last_name.trim()) {
+                newErrors.last_name = 'Last name is required';
+            }
+        }
+
+        if (formData.role_type === 'sponsor' && !String(formData.sponsor_id).trim()) {
+            newErrors.sponsor_id = 'Select a sponsor organization';
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -86,7 +109,11 @@ export default function AdminCreateUser() {
                 body: JSON.stringify({
                     email: formData.email,
                     password: formData.password,
-                    role_type: formData.role_type
+                    role_type: formData.role_type,
+                    first_name: formData.first_name,
+                    last_name: formData.last_name,
+                    sponsor_id: formData.sponsor_id,
+                    phone_number: formData.phone_number
                 })
             });
 
@@ -195,8 +222,95 @@ export default function AdminCreateUser() {
                                 <div style={{ color: '#dc3545', fontSize: '14px', marginTop: '5px' }}>
                                     {errors.role_type}
                                 </div>
-                            )}
+                            )}  
                         </div>
+
+                        {(formData.role_type === 'sponsor' || formData.role_type === 'driver') && (
+                            <>
+                                <div style={{ marginBottom: '20px' }}>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#333' }}>
+                                        First Name *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="first_name"
+                                        value={formData.first_name}
+                                        onChange={handleChange}
+                                        placeholder="First name"
+                                        style={{
+                                            width: '100%', padding: '12px',
+                                            border: errors.first_name ? '2px solid #dc3545' : '1px solid #ddd',
+                                            borderRadius: '6px', fontSize: '16px'
+                                        }}
+                                    />
+                                    {errors.first_name && <div style={{ color: '#dc3545', fontSize: '14px', marginTop: '5px' }}>{errors.first_name}</div>}
+                                </div>
+
+                                <div style={{ marginBottom: '20px' }}>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#333' }}>
+                                        Last Name *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="last_name"
+                                        value={formData.last_name}
+                                        onChange={handleChange}
+                                        placeholder="Last name"
+                                        style={{
+                                            width: '100%', padding: '12px',
+                                            border: errors.last_name ? '2px solid #dc3545' : '1px solid #ddd',
+                                            borderRadius: '6px', fontSize: '16px'
+                                        }}
+                                    />
+                                    {errors.last_name && <div style={{ color: '#dc3545', fontSize: '14px', marginTop: '5px' }}>{errors.last_name}</div>}
+                                </div>
+
+                                {formData.role_type === 'sponsor' && (
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#333' }}>
+                                            Sponsor Organization *
+                                        </label>
+                                        <select
+                                        name="sponsor_id"
+                                        value={formData.sponsor_id}
+                                        onChange={handleChange}
+                                        style={{
+                                            width: '100%', padding: '12px',
+                                            border: errors.sponsor_id ? '2px solid #dc3545' : '1px solid #ddd',
+                                            borderRadius: '6px', fontSize: '16px', backgroundColor: 'white'
+                                        }}
+                                    >
+                                        <option value="">Select organization...</option>
+                                        {sponsors.map(s => (
+                                            <option key={s.sponsor_id} value={s.sponsor_id}>
+                                                {s.company_name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.sponsor_id && <div style={{ color: '#dc3545', fontSize: '14px', marginTop: '5px' }}>{errors.sponsor_id}</div>}
+                                </div>
+                                )}
+                                {formData.role_type === 'sponsor' && (
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', color: '#333' }}>
+                                            Phone (optional)
+                                        </label>
+                                        <input
+                                            type="tel"
+                                            name="phone_number"
+                                            value={formData.phone_number}
+                                            onChange={handleChange}
+                                            placeholder="Phone number"
+                                            style={{
+                                                width: '100%', padding: '12px',
+                                                border: '1px solid #ddd',
+                                                borderRadius: '6px', fontSize: '16px'
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                            </>
+                        )}
 
                         <div style={{ marginBottom: '20px' }}>
                             <label style={{

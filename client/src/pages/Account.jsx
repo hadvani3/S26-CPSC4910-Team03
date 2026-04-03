@@ -3,10 +3,11 @@ import Nav from '../components/Nav';
 import { AuthContext } from "../components/AuthContext.jsx";
 
 export default function Account() {
-    const { token } = useContext(AuthContext);
+    const { token, role } = useContext(AuthContext);
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
-    const [newUsername, setUsername] = useState("");
+    const [newValue, setValue] = useState("");
+    const [field, setField] = useState("username");
 
     useEffect(() => {
         async function fetchAccount() {
@@ -18,6 +19,7 @@ export default function Account() {
                     },
                     body: JSON.stringify({
                         key: token,
+                        role: role,
                     }),
                 });
 
@@ -37,20 +39,23 @@ export default function Account() {
         if (token) {
             fetchAccount();
         }
-    }, [token]);
+    }, [token, role]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         try {
-            const res = await fetch("https://team03.cpsc4911.com/SetUsername", {
+            const res = await fetch("https://team03.cpsc4911.com/UpdateUser", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    newUsername: newUsername,
-                    token: token,
+                    newValue: newValue,
+                    toUpdate: field,
+                    key: token,
+                    user_id: data.user_id,
+                    role: role,
                 }),
             });
 
@@ -59,6 +64,7 @@ export default function Account() {
             if (res.ok) {
                 if (data.accessToken) {
                     console.log("Username changed successfully!");
+
                 }
             }
         } catch (err) {
@@ -69,18 +75,70 @@ export default function Account() {
     }
 
     if (error) {
-        return <h1>Server Error</h1>;
+        return (
+            <>
+                <Nav />
+                <div className="container">
+                    <h1>Server Error</h1>
+                    <p className="item">{error}</p>
+                </div>
+            </>
+        );
     }
 
     if (!data) {
-        return <h1>Loading...</h1>;
+        return (
+            <>
+                <Nav />
+                <div className="container">
+                    <h1>Loading...</h1>
+                </div>
+            </>
+        );
     }
 
     return (
         <>
             <Nav />
+            <div className="container">
+                <p className="glass-subtitle">Truckers United</p>
+                <h1>Account</h1>
+                {data.username && <h2>Welcome, {data.username}</h2>}
+                <div className="item">
+                    <span className="label">Role:</span> {data.role}
+                </div>
+                <div className="item">
+                    <span className="label">Email:</span> {data.email}
+                </div>
+                <div className="item">
+                    <span className="label">Account created:</span> {data.createDate}
+                </div>
+                <div className="item">
+                    <span className="label">Account updated:</span> {data.updatedDate}
+                </div>
+                <form onSubmit={handleSubmit} className="glass-form">
+                    <div className="glass-input-group">
+                        <label htmlFor="account-username">Change username:</label>
+                        <input
+                            id="account-username"
+                            type="username"
+                            name="username"
+                            className="glass-input"
+                            value={newValue}
+                            onChange={(e) => setValue(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <button type="submit" className="glass-btn">
+                        Update
+                    </button>
+                </form>
+            </div>
+            <Nav/>
             {data.username && <h1>Welcome, {data.username}</h1>}
             <p>
+                {data.first_name && (<>Name: {data.first_name} {data.last_name}<br/></>)}
+                {data.phone && (<>Phone: {data.phone}<br/></>)}
                 Role: {data.role}<br/>
                 Email: {data.email}<br/>
                 Account created: {data.createDate}<br/>
@@ -88,18 +146,28 @@ export default function Account() {
             </p>
             <form onSubmit={handleSubmit}>
                 <label>
-                    Change username:
+                    Update Account:
                     <input
                         type="username"
                         name="username"
-                        value={newUsername}
-                        onChange={(e) => setUsername(e.target.value)}
+                        value={newValue}
+                        onChange={(e) => setValue(e.target.value)}
                         required/>
                 </label>
                 <button type="submit">
                     Update
                 </button>
             </form>
+            <label>
+                Select field to update:
+                <select value={field} onChange={(e) => setField(e.target.value)}>
+                    <option value="username">Username</option>
+                    <option value="email">Email</option>
+                    {data.first_name && <option value="first_name">First Name</option>}
+                    {data.last_name && <option value="last_name">Last Name</option>}
+                    {data.phone && <option value="phone_number">Phone Number</option>}
+                </select>
+            </label>
         </>
     );
 }

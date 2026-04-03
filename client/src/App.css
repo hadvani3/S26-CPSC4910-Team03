@@ -82,6 +82,15 @@ body::after {
   margin: 0;
 }
 
+.nav-list li.nav-spacer {
+  flex: 1 1 auto;
+  min-width: 8px;
+  pointer-events: none;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
 /*
 .nav-list li a {
   display: block;
@@ -126,6 +135,52 @@ body::after {
   display: flex;
   flex-direction: column;
   gap: 15px;
+}
+
+/* Full-width admin dashboard (wider than default .container) */
+.admin-dashboard {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: min(1400px, 96vw);
+  margin: 20px auto 32px;
+  padding: 20px 24px 24px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 1100px) {
+  .admin-dashboard-main-cols {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-dashboard-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 1000px) {
+  .admin-dashboard-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .admin-dashboard-stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-dashboard-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
 }
 .Searchcontainer {
   max-width: 1000px;
@@ -400,6 +455,15 @@ button {
   background: #193D6D;
 }
 
+.admin-cream-btn {
+  background-color: #f4efe1 !important;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.admin-cream-btn:hover {
+  background-color: #b6b6b6 !important;
+}
+
 .glass-link {
   color: #e0e0e0;
   text-decoration: none;
@@ -421,7 +485,7 @@ button {
 }
 
 .removal-box {
-  background-color: #ed4f0b;
+  background-color: #ea6112;
   width: 450px;
   height: 150px;
   margin: 0 auto;

@@ -52,13 +52,24 @@ CREATE TABLE IF NOT EXISTS drivers (
 -- driver application table
 CREATE TABLE IF NOT EXISTS driver_applications (
 	application_id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL, -- applicant ID
-    sponsor_id INT NOT NULL,  -- the sponsor the driver is applying to
-    application_status VARCHAR(25) NOT NULL DEFAULT 'PENDING', -- pending, approved, denied
-    notes VARCHAR(500),
-    reviewed_at TIMESTAMP NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+	user_id INT NOT NULL,
+	sponsor_id INT NOT NULL,
+	first_name VARCHAR(50) NOT NULL,
+	last_name VARCHAR(50) NOT NULL,
+	birth_date DATE NOT NULL,
+	email_address VARCHAR(100) NOT NULL,
+	phone_number VARCHAR(25) NOT NULL,
+	license_number VARCHAR(50),
+	street_address VARCHAR(255) NOT NULL,
+	city VARCHAR(100) NOT NULL,
+	state VARCHAR(50),
+	zip_code VARCHAR(20) NOT NULL,
+	reason TEXT NOT NULL,
+	application_status VARCHAR(25) NOT NULL DEFAULT 'PENDING',
+	notes VARCHAR(500),
+	reviewed_at TIMESTAMP NULL,
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- driver points table
@@ -71,9 +82,9 @@ CREATE TABLE IF NOT EXISTS driver_points (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- sponsor user table
+-- sponsor user table (one row per sponsor login; links users.user_id to sponsors.sponsor_id)
 CREATE TABLE IF NOT EXISTS sponsor_users (
-    user_id INT NOT NULL UNIQUE,
+    user_id INT NOT NULL PRIMARY KEY,
     sponsor_id INT NOT NULL,
     first_name VARCHAR(250) NOT NULL,
     last_name VARCHAR(250) NOT NULL,
@@ -91,4 +102,12 @@ CREATE TABLE IF NOT EXISTS reset_password_tokens (
     expires_at TIMESTAMP NOT NULL,
     used BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- login attempts table
+CREATE TABLE IF NOT EXISTS login_attempts (
+    attempt_id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(255) NOT NULL,
+    success BOOLEAN NOT NULL,
+    attempted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
