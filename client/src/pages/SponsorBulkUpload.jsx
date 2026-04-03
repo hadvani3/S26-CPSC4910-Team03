@@ -1,9 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Nav from '../components/Nav';
+import { AuthContext } from '../components/AuthContext.jsx';
 
-export default function AdminBulkUploads() {
+export default function SponsorBulkUpload() {
     const navigate = useNavigate();
+    const { token } = useContext(AuthContext);
     const fileInputRef = useRef(null);
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -35,18 +37,20 @@ export default function AdminBulkUploads() {
         try {
             const text = await file.text();
             const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            const rows = lines.map((line,index) => ({ line: index + 1, content: line }));
+            const rows = lines.map((line, index) => ({ line: index + 1, content: line }));
 
-            const res = await fetch('/api/admin/bulk-upload', {
+            const res = await fetch('/api/sponsor/bulk-upload', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body : JSON.stringify({ rows })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ rows })
+            });
 
-        }); 
             const data = await res.json();
-            if(!res.ok) throw new Error(data.error);
+            if (!res.ok) throw new Error(data.error);
             setResults(data);
-
         } catch (err) {
             console.error(err);
             alert('Upload failed. Please try again.');
@@ -80,7 +84,7 @@ export default function AdminBulkUploads() {
                         Bulk Upload
                     </h1>
                     <p style={{ margin: 0, opacity: 0.9 }}>
-                        Upload a pipe-delimited file to create organizations, drivers, and sponsor users
+                        Upload a pipe-delimited file to add drivers and sponsor users to your organization
                     </p>
                 </div>
 
@@ -104,18 +108,16 @@ export default function AdminBulkUploads() {
                         color: '#333',
                         lineHeight: '2'
                     }}>
-                        <div><span style={{ color: '#667eea', fontWeight: '600' }}>O</span>|organization name</div>
-                        <div><span style={{ color: '#4caf50', fontWeight: '600' }}>D</span>|organization name|first name|last name|email|points (opt)|reason (opt)</div>
-                        <div><span style={{ color: '#ff9800', fontWeight: '600' }}>S</span>|organization name|first name|last name|email</div>
+                        <div><span style={{ color: '#4caf50', fontWeight: '600' }}>D</span>|first name|last name|email|points (opt)|reason (opt)</div>
+                        <div><span style={{ color: '#ff9800', fontWeight: '600' }}>S</span>|first name|last name|email</div>
                     </div>
                     <div style={{
                         display: 'grid',
-                        gridTemplateColumns: '1fr 1fr 1fr',
+                        gridTemplateColumns: '1fr 1fr',
                         gap: '10px',
                         marginTop: '12px'
                     }}>
                         {[
-                            { type: 'O', label: 'Organization', color: '#667eea', bg: '#f0f0ff' },
                             { type: 'D', label: 'Driver',       color: '#4caf50', bg: '#f0fff0' },
                             { type: 'S', label: 'Sponsor User', color: '#ff9800', bg: '#fff8f0' },
                         ].map(({ type, label, color, bg }) => (
@@ -215,7 +217,6 @@ export default function AdminBulkUploads() {
                 {/* results */}
                 {results && (
                     <div>
-                        {/* summary cards */}
                         <div style={{
                             display: 'grid',
                             gridTemplateColumns: '1fr 1fr 1fr',
@@ -223,9 +224,9 @@ export default function AdminBulkUploads() {
                             marginBottom: '20px'
                         }}>
                             {[
-                                { label: 'Created',  value: results.created, bg: '#d4edda', color: '#155724' },
-                                { label: 'Updated',  value: results.updated, bg: '#d1ecf1', color: '#0c5460' },
-                                { label: 'Errors',   value: results.errors.length, bg: results.errors.length > 0 ? '#f8d7da' : '#d4edda', color: results.errors.length > 0 ? '#721c24' : '#155724' },
+                                { label: 'Created', value: results.created, bg: '#d4edda', color: '#155724' },
+                                { label: 'Updated', value: results.updated, bg: '#d1ecf1', color: '#0c5460' },
+                                { label: 'Errors',  value: results.errors.length, bg: results.errors.length > 0 ? '#f8d7da' : '#d4edda', color: results.errors.length > 0 ? '#721c24' : '#155724' },
                             ].map(({ label, value, bg, color }) => (
                                 <div key={label} style={{
                                     background: bg, borderRadius: '10px',
@@ -241,7 +242,6 @@ export default function AdminBulkUploads() {
                             ))}
                         </div>
 
-                        {/* error table */}
                         {results.errors.length > 0 && (
                             <div style={{
                                 backgroundColor: 'white',
@@ -327,7 +327,7 @@ export default function AdminBulkUploads() {
 
                 <div style={{ marginTop: '30px', textAlign: 'center' }}>
                     <button
-                        onClick={() => navigate('/admin-page')}
+                        onClick={() => navigate('/sponsor-page')}
                         style={{
                             padding: '12px 30px', background: '#6c757d',
                             color: 'white', border: 'none', borderRadius: '8px',
