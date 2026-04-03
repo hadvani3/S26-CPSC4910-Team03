@@ -1,34 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom'
+import React, { useState, useEffect, useContext } from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom'
 import Nav from '../components/Nav';
+import {AuthContext} from "../components/AuthContext.jsx";
 
 const Cart = () =>{
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+
   const navigate = useNavigate();
   const location = useLocation();
+  const { token} = useContext(AuthContext);
 
-  //get the queries passed we want to search with
+ //checking the token
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const user_id = queryParams.get('user_id');
-
-    if (user_id) {
-      fetchResults(user_id);
+    if (!token) {
+      navigate("/");
     }
-  }, [location.search]);
+  }, [token, navigate]);
 
 
-  //recieve the data from the backend with these queries
-  const fetchResults = async (query) => {
+  useEffect(() => {
+    if (token) {
+      fetchResults();
+    }
+  }, [token]);
+
+  const fetchResults = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/cart?user_id=${encodeURIComponent(query)}`);
+      const response = await fetch(`/api/cart`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: token }),
+      });
+      
+      if (!response.ok) throw new Error("Failed to fetch cart");
+      
       const data = await response.json();
       setProducts(data);
     } catch (error) {
-      console.error("Search failed:", error);
+      console.error("Cart fetch failed:", error);
     } finally {
       setLoading(false);
     }
@@ -43,8 +54,8 @@ const Cart = () =>{
 
       {!loading && products.length === 0 && <p style={{ color: 'white' }}>No products found.</p>}
         <h1>Your Cart:</h1>
-        {products.map((item) => (
-          <div key={item.listing_id} className="container">
+        {products.map((item, index) => (
+          <div key={`${item.listing_id}-${index}`} className="container">
           <a href= {`/product?q=${item.listing_id}`}>
             <img src={item.image} alt={item.title} style={{ width: '200px'}} />
             <h4 style={{ color: 'white' }}>{item.title}</h4>

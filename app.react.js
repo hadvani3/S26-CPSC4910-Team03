@@ -251,64 +251,117 @@ app.get('/api/:sponsor_id/catalog', async (req, res) =>{
 
 
 //showing the details of you cart
-app.get('/api/cart', async (req, res) =>{
-	const user_id = req.query.user_id;
+app.post('/api/cart', async (req, res) =>{
+	const token = req.body.key
+	const email = decodeAccessToken(token)
 
-	//getting the product values from the database
-	const query = 'SELECT cart FROM drivers WHERE user_id = ?';
-	db.query(query, [user_id], async (err, results) => {
+	//get the user_id from email
+	db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, userResults) => {
 		if (err) {
-			console.error(err);
-			return res.status(500).json({ error: "Database Error" });
-		}
-		if (results.length === 0) {
-			return res.status(404).json({ error: "No data found" });
-		}
-		const prodList = String(results[0].cart);
+            console.error("Database Error:", err);
+            return res.status(500).json({ error: "Failed to update catalog" });
+        }
+        if (userResults.length === 0) {
+            return res.status(404).json({ error: "cart not found not found" });
+        }
+
+		const user_id = userResults[0].user_id;
+		//getting the product values from the database
+		const query = 'SELECT cart FROM drivers WHERE user_id = ?';
+		db.query(query, [user_id], async (err, results) => {
+			if (err) {
+				console.error(err);
+				return res.status(500).json({ error: "Database Error" });
+			}
+			if (results.length === 0) {
+				return res.status(404).json({ error: "No data found" });
+			}
+			const cartString = String(results[0].cart);
 
 
-		//call the data we want from etsy api
-		let cleanList = prodList.slice(1);
-		
+			//call the data we want from etsy api
+			const listingIds = cartString.split(',').filter(id => id.trim() !== "");
 
-		const requestOptions = {
-        method: 'GET',
-        headers: {
-            'x-api-key': 'eygp51dfkb5pm7buhaxjtm93:str7wniisc', 
-            'Accept': 'application/json'
-        },
-		};
-		const listingIds = cleanList.split(',').map(id => id.trim()).join(',');
-		const url = `https://openapi.etsy.com/v3/application/listings/batch?listing_ids=${listingIds}&includes=Images`;
-        const response = await fetch(url, requestOptions);
-        const data = await response.json();
+			const requestOptions = {
+			method: 'GET',
+			headers: {
+				'x-api-key': 'eygp51dfkb5pm7buhaxjtm93:str7wniisc', 
+				'Accept': 'application/json'
+			},
+			};
 
-		const newData = data.results.map(item => ({
-			listing_id: item.listing_id,
-			title: item.title,
-			price: item.price.amount,
-			image: '',
-			ratingAvg: 0
-		}));
+			// Fetch from Etsy (Etsy returns a UNIQUE list of matching results)
+                const url = `https://openapi.etsy.com/v3/application/listings/batch?listing_ids=${listingIds.join(',')}&includes=Images`;
+                const response = await fetch(url, requestOptions);
+                const data = await response.json();
 
-		//second api call for the image
-		const imgRes = await fetch(`https://openapi.etsy.com/v3/application/listings/batch?listing_ids=${listingIds}&includes=Images`, requestOptions);
-		const imgData = await imgRes.json();
+                if (!data.results) {
+                    return res.status(404).json({ error: "No products found on Etsy" });
+                }
 
-		//add the image link to final response
-		newData.forEach((item) => {
-            
-        
-			const listingImages = imgData.results.find(img => img.listing_id === item.listing_id);
 
-			//item.ratingAvg = listingDetails.review_average || 0;
-			item.image = listingImages.images[0].url_fullxfull;
+                const uniqueProducts = data.results.map(item => ({
+                    listing_id: item.listing_id,
+                    title: item.title,
+                    price: item.price.amount,
+                    image: item.images && item.images.length > 0 ? item.images[0].url_fullxfull : '',
+                    ratingAvg: 0
+                }));
+
+                const finalCart = listingIds.map(id => {
+                    return uniqueProducts.find(p => p.listing_id == id);
+                }).filter(p => p !== undefined); 
+
+                console.log("Cart with duplicates:", finalCart);
+                return res.status(200).json(finalCart);
 		});
-
-		res.status(200).json(newData);
 	});
-
 });
+
+app.post('/api/addToCart', (req, res) => {
+	const product = req.body.product_id;
+	const count = req.body.count;
+	const token = req.body.key
+	const email = decodeAccessToken(token)
+
+	if (!email) return res.status(401).json({ error: "Invalid Token" });
+
+	//get the user_id from email
+	db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, userResults) => {
+		if (err) {
+            console.error("Database Error:", err);
+            return res.status(500).json({ error: "Failed to update catalog" });
+        }
+        if (userResults.affectedRows === 0) {
+            return res.status(404).json({ error: "cart not found not found" });
+        }
+
+		const user_id = userResults[0].user_id;
+
+		//here i am formatting the addition to the cart
+		let addString = ''
+		for(let i = 0; i < count; i++){
+			addString += `,${product}`;
+		}
+
+		//query to add to the cart field
+		const query = 'UPDATE drivers SET cart = CONCAT (cart, ?) WHERE user_id = ?';
+		db.query(query, [addString, user_id], (err, results) => {
+			if (err) {
+				console.error("Database Error:", err);
+				return res.status(500).json({ error: "Failed to update catalog" });
+			}
+
+
+			if (results.affectedRows === 0) {
+				return res.status(404).json({ error: "cart not found not found" });
+			}
+
+		
+			return res.status(200).json({ success: true, message: "Cart updated" });
+		});
+	});
+})
 
 app.get('/api/about', (req, res) => {
 	const query = 'SELECT team_number, version_number, release_date, product_name, product_desc FROM about_info WHERE is_curr = 1';
@@ -580,6 +633,8 @@ app.post("/GetSponsorDrivers", (req, res) => {
 	})
 })
 
+
+//get info of a sponsor from a token
 app.post("/GetSponsor", (req, res) => {
 	const token = req.body.key
 	console.log(token)
