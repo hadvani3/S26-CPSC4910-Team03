@@ -537,14 +537,16 @@ export default function SponsorHomePage() {
                             >
                             Bulk Upload
                             </button>
-                        <button className="admin-cream-btn" style={{
-                            padding: '15px 20px',
-                            color: '#1f2937',
-                            border: '1px solid rgba(15, 23, 42, 0.18)',
-                            borderRadius: '10px',
-                            cursor: 'pointer',
-                            fontSize: '15px',
-                            fontWeight: '700'
+                            <button 
+                            onClick ={() => navigate(`/sponsor/points-report`)}
+                            className="admin-cream-btn" style={{
+                                padding: '15px 20px',
+                                color: '#1f2937',
+                                border: '1px solid rgba(15, 23, 42, 0.18)',
+                                borderRadius: '10px',
+                                cursor: 'pointer',
+                                fontSize: '15px',
+                                fontWeight: '700'
                         }}>
                             Generate Reports
                         </button>

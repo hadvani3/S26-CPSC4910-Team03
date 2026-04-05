@@ -8,6 +8,11 @@ export default function AdminAuditLog() {
     const [filter, setFilter] = useState('all');
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [sponsorFilter, setSponsorFilter] = useState('all');
+    const [sponsors, setSponsors] = useState([]);
+
 
     useEffect( () => {
         setLoading(true);
@@ -21,11 +26,26 @@ export default function AdminAuditLog() {
             console.error('There was an error fetching audit logs!', err);
             setLoading(false);
         });
+
+        fetch('/api/sponsors')
+        .then(res => res.json())
+        .then(data => {
+            setSponsors(data);
+        })
+        .catch(err => {
+            console.error('There was an error fetching sponsors!', err);
+        });
     },[filter]);
 
-    const filteredLogs = logs.filter(item =>
-        item.label.toLowerCase().includes(search.toLowerCase())
-    )
+    const filteredLogs = logs.filter(item => {
+        const searchMatch = item.label.toLowerCase().includes(search.toLowerCase());
+        const itemDate = new Date(item.timestamp);
+        const startDateMatch = startDate ? itemDate >= new Date(startDate) : true;
+        const endDateMatch = endDate ? itemDate <= new Date(endDate) : true;
+        const sponsorMatch = sponsorFilter !== 'all' ? item.label.toLowerCase().includes(sponsorFilter.toLowerCase()) : true;
+
+        return searchMatch && startDateMatch && endDateMatch && sponsorMatch;
+    });
 
 
     return (
@@ -108,9 +128,85 @@ export default function AdminAuditLog() {
                             border: '1px solid rgba(15,23,42,0.18)',
                             fontSize: '14px',
                             width: '250px',
+                    
             
                     }}
                     />
+
+                    <input 
+                        type = "date"
+                        value = {startDate}
+                        onChange={e => setStartDate(e.target.value)}
+                        style = {{
+                            padding: '10px 14px',
+                            borderRadius : '8px',
+                            border : '1px solid rgba(15,23,42,0.18)',
+                            fontSize : '14px'
+                        }}   
+                    />
+                    <input 
+                        type = "date"
+                        value = {endDate}
+                        onChange={e => setEndDate(e.target.value)}
+                        style = {{
+                            padding: '10px 14px',
+                            borderRadius : '8px',
+                            border : '1px solid rgba(15,23,42,0.18)',
+                            fontSize : '14px'
+                        }}
+                    />
+                    <label style={{ color: '#f4f8ff', fontWeight: '600' }}>Sponsor</label>
+                    <select 
+                        value={sponsorFilter}
+                        onChange = {e => setSponsorFilter(e.target.value)}
+                        style = {{
+                            padding: '10px 14px',
+                            borderRadius : '8px',
+                            border : '1px solid rgba(15,23,42,0.18)',
+                            fontSize : '14px'
+                        }}
+                    >
+                        <option value = "all">All Sponsors</option>
+                        {sponsors.map(s => (
+                            <option key={s.sponsor_id} value={s.company_name}>{s.company_name}
+                            </option>
+                        ))
+                        }
+    
+                    </select>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            const headers = ['Type', 'Label', 'Success', 'Timestamp'];
+                            const rows = filteredLogs.map(item => [
+                                item.type,
+                                item.label,
+                                item.type === 'login' ? (item.success ? 'Success' : 'Failed') : '',
+                                new Date(item.timestamp).toLocaleString()
+                            ]);
+                            const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+                            const blob = new Blob([csv], { type: 'text/csv' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'audit_log.csv';
+                            a.click();
+                            URL.revokeObjectURL(url);
+                        }}
+                        style={{
+                            padding: '8px 16px',
+                            backgroundColor: '#4caf50',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        Download CSV
+                    </button>
+                   
                     </div>
         
 
