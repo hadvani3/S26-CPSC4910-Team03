@@ -2011,6 +2011,105 @@ app.post('/api/purchase', async (req, res) => {
 	});
 })
 
+// sponsor point reports
+app.get('/api/sponsor/points-report', async (req, res) => {
+	const token = getBearerToken(req);
+	if (!token) return res.status(401).json({ error: 'Authorization is required!' });
+
+	const email = decodeAccessToken(token);
+
+	const sponsorUser = await new Promise((resolve) => {
+		// query sponsor users 
+		db.query(
+			`SELECT sa.sponsor_id FROM users s
+			JOIN sponsor_users sa on s.user_id = sa.user_id
+			WHERE  s.email = ? LIMIT 1`,
+			[email],
+			(err, results) => resolve(err ? null : results)
+		);
+	});
+
+	if (!sponsorUser || sponsorUser.length === 0) {
+		return res.status(403).json({ error: 'Sponsor organization was not found.' });
+	}
+
+	const sponsor_id = sponsorUser[0].sponsor_id;
+
+	// query driver points
+	const sql = `
+	SELECT
+		d.driver_id,
+		CONCAT(d.first_name, ' ', d.last_name) AS driver_name,
+		d.total_points,
+		dp.points_change,
+		dp.reason,
+		dp.created_at AS date,
+		s.company_name AS sponsor_name
+	FROM driver_points dp
+	JOIN drivers d ON dp.driver_id = d.driver_id
+	JOIN sponsors s ON dp.sponsor_id = s.sponsor_id
+	WHERE s.sponsor_id = ?
+	ORDER BY dp.created_at DESC
+	`;
+
+	db.query(sql, [sponsor_id], (err, results) => { 
+		if (err) {
+			console.error(err);
+			return res.status(500).json({ error: 'Database error.' });
+		}
+		res.json(results);
+	});
+});
+
+// admin sales by sponsor report
+app.get('/api/admin/sales-by-sponsor', (req,res) => {
+	const sql = `
+	SELECT
+		s.company_name AS sponsor_name,
+		CONCAT(d.first_name, ' ', d.last_name) AS driver_name,
+		dp.points_change,
+		dp.reason,
+		dp.created_at AS date
+	FROM driver_points dp
+	JOIN sponsors s ON dp.sponsor_id = s.sponsor_id
+	JOIN drivers d ON dp.driver_id = d.driver_id
+	ORDER BY dp.created_at DESC
+	`;
+
+	db.query(sql, (err, results) => {
+		if(err) {
+			console.error(err);
+			return res.status(500).json({ error: 'Database error.' });
+		}
+		res.json(results);
+	});
+
+
+});
+
+// admin sales by driver
+app.get('/api/admin/sales-by-driver', (req, res) => {
+	const sql = `
+	SELECT
+	CONCAT(d.first_name, ' ' , d.last_name) AS driver_name,
+	s.company_name as sponsor_name,
+	dp.points_change,
+	dp.reason,
+	dp.created_at AS date
+	FROM driver_points dp
+	JOIN drivers d ON dp.driver_id = d.driver_id
+	JOIN sponsors s on dp.sponsor_id = s.sponsor_id
+	ORDER BY dp.created_at DESC
+	`;
+
+	db.query(sql, (err, results) => {
+		if(err) {
+			console.error(err);
+			return res.status(500).json({ error: 'Database error.' });
+		}
+		res.json(results);
+	});
+});
 
 //Serve React build
 const clientDist = path.join(__dirname, 'client', 'dist');
