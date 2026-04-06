@@ -687,22 +687,27 @@ export default function AdminApplications() {
                                             borderBottom: '2px solid #dee2e6',
                                         }}
                                     >
-                                        {['Driver', 'Sponsor', 'Decision', 'Notes', 'Reviewed on'].map(
-                                            (h) => (
-                                                <th
-                                                    key={h}
-                                                    style={{
-                                                        padding: '12px 16px',
-                                                        textAlign: 'left',
-                                                        fontWeight: '600',
-                                                        fontSize: '13px',
-                                                        color: '#555',
-                                                    }}
-                                                >
-                                                    {h}
-                                                </th>
-                                            )
-                                        )}
+                                        {[
+                                            'Driver',
+                                            'Sponsor',
+                                            'Reason',
+                                            'Decision',
+                                            'Notes',
+                                            'Reviewed on',
+                                        ].map((h) => (
+                                            <th
+                                                key={h}
+                                                style={{
+                                                    padding: '12px 16px',
+                                                    textAlign: 'left',
+                                                    fontWeight: '600',
+                                                    fontSize: '13px',
+                                                    color: '#555',
+                                                }}
+                                            >
+                                                {h}
+                                            </th>
+                                        ))}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -731,6 +736,18 @@ export default function AdminApplications() {
                                                 }}
                                             >
                                                 {app.sponsor_name}
+                                            </td>
+                                            <td
+                                                style={{
+                                                    padding: '12px 16px',
+                                                    fontSize: '13px',
+                                                    color: '#555',
+                                                    maxWidth: '240px',
+                                                    verticalAlign: 'top',
+                                                    wordBreak: 'break-word',
+                                                }}
+                                            >
+                                                {app.reason?.trim() ? app.reason : '—'}
                                             </td>
                                             <td style={{ padding: '12px 16px' }}>
                                                 <span
