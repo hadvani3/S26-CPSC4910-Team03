@@ -1091,6 +1091,55 @@ app.get('/api/sponsors', (req, res) => {
     );
 });
 
+// Current driver's point balance (navbar, etc.)
+app.get('/api/me/points', (req, res) => {
+	const token = getBearerToken(req);
+	if (!token) {
+		return res.status(401).json({ error: 'Authorization required' });
+	}
+	const email = decodeAccessToken(token);
+	if (!email) {
+		return res.status(401).json({ error: 'Invalid or expired token' });
+	}
+
+	db.query(
+		'SELECT user_id, role_type FROM users WHERE email = ? AND is_active = 1 LIMIT 1',
+		[email],
+		(err, urows) => {
+			if (err) {
+				console.error(err);
+				return res.status(500).json({ error: 'Database error' });
+			}
+			if (!urows.length) {
+				return res.status(401).json({ error: 'User not found' });
+			}
+			const rt = String(urows[0].role_type ?? '')
+				.trim()
+				.toLowerCase();
+			if (rt !== 'driver') {
+				return res.status(403).json({ error: 'Only drivers have a point balance' });
+			}
+			const userId = urows[0].user_id;
+			db.query(
+				'SELECT total_points FROM drivers WHERE user_id = ? LIMIT 1',
+				[userId],
+				(e2, drows) => {
+					if (e2) {
+						console.error(e2);
+						return res.status(500).json({ error: 'Database error' });
+					}
+					if (!drows.length) {
+						return res.json({ points: 0 });
+					}
+					const raw = drows[0].total_points;
+					const n = raw == null ? 0 : Number(raw);
+					return res.json({ points: Number.isFinite(n) ? n : 0 });
+				}
+			);
+		}
+	);
+});
+
 // driver submits sponsor application (user_id + sponsor_id resolved in SQL)
 app.post('/api/driver-applications', (req, res) => {
     const {

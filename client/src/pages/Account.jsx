@@ -134,40 +134,6 @@ export default function Account() {
                     </button>
                 </form>
             </div>
-            <Nav/>
-            {data.username && <h1>Welcome, {data.username}</h1>}
-            <p>
-                {data.first_name && (<>Name: {data.first_name} {data.last_name}<br/></>)}
-                {data.phone && (<>Phone: {data.phone}<br/></>)}
-                Role: {data.role}<br/>
-                Email: {data.email}<br/>
-                Account created: {data.createDate}<br/>
-                Account updated: {data.updatedDate}<br/>
-            </p>
-            <form onSubmit={handleSubmit}>
-                <label>
-                    Update Account:
-                    <input
-                        type="username"
-                        name="username"
-                        value={newValue}
-                        onChange={(e) => setValue(e.target.value)}
-                        required/>
-                </label>
-                <button type="submit">
-                    Update
-                </button>
-            </form>
-            <label>
-                Select field to update:
-                <select value={field} onChange={(e) => setField(e.target.value)}>
-                    <option value="username">Username</option>
-                    <option value="email">Email</option>
-                    {data.first_name && <option value="first_name">First Name</option>}
-                    {data.last_name && <option value="last_name">Last Name</option>}
-                    {data.phone && <option value="phone_number">Phone Number</option>}
-                </select>
-            </label>
         </>
     );
 }
