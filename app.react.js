@@ -12,6 +12,7 @@ const app = express();
 app.use(cors())
 const PORT = process.env.PORT || 3000;
 const allowedOrigins = ['http://localhost:5173'];
+const etsyKey = process.env.ETSY_API_KEY;
 
 const db = mysql.createPool({
 	host: "cpsc4910-s26.cobd8enwsupz.us-east-1.rds.amazonaws.com",
@@ -105,7 +106,7 @@ app.get('/api/search', async (req, res) => {
     const requestOptions = {
         method: 'GET',
         headers: {
-            'x-api-key': 'eygp51dfkb5pm7buhaxjtm93:str7wniisc', 
+            'x-api-key': etsyKey, 
             'Accept': 'application/json'
         },
     };
@@ -155,7 +156,7 @@ app.get('/api/product', async (req, res) => {
 	const requestOptions = {
         method: 'GET',
         headers: {
-            'x-api-key': 'eygp51dfkb5pm7buhaxjtm93:str7wniisc', 
+            'x-api-key': etsyKey, 
             'Accept': 'application/json'
         },
     };
@@ -215,7 +216,7 @@ app.get('/api/:sponsor_id/catalog', async (req, res) =>{
 		const requestOptions = {
         method: 'GET',
         headers: {
-            'x-api-key': 'eygp51dfkb5pm7buhaxjtm93:str7wniisc', 
+            'x-api-key': etsyKey, 
             'Accept': 'application/json'
         },
 		};
@@ -286,7 +287,7 @@ app.post('/api/cart', async (req, res) =>{
 			const requestOptions = {
 			method: 'GET',
 			headers: {
-				'x-api-key': 'eygp51dfkb5pm7buhaxjtm93:str7wniisc', 
+				'x-api-key': etsyKey, 
 				'Accept': 'application/json'
 			},
 			};
@@ -826,6 +827,9 @@ app.post('/api/reset-password', async (req, res) => {
 							}
 							
 							console.log('Password reset was successful');
+							CreateNotification(token, `The password on your account has been reset`)
+							.then(() => console.log("SMS Sent"))
+							.catch(e => console.error("SMS failed", e));
 							res.json({ success: true, message: "Password reset was successful!" });
 						}
 					);
@@ -1972,7 +1976,7 @@ app.post('/api/sponsor/bulk-upload', async (req,res) => {
 //this creats a notification in the database and sends to to a phone number
 async function CreateNotification(token, message){
 	const messageClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-	const phoneNumber = '8436310882'
+	const phoneNumber = '+18436310882'
 	const email = decodeAccessToken(token)
 
 	//get the phone number from email 
