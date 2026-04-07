@@ -670,6 +670,7 @@ app.post("/GetSponsor", (req, res) => {
 		}
 	})
 })
+
 app.post('/ChangePoints', (req, res) => {
 	const driverID = req.body.driver_id
 	const change = req.body.change
@@ -693,6 +694,44 @@ app.post('/ChangePoints', (req, res) => {
 					return res.json({ success: true });
 				}
 			})
+		}
+	})
+})
+
+app.post('/getPointsValue', (req, res) => {
+	const sponsor_id = req.body.sponsor_id
+	console.log("Sponsor id for points value")
+	console.log(sponsor_id)
+
+	const get = "select * from sponsors where sponsor_id = ?"
+	const get_query = mysql.format(get, [sponsor_id])
+	db.query(get_query, async (err, getResults) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({error: "Database Error"});
+		}
+		if (getResults.length === 0) {
+			console.log("No sponsor with that id")
+			return res.status(404).json({error: "No sponsor with that id"});
+		} else {
+			const point_value_usd = getResults[0].point_value_usd
+			return res.json({point_value_usd:point_value_usd})
+		}
+	})
+})
+
+app.post('/changePointsValue', (req, res) => {
+	const sponsor_id = req.body.sponsor_id
+	const value = req.body.value
+
+	const update = "UPDATE sponsors SET point_value_usd = ? WHERE sponsor_id = ?"
+	const update_query = mysql.format(update, [value, sponsor_id])
+	db.query(update_query, async (err) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({error: "Database Error"});
+		} else {
+			return res.status(200).json({success:true})
 		}
 	})
 })

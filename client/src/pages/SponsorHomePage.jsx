@@ -19,6 +19,8 @@ export default function SponsorHomePage() {
     const [drivers, setDrivers] = useState(null);
     const [pointsChanges, setPointsChanges] = useState({});
     const [pointsReason, setPointsReason] = useState("");
+    const [pointsValue, setPointsValue] = useState(null)
+    const [pointsValueUpdate, setPointsValueUpdate] = useState("")
 
     useEffect(() => {
         setStats({
@@ -153,6 +155,38 @@ export default function SponsorHomePage() {
             console.log("Fetching drivers")
         }
         console.log(drivers)
+
+        async function fetchSponsorPointsValue() {
+            try {
+                console.log(sponsorID)
+                const res = await fetch("https://team03.cpsc4911.com/getPointsValue", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        sponsor_id: sponsorID,
+                    }),
+                });
+
+                const result = await res.json();
+
+                if (res.ok) {
+                    setPointsValue(result.point_value_usd);
+                } else {
+                    setError("Failed to fetch sponsor points value");
+                }
+            } catch (err) {
+                console.error(err);
+                setError("Server error");
+            }
+        }
+
+        if (sponsorID) {
+            fetchSponsorPointsValue()
+            console.log("Fetching points value")
+        }
+        console.log(pointsValue)
     }, [sponsorID, drivers])
 
     const handleLogout = () => {
@@ -191,6 +225,28 @@ export default function SponsorHomePage() {
                     )
                 );
                 setPointsChanges((prev) => ({ ...prev, [driver_id]: "" }));
+            } else {
+                alert("Failed to update points");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Server error");
+        }
+    };
+
+    const handleChangePointsValue = async () => {
+        try {
+            const res = await fetch("https://team03.cpsc4911.com/changePointsValue", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    sponsor_id: sponsorID,
+                    value: pointsValueUpdate,
+                }),
+            });
+
+            if (res.ok) {
+                console.log("Updated points value.")
             } else {
                 alert("Failed to update points");
             }
@@ -247,10 +303,10 @@ export default function SponsorHomePage() {
                         color: 'white',
                         boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
-                        <div style={{ fontSize: '3em', fontWeight: 'bold', margin: '0' }}>
+                        <div style={{fontSize: '3em', fontWeight: 'bold', margin: '0'}}>
                             {stats.totalDrivers}
                         </div>
-                        <div style={{ fontSize: '1.1em', marginTop: '8px', opacity: '0.9' }}>
+                        <div style={{fontSize: '1.1em', marginTop: '8px', opacity: '0.9'}}>
                             Total Drivers
                         </div>
                     </div>
@@ -263,10 +319,10 @@ export default function SponsorHomePage() {
                         color: 'white',
                         boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
-                        <div style={{ fontSize: '3em', fontWeight: 'bold', margin: '0' }}>
+                        <div style={{fontSize: '3em', fontWeight: 'bold', margin: '0'}}>
                             {stats.activeDrivers}
                         </div>
-                        <div style={{ fontSize: '1.1em', marginTop: '8px', opacity: '0.9' }}>
+                        <div style={{fontSize: '1.1em', marginTop: '8px', opacity: '0.9'}}>
                             Active Drivers
                         </div>
                     </div>
@@ -280,10 +336,10 @@ export default function SponsorHomePage() {
                         color: 'white',
                         boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
-                        <div style={{ fontSize: '3em', fontWeight: 'bold', margin: '0' }}>
+                        <div style={{fontSize: '3em', fontWeight: 'bold', margin: '0'}}>
                             {stats.pendingApplications}
                         </div>
-                        <div style={{ fontSize: '1.1em', marginTop: '8px', opacity: '0.9' }}>
+                        <div style={{fontSize: '1.1em', marginTop: '8px', opacity: '0.9'}}>
                             Pending Applications
                         </div>
                     </div>
@@ -297,13 +353,40 @@ export default function SponsorHomePage() {
                         color: 'white',
                         boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
-                        <div style={{ fontSize: '3em', fontWeight: 'bold', margin: '0' }}>
+                        <div style={{fontSize: '3em', fontWeight: 'bold', margin: '0'}}>
                             {stats.totalPointsAwarded.toLocaleString()}
                         </div>
-                        <div style={{ fontSize: '1.1em', marginTop: '8px', opacity: '0.9' }}>
+                        <div style={{fontSize: '1.1em', marginTop: '8px', opacity: '0.9'}}>
                             Points Awarded
                         </div>
                     </div>
+                    <div style={{
+                        background: 'rgba(255, 255, 255, 0.16)',
+                        border: '1px solid rgba(255, 255, 255, 0.24)',
+                        backdropFilter: 'blur(8px)',
+                        padding: '25px',
+                        borderRadius: '10px',
+                        color: 'white',
+                        boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
+                    }}>
+                        <div style={{fontSize: '3em', fontWeight: 'bold', margin: '0'}}>
+                            {pointsValue}
+                        </div>
+                        <div style={{fontSize: '1.1em', marginTop: '8px', opacity: '0.9'}}>
+                            Points Value in USD
+                        </div>
+                        <input
+                            type="number"
+                            value={pointsValueUpdate}
+                            onChange={(e) => setPointsValueUpdate(e.target.value)}
+                        />
+                        <button
+                            onClick={() => handleChangePointsValue()}
+                        >
+                            Update
+                        </button>
+                    </div>
+
                 </div>
 
                 <div style={{
@@ -320,7 +403,7 @@ export default function SponsorHomePage() {
                         borderRadius: '10px',
                         boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
-                        <h2 style={{ 
+                        <h2 style={{
                             marginTop: '0',
                             color: '#f4f8ff',
                             fontSize: '1.3em',
@@ -328,7 +411,7 @@ export default function SponsorHomePage() {
                         }}>
                             Driver Management
                         </h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
                             <button className="admin-cream-btn" style={{
                                 padding: '12px 20px',
                                 color: '#1f2937',
