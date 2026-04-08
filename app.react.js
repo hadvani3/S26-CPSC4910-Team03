@@ -3,7 +3,6 @@ const express = require('express');
 const mysql = require('mysql2');
 const path = require('path');
 const cors = require('cors')
-const twilio = require('twilio');
 const bcrypt = require('bcrypt');
 const { generateAccessToken, decodeAccessToken } = require("./generateAccessToken")
 //const prompt = require('prompt-sync')({ sigint: true });
@@ -1975,20 +1974,14 @@ app.post('/api/sponsor/bulk-upload', async (req,res) => {
 
 //this creats a notification in the database and sends to to a phone number
 async function CreateNotification(token, message){
-	const messageClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+	/*const messageClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 	const phoneNumber = '+18436310882'
 	const email = decodeAccessToken(token)
 
 	//get the phone number from email 
 
-	//create new notification for the database
+	//create new notification for the database*/
 	db.query('INSERT INTO notifications (message) VALUES (?)', [message], (err, purchaseResults) => {
-		//sending the message
-		return messageClient.messages.create({
-			body: message,
-			from: process.env.TWILIO_PHONE_NUMBER,
-			to: phoneNumber
-		});
 	});
 };
 
