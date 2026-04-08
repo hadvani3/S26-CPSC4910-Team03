@@ -1,6 +1,7 @@
-import { useState, useEffect} from 'react';
+import { useState, useEffect, useContext} from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Nav from '../components/Nav';
+import {AuthContext} from '../components/AuthContext';
 
 export default function AdminUserManagement() {
     const navigate = useNavigate();
@@ -89,6 +90,36 @@ export default function AdminUserManagement() {
             console.error(err);
             alert('Error deleting user');
         }
+    };
+
+    const {token,impersonate} = useContext(AuthContext);
+    
+    // handle impersonating function
+    const handleImpersonate = async (userId, roleType) => {
+        try {
+            const res = await fetch(`/api/admin/impersonate/${userId}`, {
+                method : 'POST',
+                headers : {'Authorization': `Bearer ${token}`}
+            });
+            const data = await res.json();
+
+            if(!res.ok) {
+                return alert(data.error); 
+            }
+            impersonate(data.impersonateToken, data.role);
+
+            if(data.role === 'driver'){
+                navigate('/driver-page');
+            }
+            else if(data.role === 'sponsor'){  
+                navigate('/sponsor-page');  
+            }
+        } catch (err) {
+            console.error('Error during impersonation:', err);
+            alert('Failed to impersonate user');
+        }
+
+        
     };
 
     return (
@@ -285,6 +316,23 @@ export default function AdminUserManagement() {
                                                 >
                                                      Delete
                                                 </button>
+
+                                                {user.role_type !== 'admin' && (
+                                                    <button
+                                                        onClick = {() => handleImpersonate(user.user_id, user.role_type)}
+                                                        style = {{
+                                                            padding : '6px 12px',
+                                                            backgroundColor : '#667eea',
+                                                            color : 'white',
+                                                            border : 'none',
+                                                            borderRadius : '4px',
+                                                            fontSize : '13px',
+                                                            cursor : 'pointer',
+                                                        }}
+                                                    >
+                                                        Impersonate User
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

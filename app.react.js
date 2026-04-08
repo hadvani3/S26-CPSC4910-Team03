@@ -2324,6 +2324,59 @@ SELECT
 
 });
 
+// admin impersonating endpoint
+app.post('/api/admin/impersonate/:user_id', (req,res) => {
+	const token = getBearerToken(req);
+	if (!token) return res.status(401).json({error: 'Authorization is required!'});
+
+	const email = decodeAccessToken(token);
+	if(!email) return res.status(401).json({error: 'Invalid or expired token!'});
+
+	// check if requester is an admin user
+	db.query(
+		`SELECT role_type FROM users WHERE email = ? AND is_active = 1 LIMIT 1`,
+		[email],
+		(err, rows) => {
+			if (err) {
+				console.error(err);
+				return res.status(500).json({ error: 'Database error!' });
+			}
+			if (!rows.length || rows[0].role_type !== 'admin') {
+				return res.status(403).json({ error: 'Access denied! This feature is for admins only' });
+			}
+
+			// get target user information
+			db.query (
+				`SELECT user_id, email, role_type FROM users WHERE user_id = ? AND is_active = 1 LIMIT 1`,
+				[req.params.user_id],
+				(err2, userRows) => {
+					if (err2) {
+						console.error(err2);
+						return res.status(500).json({ error: 'Database error!' });
+					}
+					if (!userRows.length){
+						return res.status(404).json({ error: 'Target user not found!' });
+					}
+					const targetUser = userRows[0];
+
+					if (targetUser.role_type === 'admin') {
+						return res.status(400).json({ error: 'Cannot impersonate another admin user!' });
+					}
+					const impersonateToken = generateAccessToken({
+						user : targetUser.email,
+						role : targetUser.role_type
+					});
+					res.json ({
+						impersonateToken,
+						role : targetUser.role_type,
+						email : targetUser.email
+					});
+				}
+			);
+		}
+	);
+});
+
 //Serve React build
 const clientDist = path.join(__dirname, 'client', 'dist');
 const fs = require('fs');

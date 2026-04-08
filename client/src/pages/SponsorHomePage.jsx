@@ -609,7 +609,7 @@ export default function SponsorHomePage() {
                             fontSize: '15px',
                             fontWeight: '700'
                         }}>
-                            View Analytics
+                            View Audit Logs
                             </button>   
                             <button
                             type = "button"

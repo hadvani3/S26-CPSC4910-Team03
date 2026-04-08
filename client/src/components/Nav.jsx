@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "./AuthContext.jsx";
+import ImpersonationBanner from "./ImpersonationBanner.jsx";
 
 export default function Nav() {
     const { token, role, logout } = useContext(AuthContext);
@@ -53,6 +54,8 @@ export default function Nav() {
                 : "/home";
 
     return (
+        <>
+        <ImpersonationBanner /> 
         <ul className="nav-list">
             <li><Link to={roleHomePath}>Home</Link></li>
             <li><Link to="/home">Our Program</Link></li>
@@ -78,5 +81,6 @@ export default function Nav() {
             {token && <li><Link to="/account">Account</Link></li>}
             {token && <li><Link to="/" onClick={logout}>Logout</Link></li>}
         </ul>
+        </>
     );
 }
