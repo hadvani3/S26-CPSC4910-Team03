@@ -671,6 +671,7 @@ app.post("/GetSponsor", (req, res) => {
 		}
 	})
 })
+
 app.post('/ChangePoints', (req, res) => {
 	const driverID = req.body.driver_id
 	const change = req.body.change
@@ -694,6 +695,44 @@ app.post('/ChangePoints', (req, res) => {
 					return res.json({ success: true });
 				}
 			})
+		}
+	})
+})
+
+app.post('/getPointsValue', (req, res) => {
+	const sponsor_id = req.body.sponsor_id
+	console.log("Sponsor id for points value")
+	console.log(sponsor_id)
+
+	const get = "select * from sponsors where sponsor_id = ?"
+	const get_query = mysql.format(get, [sponsor_id])
+	db.query(get_query, async (err, getResults) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({error: "Database Error"});
+		}
+		if (getResults.length === 0) {
+			console.log("No sponsor with that id")
+			return res.status(404).json({error: "No sponsor with that id"});
+		} else {
+			const point_value_usd = getResults[0].point_value_usd
+			return res.json({point_value_usd:point_value_usd})
+		}
+	})
+})
+
+app.post('/changePointsValue', (req, res) => {
+	const sponsor_id = req.body.sponsor_id
+	const value = req.body.value
+
+	const update = "UPDATE sponsors SET point_value_usd = ? WHERE sponsor_id = ?"
+	const update_query = mysql.format(update, [value, sponsor_id])
+	db.query(update_query, async (err) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({error: "Database Error"});
+		} else {
+			return res.status(200).json({success:true})
 		}
 	})
 })
@@ -1095,6 +1134,55 @@ app.get('/api/sponsors', (req, res) => {
     );
 });
 
+// Current driver's point balance (navbar, etc.)
+app.get('/api/me/points', (req, res) => {
+	const token = getBearerToken(req);
+	if (!token) {
+		return res.status(401).json({ error: 'Authorization required' });
+	}
+	const email = decodeAccessToken(token);
+	if (!email) {
+		return res.status(401).json({ error: 'Invalid or expired token' });
+	}
+
+	db.query(
+		'SELECT user_id, role_type FROM users WHERE email = ? AND is_active = 1 LIMIT 1',
+		[email],
+		(err, urows) => {
+			if (err) {
+				console.error(err);
+				return res.status(500).json({ error: 'Database error' });
+			}
+			if (!urows.length) {
+				return res.status(401).json({ error: 'User not found' });
+			}
+			const rt = String(urows[0].role_type ?? '')
+				.trim()
+				.toLowerCase();
+			if (rt !== 'driver') {
+				return res.status(403).json({ error: 'Only drivers have a point balance' });
+			}
+			const userId = urows[0].user_id;
+			db.query(
+				'SELECT total_points FROM drivers WHERE user_id = ? LIMIT 1',
+				[userId],
+				(e2, drows) => {
+					if (e2) {
+						console.error(e2);
+						return res.status(500).json({ error: 'Database error' });
+					}
+					if (!drows.length) {
+						return res.json({ points: 0 });
+					}
+					const raw = drows[0].total_points;
+					const n = raw == null ? 0 : Number(raw);
+					return res.json({ points: Number.isFinite(n) ? n : 0 });
+				}
+			);
+		}
+	);
+});
+
 // driver submits sponsor application (user_id + sponsor_id resolved in SQL)
 app.post('/api/driver-applications', (req, res) => {
     const {
@@ -1418,7 +1506,22 @@ app.patch('/api/applications/:id/review', (req, res) => {
 								if (result.affectedRows === 0) {
 									return res.status(404).json({ error: 'Application not found' });
 								}
-								res.json({ success: true });
+								//res.json({ success: true });
+
+								// link approved drivers to sponsors
+								if (application_status === 'APPROVED') {
+									db.query (
+										`UPDATE drivers SET sponsor_id = ?, phone_number = ? WHERE user_id = ?`,
+										[row.sponsor_id, row.phone_number, row.user_id],
+										(e4) => {
+											if (e4) console.error('Failed to link this driver to sponsor.', e4);
+											res.json({ success: true, message: 'Application approved and driver linked to sponsor' });
+										}
+									);
+								}
+								else {
+									res.json({success: true});
+								}
 							}
 						);
 					};
@@ -2032,10 +2135,351 @@ app.post('/api/purchase', async (req, res) => {
 	});
 })
 
+// sponsor point reports
+app.get('/api/sponsor/points-report', async (req, res) => {
+	const token = getBearerToken(req);
+	if (!token) return res.status(401).json({ error: 'Authorization is required!' });
+
+	const email = decodeAccessToken(token);
+
+	const sponsorUser = await new Promise((resolve) => {
+		// query sponsor users 
+		db.query(
+			`SELECT sa.sponsor_id FROM users s
+			JOIN sponsor_users sa on s.user_id = sa.user_id
+			WHERE  s.email = ? LIMIT 1`,
+			[email],
+			(err, results) => resolve(err ? null : results)
+		);
+	});
+
+	if (!sponsorUser || sponsorUser.length === 0) {
+		return res.status(403).json({ error: 'Sponsor organization was not found.' });
+	}
+
+	const sponsor_id = sponsorUser[0].sponsor_id;
+
+	// query driver points
+	const sql = `
+	SELECT
+		d.driver_id,
+		CONCAT(d.first_name, ' ', d.last_name) AS driver_name,
+		d.total_points,
+		dp.points_change,
+		dp.reason,
+		dp.created_at AS date,
+		s.company_name AS sponsor_name
+	FROM driver_points dp
+	JOIN drivers d ON dp.driver_id = d.driver_id
+	JOIN sponsors s ON dp.sponsor_id = s.sponsor_id
+	WHERE s.sponsor_id = ?
+	ORDER BY dp.created_at DESC
+	`;
+
+	db.query(sql, [sponsor_id], (err, results) => { 
+		if (err) {
+			console.error(err);
+			return res.status(500).json({ error: 'Database error.' });
+		}
+		res.json(results);
+	});
+});
+
+// admin sales by sponsor report
+app.get('/api/admin/sales-by-sponsor', (req,res) => {
+	const sql = `
+	SELECT
+		s.company_name AS sponsor_name,
+		CONCAT(d.first_name, ' ', d.last_name) AS driver_name,
+		dp.points_change,
+		dp.reason,
+		dp.created_at AS date
+	FROM driver_points dp
+	JOIN sponsors s ON dp.sponsor_id = s.sponsor_id
+	JOIN drivers d ON dp.driver_id = d.driver_id
+	ORDER BY dp.created_at DESC
+	`;
+
+	db.query(sql, (err, results) => {
+		if(err) {
+			console.error(err);
+			return res.status(500).json({ error: 'Database error.' });
+		}
+		res.json(results);
+	});
+
+
+});
+
+// admin sales by driver
+app.get('/api/admin/sales-by-driver', (req, res) => {
+	const sql = `
+	SELECT
+	CONCAT(d.first_name, ' ' , d.last_name) AS driver_name,
+	s.company_name as sponsor_name,
+	dp.points_change,
+	dp.reason,
+	dp.created_at AS date
+	FROM driver_points dp
+	JOIN drivers d ON dp.driver_id = d.driver_id
+	JOIN sponsors s on dp.sponsor_id = s.sponsor_id
+	ORDER BY dp.created_at DESC
+	`;
+
+	db.query(sql, (err, results) => {
+		if(err) {
+			console.error(err);
+			return res.status(500).json({ error: 'Database error.' });
+		}
+		res.json(results);
+	});
+});
+
+// sponsor audit log
+app.get('/api/sponsor/audit-log', async (req,res) => {
+	const token = getBearerToken(req);
+	if (!token) return res.status(401).json({ error: 'Authorization is required!' });
+
+	const email = decodeAccessToken(token);
+	const type = req.query.type || 'all';
+
+	const sponsorUser = await new Promise((resolve) =>{
+		db.query(
+			`SELECT s.sponsor_id FROM users u
+			JOIN sponsor_users s ON u.user_id = s.user_id
+			WHERE u.email = ? LIMIT 1`,
+			[email],
+			(err, results) => resolve(err ? null : results)
+		);
+
+	});
+
+	if (!sponsorUser || sponsorUser.length === 0) {
+		return res.status(403).json({ error: 'Sponsor organization was not found.' });
+	}
+
+	const sponsor_id = sponsorUser[0].sponsor_id;
+	let sql = '';
+	let params = [];
+
+	if (type === 'application') {
+		sql = `SELECT 'application' AS type,
+			CONCAT(da.first_name, ' ', da.last_name, ' applied to ', s.company_name) AS label,
+            NULL AS success, da.created_at AS timestamp
+            FROM driver_applications da
+            JOIN sponsors s ON da.sponsor_id = s.sponsor_id
+            WHERE da.sponsor_id = ?
+            ORDER BY da.created_at DESC LIMIT 50`;
+		params = [sponsor_id];
+	}
+
+	else if (type === 'points') {
+		sql = `SELECT 'points' AS type,
+			CONCAT(d.first_name, ' ', d.last_name, ' (', dp.points_change, ' pts)') AS label,
+			NULL AS success , dp.created_at AS timestamp
+            FROM driver_points dp
+            JOIN drivers d ON dp.driver_id = d.driver_id
+            WHERE dp.sponsor_id = ?
+            ORDER BY dp.created_at DESC LIMIT 50`;
+		params = [sponsor_id];
+	}
+
+	else {
+		sql = `SELECT 'application' AS type,
+            CONCAT(da.first_name, ' ', da.last_name, ' applied to ', s.company_name) AS label,
+            NULL AS success, da.created_at AS timestamp
+            FROM driver_applications da
+            JOIN sponsors s ON da.sponsor_id = s.sponsor_id
+            WHERE da.sponsor_id = ?
+            UNION ALL
+            SELECT 'points' AS type,
+            CONCAT(d.first_name, ' ', d.last_name, ' (', dp.points_change, ' pts)') AS label,
+            NULL AS success, dp.created_at AS timestamp
+            FROM driver_points dp
+            JOIN drivers d ON dp.driver_id = d.driver_id
+            WHERE dp.sponsor_id = ?
+            ORDER BY timestamp DESC LIMIT 50`;
+        params = [sponsor_id, sponsor_id];
+	}
+
+	db.query(sql, params, (err, results) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({ error: 'Database error.' });
+		}
+		res.json(results);
+	});
+
+});
+
+// sponsor stats endpoint
+app.get('/api/sponsor/stats', async (req,res) => {
+	const token = getBearerToken(req);
+	if(!token) return res.status(401).json({ error: 'Authorization is required!' });
+
+
+const email = decodeAccessToken(token);
+
+const sponsorUser = await new Promise((resolve) => {
+	db.query(
+		`SELECT su.sponsor_id FROM users u
+		JOIN sponsor_users su ON u.user_id = su.user_id
+		WHERE u.email = ? LIMIT 1`,
+		[email],
+		(err, results) => resolve(err ? null : results)
+	);
+});
+
+// check if sponsor user exists
+if (!sponsorUser || sponsorUser.length === 0) {
+	return res.status(403).json({ error: 'Sponsor organization was not found.' });
+}
+
+const sponsor_id = sponsorUser[0].sponsor_id;
+
+const sql =`
+SELECT
+    (SELECT COUNT(*) FROM drivers WHERE sponsor_id = ?) as totalDrivers,
+    (SELECT COUNT(*) FROM drivers WHERE sponsor_id = ?) as activeDrivers,
+    (SELECT COUNT(*) FROM driver_applications WHERE sponsor_id = ? AND application_status = 'PENDING') as pendingApplications,
+    (SELECT COALESCE(SUM(points_change), 0) FROM driver_points WHERE sponsor_id = ? AND points_change > 0) as totalPointsAwarded
+	`;
+
+	db.query(sql, [sponsor_id, sponsor_id, sponsor_id, sponsor_id], (err, results) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({ error: 'Database error.' });
+		}
+		res.json ({
+			totalDrivers: results[0].totalDrivers || 0,
+			activeDrivers: results[0].activeDrivers || 0,
+			pendingApplications: results[0].pendingApplications || 0,
+			totalPointsAwarded: results[0].totalPointsAwarded || 0
+		});
+	});
+
+});
+
+// admin impersonating endpoint
+app.post('/api/admin/impersonate/:user_id', (req,res) => {
+	const token = getBearerToken(req);
+	if (!token) return res.status(401).json({error: 'Authorization is required!'});
+
+	const email = decodeAccessToken(token);
+	if(!email) return res.status(401).json({error: 'Invalid or expired token!'});
+
+	// check if requester is an admin user
+	db.query(
+		`SELECT role_type FROM users WHERE email = ? AND is_active = 1 LIMIT 1`,
+		[email],
+		(err, rows) => {
+			if (err) {
+				console.error(err);
+				return res.status(500).json({ error: 'Database error!' });
+			}
+			if (!rows.length || rows[0].role_type !== 'admin') {
+				return res.status(403).json({ error: 'Access denied! This feature is for admins only' });
+			}
+
+			// get target user information
+			db.query (
+				`SELECT user_id, email, role_type FROM users WHERE user_id = ? AND is_active = 1 LIMIT 1`,
+				[req.params.user_id],
+				(err2, userRows) => {
+					if (err2) {
+						console.error(err2);
+						return res.status(500).json({ error: 'Database error!' });
+					}
+					if (!userRows.length){
+						return res.status(404).json({ error: 'Target user not found!' });
+					}
+					const targetUser = userRows[0];
+
+					if (targetUser.role_type === 'admin') {
+						return res.status(400).json({ error: 'Cannot impersonate another admin user!' });
+					}
+					const impersonateToken = generateAccessToken({
+						user : targetUser.email,
+						role : targetUser.role_type
+					});
+					res.json ({
+						impersonateToken,
+						role : targetUser.role_type,
+						email : targetUser.email
+					});
+				}
+			);
+		}
+	);
+});
+
+// sponsor impersonatation - drivers
+app.post('/api/sponsor/impersonate/:driver_id', (req,res) => {
+	const token = getBearerToken(req);
+	if (!token) {
+		return res.status(401).json({ error: 'Authorization is required!' });
+	}
+
+	const email = decodeAccessToken(token);
+	if (!email) {
+		return res.status(401).json({ error: 'Invalid or expired token!' });
+	}
+
+	// ensure that user is a sponsors
+	db.query (
+		`SELECT u.user_id, su.sponsor_id FROM users u
+		JOIN sponsor_users su ON u.user_id = su.user_id
+		WHERE u.email = ? AND u.is_active = 1 LIMIT 1`,
+		[email],
+
+		(err,rows) => {
+			if(err) {
+				console.error(err);
+				return res.status(500).json({ error: 'Database error!' });
+			}
+			if(!rows.length) {
+				return res.status(403).json({ error: 'Access denied - User is not a sponsor!' });
+			}
+			const sponsor_id = rows[0].sponsor_id;
+
+			// check that the targer user belongs to the sponsor
+			db.query (
+				`SELECT u.user_id, u.email, u.role_type FROM users u
+				JOIN drivers d ON u.user_id = d.user_id
+				WHERE d.driver_id = ? AND d.sponsor_id = ? AND u.is_active = 1 LIMIT 1`,
+				[req.params.driver_id, sponsor_id],
+				(err2, driverRows) => {
+					if (err2) {
+					console.error(err2);
+					return res.status(500).json({ error: 'Database error!' });
+					}
+					if(!driverRows.length) {
+						return res.status(404).json({ error: 'Target driver not found or does not belong to your organization!' });
+					}
+
+					const targetDriver = driverRows[0];
+
+					const impersonateToken = generateAccessToken({
+						user: targetDriver.email,
+						role : 'driver'
+					});
+					res.json({
+						impersonateToken,
+						role : 'driver',
+						email : targetDriver.email
+					});
+				}
+			);
+		}
+	);
+
+});
+
 
 //Serve React build
 const clientDist = path.join(__dirname, 'client', 'dist');
 const fs = require('fs');
+const { decode } = require("punycode");
 if (fs.existsSync(clientDist)) {
 	app.use(express.static(clientDist));
 	// SPA fallback, send index.html for any request not handled by API or static files

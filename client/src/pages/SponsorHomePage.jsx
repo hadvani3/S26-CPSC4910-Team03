@@ -19,15 +19,26 @@ export default function SponsorHomePage() {
     const [drivers, setDrivers] = useState(null);
     const [pointsChanges, setPointsChanges] = useState({});
     const [pointsReason, setPointsReason] = useState("");
+    const [pointsValue, setPointsValue] = useState(null)
+    const [pointsValueUpdate, setPointsValueUpdate] = useState("")
+    const [recentActivities, setRecentActivities] = useState([]);
 
     useEffect(() => {
-        setStats({
-            totalDrivers: 10,
-            activeDrivers: 8,
-            pendingApplications: 2,
-            totalPointsAwarded: 1000
-        });
-    }, [navigate]);
+        if (token) {
+            fetch('/api/sponsor/stats', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+
+            .then(res => res.json())
+            .then(data => setStats({
+                totalDrivers: data.totalDrivers,
+                activeDrivers: data.activeDrivers,
+                pendingApplications: data.pendingApplications,
+                totalPointsAwarded: data.totalPointsAwarded
+            }))
+            .catch(err => console.error('Error fetching sponsor stats from the database!', err))
+        }
+    }, [token])
 
     useEffect(() => {
         async function fetchAccount() {
@@ -153,7 +164,51 @@ export default function SponsorHomePage() {
             console.log("Fetching drivers")
         }
         console.log(drivers)
+
+        async function fetchSponsorPointsValue() {
+            try {
+                console.log(sponsorID)
+                const res = await fetch("https://team03.cpsc4911.com/getPointsValue", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        sponsor_id: sponsorID,
+                    }),
+                });
+
+                const result = await res.json();
+
+                if (res.ok) {
+                    setPointsValue(result.point_value_usd);
+                } else {
+                    setError("Failed to fetch sponsor points value");
+                }
+            } catch (err) {
+                console.error(err);
+                setError("Server error");
+            }
+        }
+
+        if (sponsorID) {
+            fetchSponsorPointsValue()
+            console.log("Fetching points value")
+        }
+        console.log(pointsValue)
     }, [sponsorID, drivers])
+
+    useEffect(() => {
+        if (token) {
+            fetch('/api/sponsor/audit-log?type=all',{
+                headers : {'Authorization': `Bearer ${token}`}
+
+            })
+            .then(res => res.json())
+            .then(data => setRecentActivities(data.slice(0,5)))
+            .catch(err => console.error('Error fetching recent activities', err));
+        }
+    }, [token])
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -199,6 +254,48 @@ export default function SponsorHomePage() {
             alert("Server error");
         }
     };
+
+    const handleChangePointsValue = async () => {
+        try {
+            const res = await fetch("https://team03.cpsc4911.com/changePointsValue", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    sponsor_id: sponsorID,
+                    value: pointsValueUpdate,
+                }),
+            });
+
+            if (res.ok) {
+                console.log("Updated points value.")
+            } else {
+                alert("Failed to update points");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Server error");
+        }
+    };
+
+    const {impersonate} = useContext(AuthContext);
+
+    const handleSponsorImpersonate = async (userId) => {
+        console.log('Impersonating driver_id:', userId);
+    try {
+        const res = await fetch(`/api/sponsor/impersonate/${userId}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.error);
+        impersonate(data.impersonateToken, data.role);
+        navigate('/driver-page');
+    } catch (err) {
+        console.error(err);
+        alert('Failed to impersonate driver');
+    }
+};
+
 
 
     return (
@@ -247,10 +344,10 @@ export default function SponsorHomePage() {
                         color: 'white',
                         boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
-                        <div style={{ fontSize: '3em', fontWeight: 'bold', margin: '0' }}>
+                        <div style={{fontSize: '3em', fontWeight: 'bold', margin: '0'}}>
                             {stats.totalDrivers}
                         </div>
-                        <div style={{ fontSize: '1.1em', marginTop: '8px', opacity: '0.9' }}>
+                        <div style={{fontSize: '1.1em', marginTop: '8px', opacity: '0.9'}}>
                             Total Drivers
                         </div>
                     </div>
@@ -263,10 +360,10 @@ export default function SponsorHomePage() {
                         color: 'white',
                         boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
-                        <div style={{ fontSize: '3em', fontWeight: 'bold', margin: '0' }}>
+                        <div style={{fontSize: '3em', fontWeight: 'bold', margin: '0'}}>
                             {stats.activeDrivers}
                         </div>
-                        <div style={{ fontSize: '1.1em', marginTop: '8px', opacity: '0.9' }}>
+                        <div style={{fontSize: '1.1em', marginTop: '8px', opacity: '0.9'}}>
                             Active Drivers
                         </div>
                     </div>
@@ -280,10 +377,10 @@ export default function SponsorHomePage() {
                         color: 'white',
                         boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
-                        <div style={{ fontSize: '3em', fontWeight: 'bold', margin: '0' }}>
+                        <div style={{fontSize: '3em', fontWeight: 'bold', margin: '0'}}>
                             {stats.pendingApplications}
                         </div>
-                        <div style={{ fontSize: '1.1em', marginTop: '8px', opacity: '0.9' }}>
+                        <div style={{fontSize: '1.1em', marginTop: '8px', opacity: '0.9'}}>
                             Pending Applications
                         </div>
                     </div>
@@ -297,13 +394,40 @@ export default function SponsorHomePage() {
                         color: 'white',
                         boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
-                        <div style={{ fontSize: '3em', fontWeight: 'bold', margin: '0' }}>
+                        <div style={{fontSize: '3em', fontWeight: 'bold', margin: '0'}}>
                             {stats.totalPointsAwarded.toLocaleString()}
                         </div>
-                        <div style={{ fontSize: '1.1em', marginTop: '8px', opacity: '0.9' }}>
+                        <div style={{fontSize: '1.1em', marginTop: '8px', opacity: '0.9'}}>
                             Points Awarded
                         </div>
                     </div>
+                    <div style={{
+                        background: 'rgba(255, 255, 255, 0.16)',
+                        border: '1px solid rgba(255, 255, 255, 0.24)',
+                        backdropFilter: 'blur(8px)',
+                        padding: '25px',
+                        borderRadius: '10px',
+                        color: 'white',
+                        boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
+                    }}>
+                        <div style={{fontSize: '3em', fontWeight: 'bold', margin: '0'}}>
+                            {pointsValue}
+                        </div>
+                        <div style={{fontSize: '1.1em', marginTop: '8px', opacity: '0.9'}}>
+                            Points Value in USD
+                        </div>
+                        <input
+                            type="number"
+                            value={pointsValueUpdate}
+                            onChange={(e) => setPointsValueUpdate(e.target.value)}
+                        />
+                        <button
+                            onClick={() => handleChangePointsValue()}
+                        >
+                            Update
+                        </button>
+                    </div>
+
                 </div>
 
                 <div style={{
@@ -320,7 +444,7 @@ export default function SponsorHomePage() {
                         borderRadius: '10px',
                         boxShadow: '0 8px 18px rgba(0,0,0,0.18)'
                     }}>
-                        <h2 style={{ 
+                        <h2 style={{
                             marginTop: '0',
                             color: '#f4f8ff',
                             fontSize: '1.3em',
@@ -328,7 +452,7 @@ export default function SponsorHomePage() {
                         }}>
                             Driver Management
                         </h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
                             <button className="admin-cream-btn" style={{
                                 padding: '12px 20px',
                                 color: '#1f2937',
@@ -449,44 +573,26 @@ export default function SponsorHomePage() {
                         flexDirection: 'column',
                         gap: '12px'
                     }}>
-                        <div style={{
-                            padding: '15px',
-                            background: 'rgba(255, 255, 255, 0.18)',
-                            borderRadius: '6px',
-                            borderLeft: '4px solid #f4efe1',
-                            color: '#f4f8ff'
-                        }}>
-                            <strong>New application:</strong> Mike Jones
-                            <div style={{ fontSize: '0.9em', color: '#dbe6ff', marginTop: '5px' }}>
-                                2 hours ago
-                            </div>
-                        </div>
-                        <div style={{
-                            padding: '15px',
-                            background: 'rgba(255, 255, 255, 0.18)',
-                            borderRadius: '6px',
-                            borderLeft: '4px solid #f4efe1',
-                            color: '#f4f8ff'
-                        }}>
-                            <strong>Points awarded:</strong> 100 pts to Maxx Crosby
-                            <div style={{ fontSize: '0.9em', color: '#dbe6ff', marginTop: '5px' }}>
-                                5 hours ago
-                            </div>
-                        </div>
-                        <div style={{
-                            padding: '15px',
-                            background: 'rgba(255, 255, 255, 0.18)',
-                            borderRadius: '6px',
-                            borderLeft: '4px solid #f4efe1',
-                            color: '#f4f8ff'
-                        }}>
-                            <strong>Driver approved:</strong> Edward Kenway
-                            <div style={{ fontSize: '0.9em', color: '#dbe6ff', marginTop: '5px' }}>
-                                1 day ago
-                            </div>
+                       {recentActivities.length === 0 ? (
+                            <div style={{ color: '#dbe6ff' }}>No recent activity.</div>
+                        ) : (
+                            recentActivities.map((item, index) => (
+                                <div key={index} style={{
+                                    padding: '15px',
+                                    background: 'rgba(255, 255, 255, 0.18)',
+                                    borderRadius: '6px',
+                                    borderLeft: '4px solid #f4efe1',
+                                    color: '#f4f8ff'
+                                }}>
+                                    <strong>{item.type === 'application' ? 'Application' : 'Points change'}:</strong> {item.label}
+                                    <div style={{ fontSize: '0.9em', color: '#dbe6ff', marginTop: '5px' }}>
+                                        {new Date(item.timestamp).toLocaleString()}
+                                    </div>
+                                </div>
+                            ))
+                        )}
                         </div>
                     </div>
-                </div>
 
                 <div style={{
                     background: 'rgba(255, 255, 255, 0.16)',
@@ -510,7 +616,11 @@ export default function SponsorHomePage() {
                         gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
                         gap: '15px'
                     }}>
-                        <button className="admin-cream-btn" style={{
+                        <button
+                            type= "button"
+                            onClick= {() => navigate(`/sponsor/audit-log`)}
+                            className = "admin-cream-btn"
+                            style={{
                             padding: '15px 20px',
                             color: '#1f2937',
                             border: '1px solid rgba(15, 23, 42, 0.18)',
@@ -519,7 +629,7 @@ export default function SponsorHomePage() {
                             fontSize: '15px',
                             fontWeight: '700'
                         }}>
-                            View Analytics
+                            View Audit Logs
                             </button>   
                             <button
                             type = "button"
@@ -537,14 +647,16 @@ export default function SponsorHomePage() {
                             >
                             Bulk Upload
                             </button>
-                        <button className="admin-cream-btn" style={{
-                            padding: '15px 20px',
-                            color: '#1f2937',
-                            border: '1px solid rgba(15, 23, 42, 0.18)',
-                            borderRadius: '10px',
-                            cursor: 'pointer',
-                            fontSize: '15px',
-                            fontWeight: '700'
+                            <button 
+                            onClick ={() => navigate(`/sponsor/points-report`)}
+                            className="admin-cream-btn" style={{
+                                padding: '15px 20px',
+                                color: '#1f2937',
+                                border: '1px solid rgba(15, 23, 42, 0.18)',
+                                borderRadius: '10px',
+                                cursor: 'pointer',
+                                fontSize: '15px',
+                                fontWeight: '700'
                         }}>
                             Generate Reports
                         </button>
@@ -561,24 +673,13 @@ export default function SponsorHomePage() {
                         }}>
                             Manage Catalog
                         </button>
-                        <button className="admin-cream-btn" style={{
-                            padding: '15px 20px',
-                            color: '#1f2937',
-                            border: '1px solid rgba(15, 23, 42, 0.18)',
-                            borderRadius: '10px',
-                            cursor: 'pointer',
-                            fontSize: '15px',
-                            fontWeight: '700'
-                        }}>
-                            Export Data
-                        </button>
                     </div>
                 </div>
 
                 {drivers && drivers.length > 0 && (
                     <>
                         <h2>Your Drivers</h2>
-                        <table border="1" cellPadding="8">
+                        <table border="1" cellPadding="8" style={{ color:"white"}}>
                             <thead>
                             <tr>
                                 <th>First Name</th>
@@ -587,6 +688,7 @@ export default function SponsorHomePage() {
                                 <th>Points</th>
                                 <th>Points Change Value</th>
                                 <th>Update Points</th>
+                                <th>Impersonate</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -613,12 +715,29 @@ export default function SponsorHomePage() {
                                             Update
                                         </button>
                                     </td>
+                                    <td>
+                                        <button
+                                            onClick={() => handleSponsorImpersonate(driver.driver_id)}
+                                            style={{
+                                                padding: '6px 12px',
+                                                backgroundColor: '#667eea',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '4px',
+                                                fontSize: '13px',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            View as Driver
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                             </tbody>
                         </table>
                         <input
                             type="text"
+                            placeholder={"Enter reason for points change"}
                             value={pointsReason}
                             onChange={(e) => setPointsReason(e.target.value)}
                         />

@@ -32,14 +32,36 @@ export default function AdminApplications() {
     const [notes, setNotes] = useState({});
     const [submitting, setSubmitting] = useState(null);
     const [activeTab, setActiveTab] = useState('pending');
+    const [sponsorFilter, setSponsorFilter] = useState('all');
+
+    const applicationsForView = useMemo(() => {
+        if (roleNorm !== 'admin' || sponsorFilter === 'all') return applications;
+        const sid = Number(sponsorFilter);
+        if (Number.isNaN(sid)) return applications;
+        return applications.filter((a) => Number(a.sponsor_id) === sid);
+    }, [applications, roleNorm, sponsorFilter]);
+
+    const sponsorFilterOptions = useMemo(() => {
+        if (roleNorm !== 'admin') return [];
+        const map = new Map();
+        for (const a of applications) {
+            const id = a.sponsor_id;
+            if (id == null) continue;
+            const name = a.sponsor_name || `Sponsor ${id}`;
+            if (!map.has(id)) map.set(id, name);
+        }
+        return Array.from(map.entries()).sort(([, nameA], [, nameB]) =>
+            String(nameA).localeCompare(String(nameB), undefined, { sensitivity: 'base' })
+        );
+    }, [applications, roleNorm]);
 
     const pending = useMemo(
-        () => applications.filter((a) => a.application_status === 'PENDING'),
-        [applications]
+        () => applicationsForView.filter((a) => a.application_status === 'PENDING'),
+        [applicationsForView]
     );
     const reviewed = useMemo(
-        () => applications.filter((a) => a.application_status !== 'PENDING'),
-        [applications]
+        () => applicationsForView.filter((a) => a.application_status !== 'PENDING'),
+        [applicationsForView]
     );
 
     useEffect(() => {
@@ -84,6 +106,10 @@ export default function AdminApplications() {
             cancelled = true;
         };
     }, [authReady, token, roleNorm, navigate]);
+
+    useEffect(() => {
+        setExpandedId(null);
+    }, [sponsorFilter]);
 
     const toggleExpand = (id) => {
         setExpandedId((prev) => (prev === id ? null : id));
@@ -242,6 +268,56 @@ export default function AdminApplications() {
                         </div>
                     </div>
                 </div>
+
+                {roleNorm === 'admin' && (
+                    <div
+                        style={{
+                            marginBottom: '18px',
+                            padding: '14px 16px',
+                            borderRadius: '10px',
+                            background: 'rgba(255,255,255,0.14)',
+                            border: '1px solid rgba(255,255,255,0.25)',
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            alignItems: 'center',
+                            gap: '12px',
+                        }}
+                    >
+                        <label
+                            htmlFor="admin-sponsor-filter"
+                            style={{
+                                color: '#f4f8ff',
+                                fontWeight: 600,
+                                fontSize: '14px',
+                            }}
+                        >
+                            Filter by sponsor
+                        </label>
+                        <select
+                            id="admin-sponsor-filter"
+                            value={sponsorFilter}
+                            onChange={(e) => setSponsorFilter(e.target.value)}
+                            style={{
+                                flex: '1 1 220px',
+                                maxWidth: '420px',
+                                padding: '10px 12px',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(255,255,255,0.35)',
+                                background: 'rgba(255,255,255,0.95)',
+                                color: '#1f2937',
+                                fontSize: '15px',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            <option value="all">All sponsors</option>
+                            {sponsorFilterOptions.map(([id, name]) => (
+                                <option key={id} value={String(id)}>
+                                    {name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
 
                 <div style={{ display: 'flex', gap: '4px', marginBottom: '20px' }}>
                     {['pending', 'reviewed'].map((tab) => (
@@ -611,22 +687,27 @@ export default function AdminApplications() {
                                             borderBottom: '2px solid #dee2e6',
                                         }}
                                     >
-                                        {['Driver', 'Sponsor', 'Decision', 'Notes', 'Reviewed on'].map(
-                                            (h) => (
-                                                <th
-                                                    key={h}
-                                                    style={{
-                                                        padding: '12px 16px',
-                                                        textAlign: 'left',
-                                                        fontWeight: '600',
-                                                        fontSize: '13px',
-                                                        color: '#555',
-                                                    }}
-                                                >
-                                                    {h}
-                                                </th>
-                                            )
-                                        )}
+                                        {[
+                                            'Driver',
+                                            'Sponsor',
+                                            'Reason',
+                                            'Decision',
+                                            'Notes',
+                                            'Reviewed on',
+                                        ].map((h) => (
+                                            <th
+                                                key={h}
+                                                style={{
+                                                    padding: '12px 16px',
+                                                    textAlign: 'left',
+                                                    fontWeight: '600',
+                                                    fontSize: '13px',
+                                                    color: '#555',
+                                                }}
+                                            >
+                                                {h}
+                                            </th>
+                                        ))}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -655,6 +736,18 @@ export default function AdminApplications() {
                                                 }}
                                             >
                                                 {app.sponsor_name}
+                                            </td>
+                                            <td
+                                                style={{
+                                                    padding: '12px 16px',
+                                                    fontSize: '13px',
+                                                    color: '#555',
+                                                    maxWidth: '240px',
+                                                    verticalAlign: 'top',
+                                                    wordBreak: 'break-word',
+                                                }}
+                                            >
+                                                {app.reason?.trim() ? app.reason : '—'}
                                             </td>
                                             <td style={{ padding: '12px 16px' }}>
                                                 <span

@@ -9,7 +9,7 @@ export default function SponsorRemovalPage(){
         <h1 className = "remove-title">Removal Of Sponsor Account</h1>
         <div className = "removal-box"> 
             <div className="glass-input-group">
-                <label>Sponsor Email</label>
+                <label>Sponsor User Email</label>
                 <input
                 type="email"
                 name="email"
@@ -22,7 +22,7 @@ export default function SponsorRemovalPage(){
             </div>
 
             <div className="glass-input-group">
-                <label>Sponsor Password</label>
+                <label>Sponsor User Password</label>
                     <div className="glass-input-wrapper">
                         <input
                         type={showPassword ? "text" : "password"}
@@ -47,7 +47,7 @@ export default function SponsorRemovalPage(){
             </div>
             <div style={{ 
                     paddingTop: '25px', 
-                    borderTop: '2px solid #f27f33',
+                    borderTop: '2px solid #fd815b',
                     textAlign: 'center'
                 }}>
                 <button type = "button">Delete Account</button>

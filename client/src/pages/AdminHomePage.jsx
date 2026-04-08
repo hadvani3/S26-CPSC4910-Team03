@@ -170,7 +170,7 @@ export default function AdminHomePage() {
                             {stats.totalSponsors}
                         </div>
                         <div style={{ fontSize: '0.95em', marginTop: '6px', opacity: 0.9 }}>
-                            Sponsors
+                            Sponsor Organizations
                         </div>
                     </div>
                     <div style={{
@@ -277,7 +277,7 @@ export default function AdminHomePage() {
                                 </button>
                             <button
                                 type="button"
-                                onClick={() => navigate('/admin/reports')}
+                                onClick={() => navigate('/admin/reports/sales-by-sponsor')}
                                 className="admin-cream-btn"
                                 style={btnBase}
                             >
@@ -400,10 +400,11 @@ export default function AdminHomePage() {
                                 fontWeight: '700',
                             }}
                         >
-                            View Analytics
+                            View Audit Logs
                         </button>
                         <button
                             type="button"
+                            onClick={() => navigate('/admin/reports')}
                             className="admin-cream-btn"
                             style={{
                                 padding: '12px 14px',
