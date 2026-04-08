@@ -24,13 +24,21 @@ export default function SponsorHomePage() {
     const [recentActivities, setRecentActivities] = useState([]);
 
     useEffect(() => {
-        setStats({
-            totalDrivers: 10,
-            activeDrivers: 8,
-            pendingApplications: 2,
-            totalPointsAwarded: 1000
-        });
-    }, [navigate]);
+        if (token) {
+            fetch('/api/sponsor/stats', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+
+            .then(res => res.json())
+            .then(data => setStats({
+                totalDrivers: data.totalDrivers,
+                activeDrivers: data.activeDrivers,
+                pendingApplications: data.pendingApplications,
+                totalPointsAwarded: data.totalPointsAwarded
+            }))
+            .catch(err => console.error('Error fetching sponsor stats from the database!', err))
+        }
+    }, [token])
 
     useEffect(() => {
         async function fetchAccount() {
@@ -591,6 +599,7 @@ export default function SponsorHomePage() {
                         <button
                             type= "button"
                             onClick= {() => navigate(`/sponsor/audit-log`)}
+                            className = "admin-cream-btn"
                             style={{
                             padding: '15px 20px',
                             color: '#1f2937',
@@ -643,17 +652,6 @@ export default function SponsorHomePage() {
                             fontWeight: '700'
                         }}>
                             Manage Catalog
-                        </button>
-                        <button className="admin-cream-btn" style={{
-                            padding: '15px 20px',
-                            color: '#1f2937',
-                            border: '1px solid rgba(15, 23, 42, 0.18)',
-                            borderRadius: '10px',
-                            cursor: 'pointer',
-                            fontSize: '15px',
-                            fontWeight: '700'
-                        }}>
-                            Export Data
                         </button>
                     </div>
                 </div>

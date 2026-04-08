@@ -2276,6 +2276,54 @@ app.get('/api/sponsor/audit-log', async (req,res) => {
 
 });
 
+// sponsor stats endpoint
+app.get('/api/sponsor/stats', async (req,res) => {
+	const token = getBearerToken(req);
+	if(!token) return res.status(401).json({ error: 'Authorization is required!' });
+
+
+const email = decodeAccessToken(token);
+
+const sponsorUser = await new Promise((resolve) => {
+	db.query(
+		`SELECT su.sponsor_id FROM users u
+		JOIN sponsor_users su ON u.user_id = su.user_id
+		WHERE u.email = ? LIMIT 1`,
+		[email],
+		(err, results) => resolve(err ? null : results)
+	);
+});
+
+// check if sponsor user exists
+if (!sponsorUser || sponsorUser.length === 0) {
+	return res.status(403).json({ error: 'Sponsor organization was not found.' });
+}
+
+const sponsor_id = sponsorUser[0].sponsor_id;
+
+const sql =`
+SELECT
+    (SELECT COUNT(*) FROM drivers WHERE sponsor_id = ?) as totalDrivers,
+    (SELECT COUNT(*) FROM drivers WHERE sponsor_id = ?) as activeDrivers,
+    (SELECT COUNT(*) FROM driver_applications WHERE sponsor_id = ? AND application_status = 'PENDING') as pendingApplications,
+    (SELECT COALESCE(SUM(points_change), 0) FROM driver_points WHERE sponsor_id = ? AND points_change > 0) as totalPointsAwarded
+	`;
+
+	db.query(sql, [sponsor_id, sponsor_id, sponsor_id, sponsor_id], (err, results) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({ error: 'Database error.' });
+		}
+		res.json ({
+			totalDrivers: results[0].totalDrivers || 0,
+			activeDrivers: results[0].activeDrivers || 0,
+			pendingApplications: results[0].pendingApplications || 0,
+			totalPointsAwarded: results[0].totalPointsAwarded || 0
+		});
+	});
+
+});
+
 //Serve React build
 const clientDist = path.join(__dirname, 'client', 'dist');
 const fs = require('fs');
