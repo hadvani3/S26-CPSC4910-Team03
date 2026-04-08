@@ -663,7 +663,7 @@ export default function SponsorHomePage() {
                 {drivers && drivers.length > 0 && (
                     <>
                         <h2>Your Drivers</h2>
-                        <table border="1" cellPadding="8">
+                        <table border="1" cellPadding="8" style={{ color:"white"}}>
                             <thead>
                             <tr>
                                 <th>First Name</th>
@@ -704,6 +704,7 @@ export default function SponsorHomePage() {
                         </table>
                         <input
                             type="text"
+                            placeholder={"Enter reason for points change"}
                             value={pointsReason}
                             onChange={(e) => setPointsReason(e.target.value)}
                         />
