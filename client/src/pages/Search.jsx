@@ -68,19 +68,22 @@ const SearchResults = () => {
           Search
         </button>
       </form>
-      <h2 style={{ color: 'white' }}>Results for "{new URLSearchParams(location.search).get('q')}"</h2>
+      </div>
+      <h2 style={{ color: 'white', textAlign: 'center' }}>Results for "{new URLSearchParams(location.search).get('q')}":</h2>
 
       {loading && <p>Loading...</p>}
-
-      {!loading && products.length === 0 && <p style={{ color: 'white' }}>No products found.</p>}
+      <div style ={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px', padding: '20px', maxWidth: '1400px', width: '100%', margin: '0 auto'}}>
+      {!loading && products.length === 0 && <p style={{ color: 'white', textAlign: 'center' }}>No products found.</p>}
 
         {products.map((item) => (
-          <div key={item.listing_id} className="container">
+          <div key={item.listing_id} className="container" style={{padding: '25px', borderRadius: '12px', border: '1px solid #333', display: 'flex', flexDirection: 'column',
+      transition: 'transform 0.2s', minHeight: '400px'}}>
           <Link to={getProductPath(item.listing_id)} style={{ textDecoration: 'none' }}>
-            <img src={item.image} alt={item.title} style={{ width: '200px'}} />
-            <h4 style={{ color: 'white' }}>{item.title}</h4>
+            <img src={item.image} alt={item.title} style={{ display: 'block', width: '100%', marginBottom: '10px', height: '400px', objectFit: 'contain',  }} />
+            <h4 style={{ color: 'white', textAlign: 'center', fontSize: '0.9rem', height: '3em', overflow: 'hidden' }}>{item.title}</h4>
             <p style={{
-              color: "white"
+              color: "green",
+              textAlign: "center"
             }}> <b>Points: {item.price}</b></p>
             </Link>
           </div>

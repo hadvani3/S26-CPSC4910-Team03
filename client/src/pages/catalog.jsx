@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom'
+import React, { useState, useEffect, useContext } from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom'
 import Nav from '../components/Nav';
 import { useParams } from 'react-router-dom';
+import { AuthContext } from "../components/AuthContext.jsx";
 
 const Catalog = () =>{
   const [products, setProducts] = useState([]);
@@ -10,6 +11,14 @@ const Catalog = () =>{
   const location = useLocation();
 
   const { sponsor_id } = useParams(); 
+  const { token, role } = useContext(AuthContext);
+  
+    //check the token
+    useEffect(() => {
+      if (!token) {
+        navigate("/"); 
+      }
+    }, [token, navigate]);
 
   useEffect(() => {
     if (sponsor_id) {
@@ -31,27 +40,31 @@ const Catalog = () =>{
     }
   };
   
+ 
+  //send to the specific type of product page
+  const getProductPath = (id) => {
+    return role === 'sponsor' 
+      ? `/sponsor_product?q=${id}` 
+      : `/product?q=${id}`;
+  };
 
    return (
     <>
-    <Nav />
-    <div className="Searchcontainer" style={{width: '1000px'}}>
-      {loading && <p>Loading...</p>}
-
-      {!loading && products.length === 0 && <p style={{ color: 'white' }}>No products found.</p>}
+      <Nav />
+        {loading && <p>Loading...</p>}
+        {!loading && products.length === 0 && <p style={{ color: 'white' }}>No products found.</p>}
         <h1>Catalog:</h1>
-        {products.map((item) => (
-          <div key={item.listing_id} className="container">
-          <a href= {`/product?q=${item.listing_id}`}>
-            <img src={item.image} alt={item.title} style={{ width: '200px'}} />
-            <h4 style={{ color: 'white' }}>{item.title}</h4>
-            <p style={{
-              color: "white"
-            }}> <b>Points: {item.price}</b></p>
-            </a>
-          </div>
-        ))}
-      </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px', padding: '20px', maxWidth: '1400px', width: '100%', margin: '0 auto' }}>
+          {products.map((item) => (
+            <div key={item.listing_id} className="container" style={{ padding: '25px', borderRadius: '12px', border: '1px solid #333', display: 'flex', flexDirection: 'column', transition: 'transform 0.2s', minHeight: '400px' }}>
+              <Link to={getProductPath(item.listing_id)} style={{ textDecoration: 'none' }}>
+                <img src={item.image} alt={item.title} style={{ display: 'block', width: '100%', marginBottom: '10px', height: '400px', objectFit: 'contain' }} />
+                <h4 style={{ color: 'white', textAlign: 'center', fontSize: '0.9rem', height: '3em', overflow: 'hidden' }}>{item.title}</h4>
+                <p style={{ color: "green", textAlign: "center" }}> <b>Points: {item.price}</b></p>
+              </Link>
+            </div>
+          ))}
+        </div>
     </>
   );
 };

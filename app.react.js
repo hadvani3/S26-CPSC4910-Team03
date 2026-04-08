@@ -96,7 +96,7 @@ app.post('/create_account', async (req, res) => {
 
 app.get('/api/search', async (req, res) => {
 	const searchTerm = req.query.q; 
-	const limit = 10;
+	const limit = 60;
 	//first api call to get the data we want
     const url = new URL('https://api.etsy.com/v3/application/listings/active');
     url.searchParams.append('keywords', searchTerm);
