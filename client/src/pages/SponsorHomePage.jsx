@@ -277,6 +277,26 @@ export default function SponsorHomePage() {
         }
     };
 
+    const {impersonate} = useContext(AuthContext);
+
+    const handleSponsorImpersonate = async (userId) => {
+        console.log('Impersonating driver_id:', userId);
+    try {
+        const res = await fetch(`/api/sponsor/impersonate/${userId}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.error);
+        impersonate(data.impersonateToken, data.role);
+        navigate('/driver-page');
+    } catch (err) {
+        console.error(err);
+        alert('Failed to impersonate driver');
+    }
+};
+
+
 
     return (
         <>
@@ -668,6 +688,7 @@ export default function SponsorHomePage() {
                                 <th>Points</th>
                                 <th>Points Change Value</th>
                                 <th>Update Points</th>
+                                <th>Impersonate</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -692,6 +713,22 @@ export default function SponsorHomePage() {
                                             onClick={() => handleChangePoints(driver.driver_id)}
                                         >
                                             Update
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button
+                                            onClick={() => handleSponsorImpersonate(driver.driver_id)}
+                                            style={{
+                                                padding: '6px 12px',
+                                                backgroundColor: '#667eea',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '4px',
+                                                fontSize: '13px',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            View as Driver
                                         </button>
                                     </td>
                                 </tr>
