@@ -1502,7 +1502,22 @@ app.patch('/api/applications/:id/review', (req, res) => {
 								if (result.affectedRows === 0) {
 									return res.status(404).json({ error: 'Application not found' });
 								}
-								res.json({ success: true });
+								//res.json({ success: true });
+
+								// link approved drivers to sponsors
+								if (application_status === 'APPROVED') {
+									db.query (
+										`UPDATE drivers SET sponsor_id = ?, phone_number = ? WHERE user_id = ?`,
+										[row.sponsor_id, row.phone_number, row.user_id],
+										(e4) => {
+											if (e4) console.error('Failed to link this driver to sponsor.', e4);
+											res.json({ success: true, message: 'Application approved and driver linked to sponsor' });
+										}
+									);
+								}
+								else {
+									res.json({success: true});
+								}
 							}
 						);
 					};
@@ -2323,6 +2338,122 @@ SELECT
 	});
 
 });
+
+// admin impersonating endpoint
+app.post('/api/admin/impersonate/:user_id', (req,res) => {
+	const token = getBearerToken(req);
+	if (!token) return res.status(401).json({error: 'Authorization is required!'});
+
+	const email = decodeAccessToken(token);
+	if(!email) return res.status(401).json({error: 'Invalid or expired token!'});
+
+	// check if requester is an admin user
+	db.query(
+		`SELECT role_type FROM users WHERE email = ? AND is_active = 1 LIMIT 1`,
+		[email],
+		(err, rows) => {
+			if (err) {
+				console.error(err);
+				return res.status(500).json({ error: 'Database error!' });
+			}
+			if (!rows.length || rows[0].role_type !== 'admin') {
+				return res.status(403).json({ error: 'Access denied! This feature is for admins only' });
+			}
+
+			// get target user information
+			db.query (
+				`SELECT user_id, email, role_type FROM users WHERE user_id = ? AND is_active = 1 LIMIT 1`,
+				[req.params.user_id],
+				(err2, userRows) => {
+					if (err2) {
+						console.error(err2);
+						return res.status(500).json({ error: 'Database error!' });
+					}
+					if (!userRows.length){
+						return res.status(404).json({ error: 'Target user not found!' });
+					}
+					const targetUser = userRows[0];
+
+					if (targetUser.role_type === 'admin') {
+						return res.status(400).json({ error: 'Cannot impersonate another admin user!' });
+					}
+					const impersonateToken = generateAccessToken({
+						user : targetUser.email,
+						role : targetUser.role_type
+					});
+					res.json ({
+						impersonateToken,
+						role : targetUser.role_type,
+						email : targetUser.email
+					});
+				}
+			);
+		}
+	);
+});
+
+// sponsor impersonatation - drivers
+app.post('/api/sponsor/impersonate/:driver_id', (req,res) => {
+	const token = getBearerToken(req);
+	if (!token) {
+		return res.status(401).json({ error: 'Authorization is required!' });
+	}
+
+	const email = decodeAccessToken(token);
+	if (!email) {
+		return res.status(401).json({ error: 'Invalid or expired token!' });
+	}
+
+	// ensure that user is a sponsors
+	db.query (
+		`SELECT u.user_id, su.sponsor_id FROM users u
+		JOIN sponsor_users su ON u.user_id = su.user_id
+		WHERE u.email = ? AND u.is_active = 1 LIMIT 1`,
+		[email],
+
+		(err,rows) => {
+			if(err) {
+				console.error(err);
+				return res.status(500).json({ error: 'Database error!' });
+			}
+			if(!rows.length) {
+				return res.status(403).json({ error: 'Access denied - User is not a sponsor!' });
+			}
+			const sponsor_id = rows[0].sponsor_id;
+
+			// check that the targer user belongs to the sponsor
+			db.query (
+				`SELECT u.user_id, u.email, u.role_type FROM users u
+				JOIN drivers d ON u.user_id = d.user_id
+				WHERE d.driver_id = ? AND d.sponsor_id = ? AND u.is_active = 1 LIMIT 1`,
+				[req.params.driver_id, sponsor_id],
+				(err2, driverRows) => {
+					if (err2) {
+					console.error(err2);
+					return res.status(500).json({ error: 'Database error!' });
+					}
+					if(!driverRows.length) {
+						return res.status(404).json({ error: 'Target driver not found or does not belong to your organization!' });
+					}
+
+					const targetDriver = driverRows[0];
+
+					const impersonateToken = generateAccessToken({
+						user: targetDriver.email,
+						role : 'driver'
+					});
+					res.json({
+						impersonateToken,
+						role : 'driver',
+						email : targetDriver.email
+					});
+				}
+			);
+		}
+	);
+
+});
+
 
 //Serve React build
 const clientDist = path.join(__dirname, 'client', 'dist');

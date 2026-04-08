@@ -400,7 +400,7 @@ export default function AdminHomePage() {
                                 fontWeight: '700',
                             }}
                         >
-                            View Analytics
+                            View Audit Logs
                         </button>
                         <button
                             type="button"
