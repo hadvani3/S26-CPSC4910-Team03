@@ -2199,9 +2199,87 @@ app.get('/api/admin/sales-by-driver', (req, res) => {
 	});
 });
 
+// sponsor audit log
+app.get('/api/sponsor/audit-log', async (req,res) => {
+	const token = getBearerToken(req);
+	if (!token) return res.status(401).json({ error: 'Authorization is required!' });
+
+	const email = decodeAccessToken(token);
+	const type = req.query.type || 'all';
+
+	const sponsorUser = await new Promise((resolve) =>{
+		db.query(
+			`SELECT s.sponsor_id FROM users u
+			JOIN sponsor_users s ON u.user_id = s.user_id
+			WHERE u.email = ? LIMIT 1`,
+			[email],
+			(err, results) => resolve(err ? null : results)
+		);
+
+	});
+
+	if (!sponsorUser || sponsorUser.length === 0) {
+		return res.status(403).json({ error: 'Sponsor organization was not found.' });
+	}
+
+	const sponsor_id = sponsorUser[0].sponsor_id;
+	let sql = '';
+	let params = [];
+
+	if (type === 'application') {
+		sql = `SELECT 'application' AS type,
+			CONCAT(da.first_name, ' ', da.last_name, ' applied to ', s.company_name) AS label,
+            NULL AS success, da.created_at AS timestamp
+            FROM driver_applications da
+            JOIN sponsors s ON da.sponsor_id = s.sponsor_id
+            WHERE da.sponsor_id = ?
+            ORDER BY da.created_at DESC LIMIT 50`;
+		params = [sponsor_id];
+	}
+
+	else if (type === 'points') {
+		sql = `SELECT 'points' AS type,
+			CONCAT(d.first_name, ' ', d.last_name, ' (', dp.points_change, ' pts)') AS label,
+			NULL AS success , dp.created_at AS timestamp
+            FROM driver_points dp
+            JOIN drivers d ON dp.driver_id = d.driver_id
+            WHERE dp.sponsor_id = ?
+            ORDER BY dp.created_at DESC LIMIT 50`;
+		params = [sponsor_id];
+	}
+
+	else {
+		sql = `SELECT 'application' AS type,
+            CONCAT(da.first_name, ' ', da.last_name, ' applied to ', s.company_name) AS label,
+            NULL AS success, da.created_at AS timestamp
+            FROM driver_applications da
+            JOIN sponsors s ON da.sponsor_id = s.sponsor_id
+            WHERE da.sponsor_id = ?
+            UNION ALL
+            SELECT 'points' AS type,
+            CONCAT(d.first_name, ' ', d.last_name, ' (', dp.points_change, ' pts)') AS label,
+            NULL AS success, dp.created_at AS timestamp
+            FROM driver_points dp
+            JOIN drivers d ON dp.driver_id = d.driver_id
+            WHERE dp.sponsor_id = ?
+            ORDER BY timestamp DESC LIMIT 50`;
+        params = [sponsor_id, sponsor_id];
+	}
+
+	db.query(sql, params, (err, results) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({ error: 'Database error.' });
+		}
+		res.json(results);
+	});
+
+});
+
 //Serve React build
 const clientDist = path.join(__dirname, 'client', 'dist');
 const fs = require('fs');
+const { decode } = require("punycode");
 if (fs.existsSync(clientDist)) {
 	app.use(express.static(clientDist));
 	// SPA fallback, send index.html for any request not handled by API or static files
