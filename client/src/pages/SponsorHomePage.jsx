@@ -21,15 +21,24 @@ export default function SponsorHomePage() {
     const [pointsReason, setPointsReason] = useState("");
     const [pointsValue, setPointsValue] = useState(null)
     const [pointsValueUpdate, setPointsValueUpdate] = useState("")
+    const [recentActivities, setRecentActivities] = useState([]);
 
     useEffect(() => {
-        setStats({
-            totalDrivers: 10,
-            activeDrivers: 8,
-            pendingApplications: 2,
-            totalPointsAwarded: 1000
-        });
-    }, [navigate]);
+        if (token) {
+            fetch('/api/sponsor/stats', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+
+            .then(res => res.json())
+            .then(data => setStats({
+                totalDrivers: data.totalDrivers,
+                activeDrivers: data.activeDrivers,
+                pendingApplications: data.pendingApplications,
+                totalPointsAwarded: data.totalPointsAwarded
+            }))
+            .catch(err => console.error('Error fetching sponsor stats from the database!', err))
+        }
+    }, [token])
 
     useEffect(() => {
         async function fetchAccount() {
@@ -188,6 +197,18 @@ export default function SponsorHomePage() {
         }
         console.log(pointsValue)
     }, [sponsorID, drivers])
+
+    useEffect(() => {
+        if (token) {
+            fetch('/api/sponsor/audit-log?type=all',{
+                headers : {'Authorization': `Bearer ${token}`}
+
+            })
+            .then(res => res.json())
+            .then(data => setRecentActivities(data.slice(0,5)))
+            .catch(err => console.error('Error fetching recent activities', err));
+        }
+    }, [token])
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -532,44 +553,26 @@ export default function SponsorHomePage() {
                         flexDirection: 'column',
                         gap: '12px'
                     }}>
-                        <div style={{
-                            padding: '15px',
-                            background: 'rgba(255, 255, 255, 0.18)',
-                            borderRadius: '6px',
-                            borderLeft: '4px solid #f4efe1',
-                            color: '#f4f8ff'
-                        }}>
-                            <strong>New application:</strong> Mike Jones
-                            <div style={{ fontSize: '0.9em', color: '#dbe6ff', marginTop: '5px' }}>
-                                2 hours ago
-                            </div>
-                        </div>
-                        <div style={{
-                            padding: '15px',
-                            background: 'rgba(255, 255, 255, 0.18)',
-                            borderRadius: '6px',
-                            borderLeft: '4px solid #f4efe1',
-                            color: '#f4f8ff'
-                        }}>
-                            <strong>Points awarded:</strong> 100 pts to Maxx Crosby
-                            <div style={{ fontSize: '0.9em', color: '#dbe6ff', marginTop: '5px' }}>
-                                5 hours ago
-                            </div>
-                        </div>
-                        <div style={{
-                            padding: '15px',
-                            background: 'rgba(255, 255, 255, 0.18)',
-                            borderRadius: '6px',
-                            borderLeft: '4px solid #f4efe1',
-                            color: '#f4f8ff'
-                        }}>
-                            <strong>Driver approved:</strong> Edward Kenway
-                            <div style={{ fontSize: '0.9em', color: '#dbe6ff', marginTop: '5px' }}>
-                                1 day ago
-                            </div>
+                       {recentActivities.length === 0 ? (
+                            <div style={{ color: '#dbe6ff' }}>No recent activity.</div>
+                        ) : (
+                            recentActivities.map((item, index) => (
+                                <div key={index} style={{
+                                    padding: '15px',
+                                    background: 'rgba(255, 255, 255, 0.18)',
+                                    borderRadius: '6px',
+                                    borderLeft: '4px solid #f4efe1',
+                                    color: '#f4f8ff'
+                                }}>
+                                    <strong>{item.type === 'application' ? 'Application' : 'Points change'}:</strong> {item.label}
+                                    <div style={{ fontSize: '0.9em', color: '#dbe6ff', marginTop: '5px' }}>
+                                        {new Date(item.timestamp).toLocaleString()}
+                                    </div>
+                                </div>
+                            ))
+                        )}
                         </div>
                     </div>
-                </div>
 
                 <div style={{
                     background: 'rgba(255, 255, 255, 0.16)',
@@ -593,7 +596,11 @@ export default function SponsorHomePage() {
                         gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
                         gap: '15px'
                     }}>
-                        <button className="admin-cream-btn" style={{
+                        <button
+                            type= "button"
+                            onClick= {() => navigate(`/sponsor/audit-log`)}
+                            className = "admin-cream-btn"
+                            style={{
                             padding: '15px 20px',
                             color: '#1f2937',
                             border: '1px solid rgba(15, 23, 42, 0.18)',
@@ -645,17 +652,6 @@ export default function SponsorHomePage() {
                             fontWeight: '700'
                         }}>
                             Manage Catalog
-                        </button>
-                        <button className="admin-cream-btn" style={{
-                            padding: '15px 20px',
-                            color: '#1f2937',
-                            border: '1px solid rgba(15, 23, 42, 0.18)',
-                            borderRadius: '10px',
-                            cursor: 'pointer',
-                            fontSize: '15px',
-                            fontWeight: '700'
-                        }}>
-                            Export Data
                         </button>
                     </div>
                 </div>
