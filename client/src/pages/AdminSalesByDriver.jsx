@@ -20,7 +20,7 @@ export default function AdminSalesByDriver() {
         .then(res => res.json())
         .then(data => {
             setReport(data);
-            const differentDrivers = [...new Map(data.map(r => [r.driver_id, { driver_id: r.driver_id, name: r.driver_name }])).values()];
+            const differentDrivers = [...new Map(data.map(r => [r.driver_name, { driver_name: r.driver_name}])).values()];
             setDrivers(differentDrivers);
             setLoading(false);    
 
@@ -258,7 +258,7 @@ export default function AdminSalesByDriver() {
                                         <tr key={index} style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                                             <td style={{ padding: '12px 16px', color: '#f4f8ff', fontSize: '14px' }}>{item.driver_name}</td>
                                             <td style={{ padding: '12px 16px', color: '#f4f8ff', fontSize: '14px' }}>{item.sponsor_name}</td>
-                                            <td style={{ padding: '12px 16px', color: '#86efac', fontSize: '14px', fontWeight: '600' }}>{item.total_points}</td>
+                                            <td style={{ padding: '12px 16px', color: item.total_points > 0 ? '#86efac' : item.total_points < 0 ? '#fca5a5' : '#f4f8ff', fontSize: '14px', fontWeight: '600' }}>{item.total_points}</td>
                                             <td style={{ padding: '12px 16px', color: '#f4f8ff', fontSize: '14px' }}>{item.total_changes}</td>
                                         </tr>
                                     ))}

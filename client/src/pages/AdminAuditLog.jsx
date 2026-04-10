@@ -40,8 +40,8 @@ export default function AdminAuditLog() {
     const filteredLogs = logs.filter(item => {
         const searchMatch = item.label.toLowerCase().includes(search.toLowerCase());
         const itemDate = new Date(item.timestamp);
-        const startDateMatch = startDate ? itemDate >= new Date(startDate) : true;
-        const endDateMatch = endDate ? itemDate <= new Date(endDate) : true;
+        const startDateMatch = startDate ? itemDate >= new Date(startDate + 'T00:00:00') : true;
+        const endDateMatch = endDate ? itemDate <= new Date(endDate + 'T23:59:59') : true;
         const sponsorMatch = sponsorFilter !== 'all' ? item.label.toLowerCase().includes(sponsorFilter.toLowerCase()) : true;
 
         return searchMatch && startDateMatch && endDateMatch && sponsorMatch;
