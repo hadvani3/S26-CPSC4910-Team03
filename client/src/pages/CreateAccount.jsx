@@ -8,7 +8,7 @@ export default function CreateAccount() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [role_type, setRole] = useState("driver");
+  const role_type = "driver";
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
@@ -56,7 +56,7 @@ export default function CreateAccount() {
     <>
       <Nav />
       <div className="container">
-        <h1>Create Account</h1>
+        <h1>Create Driver Account</h1>
         <form onSubmit={handleSubmit}>
           <label>
             First Name:
@@ -107,17 +107,6 @@ export default function CreateAccount() {
               required
             />
           </label>
-          <label>How will you use the site:</label>
-          <select
-            name="role_type"
-            id="role_type"
-            value={role_type}
-            onChange={(e) => setRole(e.target.value)}
-          >
-            <option value="driver">Driver</option>
-            <option value="sponsor">Sponsor</option>
-            <option value="admin">Admin</option>
-          </select>
           {message && (
             <p style={{ color: message.includes('successfully') ? 'green' : 'red' }}>
               {message}
