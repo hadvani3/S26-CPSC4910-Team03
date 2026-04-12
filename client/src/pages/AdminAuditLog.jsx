@@ -116,6 +116,7 @@ export default function AdminAuditLog() {
                             <option value="login">Login Attempts</option>
                             <option value="application">Applications</option>
                             <option value="points">Point Changes</option>
+                            <option value="password">Password Changes</option>
                         </select>
                     <input 
                         type = "text"
@@ -224,7 +225,7 @@ export default function AdminAuditLog() {
                                 color: '#f4f8ff',
                                 marginBottom: '10px',
                             }}>
-                                <strong>{item.type === 'login' ? 'Login attempt' : item.type === 'application' ? 'Application' : 'Points change'}:</strong> {item.label}
+                                <strong>{item.type === 'login' ? 'Login attempt' : item.type === 'application' ? 'Application' : item.type === 'password' ? 'Password change' : 'Points change'}:</strong> {item.label}
                                 {item.type === 'login' && (
                                     <span style={{ marginLeft: '8px', color: item.success ? '#86efac' : '#fca5a5' }}>
                                         {item.success ? 'Success' : 'Failed'}
