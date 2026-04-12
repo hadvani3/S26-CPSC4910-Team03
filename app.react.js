@@ -6,6 +6,14 @@ const cors = require('cors')
 const bcrypt = require('bcrypt');
 const { generateAccessToken, decodeAccessToken } = require("./generateAccessToken")
 //const prompt = require('prompt-sync')({ sigint: true });
+const nodemailer = require('nodemailer');
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 const app = express();
 app.use(cors())
@@ -782,8 +790,25 @@ app.post('/api/forgot-password', (req, res) => {
 				}
 
 				// log the reset URL (for testing without email)
-				console.log(`Password reset token created for ${email}`);
-				console.log(`Reset URL: http://localhost:5173/reset-password?token=${resetToken}`);
+				//console.log(`Password reset token created for ${email}`);
+				//console.log(`Reset URL: http://localhost:5173/reset-password?token=${resetToken}`);
+				const resetURL = `https://team03.cpsc4911.com/reset-password?token=${resetToken}`;
+
+
+				transporter.sendMail({
+					from: process.env.EMAIL_USER,
+					to: email,
+					subject: 'Password Reset - Good Driver Incentive Program',
+					html: `
+						<h2>Password Reset Request</h2>
+						<p>Click the link below to reset your password:</p>
+						<a href="${resetURL}">${resetURL}</a>
+						<p>This link expires in 30 minutes.</p>
+						<p>If you did not request this, ignore this email.</p>
+					`
+				}, (err) => {
+					if (err) console.error('Email failed:', err);
+				});
 
 				res.json(successResponse);
 			}
@@ -863,18 +888,21 @@ app.post('/api/reset-password', async (req, res) => {
 								console.error(err);
 								return res.status(500).json({ error: "Database Error" });
 							}
-							
-							console.log('Password reset was successful');
-							CreateNotification(token, `The password on your account has been reset`)
-							.then(() => console.log("SMS Sent"))
-							.catch(e => console.error("SMS failed", e));
-							res.json({ success: true, message: "Password reset was successful!" });
+
+							// log password changes
+							db.query(
+								'INSERT INTO password_logs (user_id) VALUES (?)',
+								[resetRecord.user_id],
+								(logErr) => {
+									if (logErr) console.error('Failed to log password change:', logErr);
+									res.json({ success: true, message: "Password reset was successful!" });
+								}
+							);
 						}
 					);
 				}
 			);
-		}
-	);
+		});
 });
 
 // create new user route
@@ -1632,6 +1660,13 @@ app.get('/api/admin/audit-log',async (req,res) => {
 		JOIN drivers d ON dp.driver_id = d.driver_id
 		ORDER BY timestamp DESC LIMIT 50`;
 	}
+	else if (type === 'password') {
+		sql = `SELECT 'password' AS type,
+		CONCAT('Password changed for user #', pl.user_id) AS label,
+		NULL AS success, pl.changed_at AS timestamp
+		FROM password_logs pl
+		ORDER BY timestamp DESC LIMIT 50`;
+	}
 	else {
 		sql = `SELECT 'login' AS type, username AS label, success, attempted_at AS timestamp
 		FROM login_attempts
@@ -1647,7 +1682,12 @@ app.get('/api/admin/audit-log',async (req,res) => {
 		NULL AS success, dp.created_at AS timestamp
 		FROM driver_points dp
 		JOIN drivers d on dp.driver_id = d.driver_id
-		ORDER BY timestamp DESC LIMIT 50`;
+		UNION ALL
+		SELECT 'password' AS type,
+		CONCAT('Password changed for user #', pl.user_id) AS label,
+		NULL AS success, pl.changed_at AS timestamp
+		FROM password_logs pl
+		ORDER BY timestamp DESC LIMIT 50`;	
 	}
 	db.query(sql, (err, results) => {
 		if (err) {
