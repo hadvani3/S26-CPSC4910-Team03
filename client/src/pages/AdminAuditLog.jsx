@@ -40,8 +40,8 @@ export default function AdminAuditLog() {
     const filteredLogs = logs.filter(item => {
         const searchMatch = item.label.toLowerCase().includes(search.toLowerCase());
         const itemDate = new Date(item.timestamp);
-        const startDateMatch = startDate ? itemDate >= new Date(startDate) : true;
-        const endDateMatch = endDate ? itemDate <= new Date(endDate) : true;
+        const startDateMatch = startDate ? itemDate >= new Date(startDate + 'T00:00:00') : true;
+        const endDateMatch = endDate ? itemDate <= new Date(endDate + 'T23:59:59') : true;
         const sponsorMatch = sponsorFilter !== 'all' ? item.label.toLowerCase().includes(sponsorFilter.toLowerCase()) : true;
 
         return searchMatch && startDateMatch && endDateMatch && sponsorMatch;
@@ -116,6 +116,7 @@ export default function AdminAuditLog() {
                             <option value="login">Login Attempts</option>
                             <option value="application">Applications</option>
                             <option value="points">Point Changes</option>
+                            <option value="password">Password Changes</option>
                         </select>
                     <input 
                         type = "text"
@@ -224,7 +225,7 @@ export default function AdminAuditLog() {
                                 color: '#f4f8ff',
                                 marginBottom: '10px',
                             }}>
-                                <strong>{item.type === 'login' ? 'Login attempt' : item.type === 'application' ? 'Application' : 'Points change'}:</strong> {item.label}
+                                <strong>{item.type === 'login' ? 'Login attempt' : item.type === 'application' ? 'Application' : item.type === 'password' ? 'Password change' : 'Points change'}:</strong> {item.label}
                                 {item.type === 'login' && (
                                     <span style={{ marginLeft: '8px', color: item.success ? '#86efac' : '#fca5a5' }}>
                                         {item.success ? 'Success' : 'Failed'}

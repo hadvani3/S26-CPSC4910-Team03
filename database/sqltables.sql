@@ -111,3 +111,15 @@ CREATE TABLE IF NOT EXISTS login_attempts (
     success BOOLEAN NOT NULL,
     attempted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Driver-sponsor join table
+CREATE TABLE IF NOT EXISTS driver_sponsors (  
+   id INT PRIMARY KEY AUTO_INCREMENT,    
+   driver_id INT NOT NULL,  
+   sponsor_id INT NOT NULL,     
+   status VARCHAR(25) NOT NULL DEFAULT  'APPROVED',    
+   points INT NOT NULL DEFAULT 0,     
+   UNIQUE KEY unique_driver_sponsor (driver_id, sponsor_id),   
+   FOREIGN KEY (driver_id) REFERENCES drivers(driver_id),    
+   FOREIGN KEY (sponsor_id) REFERENCES sponsors(sponsor_id) 
+);

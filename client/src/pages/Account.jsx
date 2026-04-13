@@ -97,37 +97,73 @@ export default function Account() {
         );
     }
 
+    const updateInputType =
+        field === 'email' ? 'email' : field === 'phone_number' ? 'tel' : 'text';
+
     return (
         <>
             <Nav />
             <div className="container">
                 <p className="glass-subtitle">Truckers United</p>
-                <h1>Account</h1>
-                {data.username && <h2>Welcome, {data.username}</h2>}
-                <div className="item">
-                    <span className="label">Role:</span> {data.role}
-                </div>
-                <div className="item">
-                    <span className="label">Email:</span> {data.email}
-                </div>
-                <div className="item">
-                    <span className="label">Account created:</span> {data.createDate}
-                </div>
-                <div className="item">
-                    <span className="label">Account updated:</span> {data.updatedDate}
-                </div>
+                {data.username && <h1>Welcome, {data.username}</h1>}
+                <p className="item" style={{ lineHeight: 1.7 }}>
+                    {data.first_name && (
+                        <>
+                            Name: {data.first_name} {data.last_name}
+                            <br />
+                        </>
+                    )}
+                    {data.phone && (
+                        <>
+                            Phone: {data.phone}
+                            <br />
+                        </>
+                    )}
+                    Role: {data.role}
+                    <br />
+                    Email: {data.email}
+                    <br />
+                    Account created: {data.createDate}
+                    <br />
+                    Account updated: {data.updatedDate}
+                    <br />
+                </p>
                 <form onSubmit={handleSubmit} className="glass-form">
                     <div className="glass-input-group">
-                        <label htmlFor="account-username">Change username:</label>
+                        <label htmlFor="account-update-value">Update Account:</label>
                         <input
-                            id="account-username"
-                            type="username"
-                            name="username"
+                            id="account-update-value"
+                            type={updateInputType}
+                            name={field}
                             className="glass-input"
                             value={newValue}
                             onChange={(e) => setValue(e.target.value)}
                             required
                         />
+                    </div>
+                    <div className="glass-input-group">
+                        <label htmlFor="account-field-select">Select field to update:</label>
+                        <select
+                            id="account-field-select"
+                            className="glass-input"
+                            value={field}
+                            onChange={(e) => {
+                                setField(e.target.value);
+                                setValue('');
+                            }}
+                        >
+                            <option value="username">Username</option>
+                            <option value="email">Email</option>
+                            {data.first_name && (
+                                <option value="first_name">First Name</option>
+                            )}
+                            {data.last_name && (
+                                <option value="last_name">Last Name</option>
+                            )}
+                            {data.phone && (
+                                <option value="phone_number">Phone Number</option>
+                            )}
+                        </select>
                     </div>
                     <button type="submit" className="glass-btn">
                         Update

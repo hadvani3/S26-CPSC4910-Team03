@@ -99,22 +99,6 @@ export default function AdminHomePage() {
                             System management & overview
                         </p>
                     </div>
-                    <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="admin-cream-btn"
-                        style={{
-                            padding: '10px 22px',
-                            color: '#1f2937',
-                            border: '1px solid rgba(15, 23, 42, 0.22)',
-                            borderRadius: '10px',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            fontWeight: '700',
-                        }}
-                    >
-                        Logout
-                    </button>
                 </div>
 
                 <div
@@ -236,6 +220,14 @@ export default function AdminHomePage() {
                             >
                                 Manage Applications
                             </button>
+                            <button
+                                type = "button"
+                                onClick= {() => navigate('/admin/reports/sales-by-driver')}
+                                className = "admin-cream-btn"
+                                style = {btnBase}
+                                >
+                                View Driver Reports
+                            </button>
                         </div>
                     </div>
 
@@ -348,7 +340,7 @@ export default function AdminHomePage() {
                         className="admin-dashboard-actions"
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
+                            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
                             gap: '12px',
                         }}
                     >
@@ -417,36 +409,6 @@ export default function AdminHomePage() {
                             }}
                         >
                             Generate Reports
-                        </button>
-                        <button
-                            type="button"
-                            className="admin-cream-btn"
-                            style={{
-                                padding: '12px 14px',
-                                color: '#1f2937',
-                                border: '1px solid rgba(15, 23, 42, 0.18)',
-                                borderRadius: '10px',
-                                cursor: 'pointer',
-                                fontSize: '14px',
-                                fontWeight: '700',
-                            }}
-                        >
-                            System Settings
-                        </button>
-                        <button
-                            type="button"
-                            className="admin-cream-btn"
-                            style={{
-                                padding: '12px 14px',
-                                color: '#1f2937',
-                                border: '1px solid rgba(15, 23, 42, 0.18)',
-                                borderRadius: '10px',
-                                cursor: 'pointer',
-                                fontSize: '14px',
-                                fontWeight: '700',
-                            }}
-                        >
-                            Backup Data
                         </button>
                     </div>
                 </div>
