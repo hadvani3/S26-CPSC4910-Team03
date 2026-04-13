@@ -628,15 +628,34 @@ app.post("/GetSponsorDrivers", (req, res) => {
 			console.log("No drivers")
 			return res.status(404).json({error: "There are no drivers for this sponsor"});
 		} else {
-			return res.json(driverResults.map(d => ({
-				driver_id: d.driver_id,
-				firstname: d.first_name,
-				lastname: d.last_name,
-				phone: d.phone_number,
-				points: d.total_points,
-				createDate: d.created_at,
-				updatedDate: d.updated_at
-			})));
+			const sqlSearch2 = "select * from driver_sponsors where sponsor_id = ?"
+			const search_query2 = mysql.format(sqlSearch2, [sponsorID])
+			db.query(search_query2, async (err, driverResults2) => {
+				if (err) {
+					console.error(err);
+					return res.status(500).json({error: "Database Error"});
+				}
+				if (driverResults2.length === 0) {
+					console.log("No drivers")
+					return res.status(404).json({error: "There are no drivers for this sponsor"});
+				} else {
+					const results2Map = Object.fromEntries(
+						driverResults2.map(d => [d.driver_id, d])
+					);
+					return res.json(driverResults.map(d => {
+						const d2 = results2Map[d.driver_id];
+						return {
+							driver_id: d.driver_id,
+							firstname: d.first_name,
+							lastname: d.last_name,
+							phone: d.phone_number,
+							points: d2 ? d2.points : null,
+							createDate: d.created_at,
+							updatedDate: d.updated_at
+						}
+					}));
+				}
+			})
 		}
 	})
 })
@@ -686,8 +705,8 @@ app.post('/ChangePoints', (req, res) => {
 	const sponsor_id = req.body.sponsor_id
 	const reason = req.body.reason
 
-	const update = "UPDATE drivers SET total_points = total_points + ? WHERE driver_id = ?"
-	const update_query = mysql.format(update, [change, driverID])
+	const update = "UPDATE driver_sponsors SET points = points + ? WHERE driver_id = ? and sponsor_id = ?"
+	const update_query = mysql.format(update, [change, driverID, sponsor_id])
 	db.query(update_query, async (err) => {
 		if (err) {
 			console.error(err);
