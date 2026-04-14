@@ -920,6 +920,10 @@ app.post('/ChangePoints', (req, res) => {
 		} else {
 			insert = "INSERT INTO driver_points (driver_id, sponsor_id, points_change, reason) VALUES (?, ?, ?, ?);"
 			insert_query = mysql.format(insert, [driverID, sponsor_id, change, reason])
+
+			//create a notification sent to the driver about the change in points
+			CreateNotification(driverID, `You've gotten ${change} for reason: ${reason}`);
+
 			db.query(insert_query, async (err) => {
 				if (err) {
 					console.error(err);
@@ -1764,6 +1768,7 @@ app.patch('/api/applications/:id/review', (req, res) => {
 
 								// link approved drivers to sponsors
 								if (application_status === 'APPROVED') {
+									CreateNotification(row.user_id, `Your application has been approved!`);
 									db.query (
 										`UPDATE drivers SET sponsor_id = ?, phone_number = ? WHERE user_id = ?`,
 										[row.sponsor_id, row.phone_number, row.user_id],
@@ -2342,15 +2347,15 @@ app.post('/api/sponsor/bulk-upload', async (req,res) => {
 });
 
 //this creats a notification in the database and sends to to a phone number
-async function CreateNotification(token, message){
+async function CreateNotification(user_id, message){
 	/*const messageClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-	const phoneNumber = '+18436310882'
+	
 	const email = decodeAccessToken(token)
 
 	//get the phone number from email 
 
 	//create new notification for the database*/
-	db.query('INSERT INTO notifications (message) VALUES (?)', [message], (err, purchaseResults) => {
+	db.query('INSERT INTO notifications (user_id, message) VALUES (?, ?)', [user_id, message], (err, results) => {
 	});
 };
 
@@ -2389,7 +2394,7 @@ app.post('/api/purchase', async (req, res) => {
 					//then we need to update the driver table
 					db.query('UPDATE drivers SET cart = "", total_points = ? WHERE user_id = ?', [points - total, user_id], (err, finalResults) => {
 
-						CreateNotification(token, `Thanks for your purchase of ${total} points!`)
+						CreateNotification(user_id, `Thanks for your purchase of ${total} points!`)
 						.then(() => console.log("SMS Sent"))
 						.catch(e => console.error("SMS failed", e));
 						return res.status(200).json({ success: true, message: "Purchase Completed" });

@@ -23,7 +23,7 @@ export default function DriverHomePage() {
     useEffect(() => {
     if (token) {
         fetch('/api/driver-home', {
-            method: 'GET', // Matches your sponsor logic
+            method: 'GET', 
             headers: { 
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
