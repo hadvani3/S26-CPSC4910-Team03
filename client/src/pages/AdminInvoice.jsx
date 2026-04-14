@@ -245,7 +245,7 @@ export default function AdminInvoice(){
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
-                                        {['Sponsor', 'Driver', 'Points Change', 'Date', 'Reason'].map(h => (
+                                        {['Sponsor', 'Purchase', 'Amount'].map(h => (
                                             <th key={h} style={{
                                                 padding: '12px 16px',
                                                 textAlign: 'left',
