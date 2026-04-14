@@ -2557,3 +2557,28 @@ if (fs.existsSync(clientDist)) {
 app.listen(PORT, '0.0.0.0', () => {
 	console.log(`React server running on port ${PORT}`);
 });
+
+//invoice logic
+app.get('api/admin/invoice', (req, res) => {
+	const sql = `
+	SELECT
+		b.company_name AS sponsor_name,
+		a.purchase_id AS purchase_number,
+		a.cost AS amount
+	FROM purchases a
+	JOIN sponsors b ON a.sponsor_id = b.sponsor_id
+	ORDER BY a.purchased_at DESC
+
+	`;
+
+
+	db.query(sql, (err, results) => {
+		if(err) {
+			console.error(err);
+			return res.status(500).json({ error: 'Database error.' });
+		}
+		res.json(results);
+	});
+
+
+});
