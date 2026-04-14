@@ -60,7 +60,7 @@ const Catalog = () =>{
               <Link to={getProductPath(item.listing_id)} style={{ textDecoration: 'none' }}>
                 <img src={item.image} alt={item.title} style={{ display: 'block', width: '100%', marginBottom: '10px', height: '400px', objectFit: 'contain' }} />
                 <h4 style={{ color: 'white', textAlign: 'center', fontSize: '0.9rem', height: '3em', overflow: 'hidden' }}>{item.title}</h4>
-                <p style={{ color: "green", textAlign: "center" }}> <b>Points: {item.price}</b></p>
+                <p style={{ color: "white", textAlign: "center" }}> <b>Points: {item.price}</b></p>
               </Link>
             </div>
           ))}
