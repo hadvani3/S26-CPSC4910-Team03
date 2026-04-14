@@ -60,11 +60,11 @@ const PurchaseHistory = () => {
                         <div  key={order.purchase_id} style={{
                             padding: '25px',
                             borderRadius: '15px',
-                            border: '1px solid #524545',
+                            border: '1px solid #ffffff',
                             color: 'white'
                             
                         }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #444', paddingBottom: '15px', marginBottom: '15px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #ffffff', paddingBottom: '15px', marginBottom: '15px' }}>
                                 <div>
                                     <p style={{ fontSize: '0.8rem', color: '#888', margin: 0 }}>ORDER ID</p>
                                     <h4 style={{ margin: 0 }}>#{order.purchase_id}</h4>
