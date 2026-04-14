@@ -64,6 +64,7 @@ export default function Nav() {
             {token && r === "sponsor" && <li><Link to="/sponsor/applications">Applications</Link></li>}
             <li><Link to="/search">Search Products</Link></li>
             {token && r === "driver" && <li><Link to="/cart">Cart</Link></li>}
+            {token && r === "driver" && <li><Link to="/purchaseHistory">Purchase History</Link></li>}
             <li><Link to="/about">About</Link></li>
             <li className="nav-spacer" aria-hidden="true" />
             {!token && <li><Link to="/">Login</Link></li>}

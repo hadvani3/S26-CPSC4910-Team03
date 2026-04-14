@@ -21,6 +21,7 @@ import AdminApplications from './pages/AdminApplications';
 import AdminBulkUpload from './pages/AdminBulkUpload';
 import Catalog from './pages/catalog.jsx';
 import SponsorProduct from './pages/SponsorProduct.jsx';
+import PurchaseHistory from './pages/purchaseHistory.jsx';  
 import AdminCreateSponsor from './pages/AdminCreateSponsor';
 import AdminAuditLog from './pages/AdminAuditLog.jsx';
 import SponsorBulkUpload from './pages/SponsorBulkUpload.jsx';
@@ -54,6 +55,7 @@ function App() {
         <Route path="/account" element={<Account />} />
         <Route path="/product" element={<Product />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path="/purchaseHistory" element={<PurchaseHistory />} />
         <Route path="/admin/users" element={<AdminUserManagement />} />
         <Route path="/admin/applications" element={<AdminApplications />} />
         <Route path="/sponsor/applications" element={<AdminApplications />} />

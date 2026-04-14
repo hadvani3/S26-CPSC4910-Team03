@@ -104,7 +104,7 @@ app.post('/create_account', async (req, res) => {
 
 app.get('/api/search', async (req, res) => {
 	const searchTerm = req.query.q; 
-	const limit = 10;
+	const limit = 60;
 	//first api call to get the data we want
     const url = new URL('https://api.etsy.com/v3/application/listings/active');
     url.searchParams.append('keywords', searchTerm);
@@ -258,6 +258,139 @@ app.get('/api/:sponsor_id/catalog', async (req, res) =>{
 	} );
 });
 
+
+async function fetchGroupProducts(listingIdsArray) {
+    if (!listingIdsArray || listingIdsArray.length === 0) return [];
+
+	//get the unique ids we send to the api
+    let uniqueIds = [];
+	for (var i = 0; i < listingIdsArray.length; i++) {
+		var currentId = listingIdsArray[i];
+		
+		if (uniqueIds.indexOf(currentId) === -1) {
+			uniqueIds.push(currentId);
+		}
+	}
+
+	const requestOptions = {
+        method: 'GET',
+        headers: {
+            'x-api-key': etsyKey, 
+            'Accept': 'application/json'
+        },
+	};
+
+        const productPromises = uniqueIds.map(async (id) => {
+            //send out the request for an item
+            const url = `https://openapi.etsy.com/v3/application/listings/${id}?includes=images`;
+            
+            const response = await fetch(url, requestOptions);
+            const data = await response.json();
+
+            return {
+                listing_id: data.listing_id,
+                title: data.title,
+                price: data.price.amount,
+                image: data.images && data.images.length > 0 ? data.images[0].url_fullxfull : '',
+                ratingAvg: 0
+            };
+        });
+
+        const results = await Promise.all(productPromises);
+        
+        return results;
+}
+
+//get the purchase history of a user
+app.post('/api/purchase-history', async (req, res) => {
+    try {
+        const token = req.body.key;
+
+        
+        const email = decodeAccessToken(token);
+
+
+        const getUser = () => new Promise((resolve, reject) => {
+            db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, results) => {
+				if (err) {
+					return reject(err);
+				} else {
+					return resolve(results);
+				}
+			});
+		});
+
+        const getPurchases = (uid) => new Promise((resolve, reject) => {
+            db.query('SELECT * FROM purchases WHERE user_id = ?', [uid], (err, results) => {
+				if(err) {
+					return reject(err)
+				}else {
+					return resolve(results);
+				}
+			});
+		});
+
+        const userResults = await getUser();
+        if (!userResults || userResults.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const user_id = userResults[0].user_id;
+
+    
+        const purchaseResults = await getPurchases(user_id);
+        if (purchaseResults.length === 0) return res.status(200).json([]);
+
+		//fix the format of the etsy cart strings
+        const allListingIds = purchaseResults.flatMap(p => {
+            if (p.cart && typeof p.cart === 'string') {
+                return p.cart.split(',');
+            }
+            return [];
+        })
+        .map(id => id.trim())
+        .filter(id => id !== ""); 
+
+        //fetch the data from etsy api
+        let etsyProducts = [];
+        if (allListingIds.length > 0) {
+            etsyProducts = await fetchGroupProducts(allListingIds);
+			console.log("Total IDs sent to Etsy:", allListingIds.length);
+			console.log("IDs actually returned by Etsy:", etsyProducts.map(e => e.listing_id));
+        }
+        
+        //format the data that we send back
+        const detailedHistory = purchaseResults.map(purchase => {
+            const idsInThisCart = purchase.cart 
+                ? purchase.cart.split(',').map(id => id.trim()).filter(id => id !== "") 
+                : [];
+
+            const productsInfo = idsInThisCart.map(id => {
+                return etsyProducts.find(e => e.listing_id == id) || { 
+                    listing_id: id, 
+                    title: "Item no longer available", 
+                    price: 0, 
+                    image: "" 
+                };
+            });
+            
+            return {
+                purchase_id: purchase.purchase_id,
+    			user_id: purchase.user_id,
+    			cost: purchase.cost,
+    			cart: purchase.cart,
+    			purchased_at: purchase.purchased_at,
+                productDetails: productsInfo 
+            };
+        });
+
+        return res.status(200).json(detailedHistory);
+
+    } catch (error) {
+        console.error("Detailed Server Error:", error);
+        return res.status(500).json({ error: "Internal Server Error" });
+    }
+});
 
 //showing the details of you cart
 app.post('/api/cart', async (req, res) =>{
