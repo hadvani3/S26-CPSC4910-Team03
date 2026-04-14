@@ -258,6 +258,79 @@ app.get('/api/:sponsor_id/catalog', async (req, res) =>{
 	} );
 });
 
+//function to easily get the points from each sponsor a driver has done work for
+async function getPointsFromSponsor(email) {
+	console.log("Getting points for email:", email);
+	//get the driver_id from email
+	const getDriver_id = () => new Promise((resolve, reject) => {
+            db.query('SELECT driver_id FROM drivers WHERE user_id = (SELECT user_id FROM users WHERE email = ?)', [email], (err, results) => {
+				if (err) {
+					return reject(err);
+				} else {
+					return resolve(results[0].driver_id);
+				}
+			});
+	});
+
+	driver_id = await getDriver_id();
+	if (!driver_id) return [];
+
+	//get the sponsor names and points from the database
+	const getSponsorfromId = () => new Promise((resolve, reject) => {
+		db.query('select sponsor_id, points FROM driver_sponsors WHERE driver_id = ? AND status = ?', [driver_id, 'APPROVED'], (err, results) => {
+			if (err) {
+				return reject(err);
+			} else {
+				return resolve(results);
+			}
+		});
+	});
+
+	sponsor_data = await getSponsorfromId();
+
+	const sponsorIds = sponsor_data.map(item => item.sponsor_id);
+	const getSponsorNames = () => new Promise((resolve, reject) => {
+        db.query('select sponsor_id, company_name FROM sponsors WHERE sponsor_id IN (?)', [sponsorIds], (err, results) => {
+            if (err) return reject(err);
+            resolve(results);
+        });
+    });
+
+    const sponsor_names = await getSponsorNames();
+
+    const finalData = sponsor_data.map(data => {
+        const nameObj = sponsor_names.find(n => n.sponsor_id === data.sponsor_id);
+        return {
+            sponsor_id: data.sponsor_id,
+            company_name: nameObj ? nameObj.company_name : 'Unknown',
+            points: data.points
+        };
+    });
+
+    console.log("Sponsor data with names retrieved:", finalData);
+    return finalData;
+
+
+}
+
+//function for the info we need on the driver homepage
+app.get('/api/driver-home', async (req, res) => {
+    const token = getBearerToken(req);
+	if(!token) return res.status(401).json({ error: 'Authorization is required!' });
+
+
+	const email = decodeAccessToken(token);
+
+    console.log("Driver Home API called for email:", email);
+
+    try {
+        const data = await getPointsFromSponsor(email);
+        return res.status(200).json(data);
+    } catch (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
 
 async function fetchGroupProducts(listingIdsArray) {
     if (!listingIdsArray || listingIdsArray.length === 0) return [];
@@ -847,6 +920,10 @@ app.post('/ChangePoints', (req, res) => {
 		} else {
 			insert = "INSERT INTO driver_points (driver_id, sponsor_id, points_change, reason) VALUES (?, ?, ?, ?);"
 			insert_query = mysql.format(insert, [driverID, sponsor_id, change, reason])
+
+			//create a notification sent to the driver about the change in points
+			CreateNotification(driverID, `You've gotten ${change} for reason: ${reason}`);
+
 			db.query(insert_query, async (err) => {
 				if (err) {
 					console.error(err);
@@ -1314,6 +1391,7 @@ app.get('/api/sponsors', (req, res) => {
     );
 });
 
+/*
 // Current driver's point balance (navbar, etc.)
 app.get('/api/me/points', (req, res) => {
 	const token = getBearerToken(req);
@@ -1362,7 +1440,7 @@ app.get('/api/me/points', (req, res) => {
 		}
 	);
 });
-
+*/
 // driver submits sponsor application (user_id + sponsor_id resolved in SQL)
 app.post('/api/driver-applications', (req, res) => {
     const {
@@ -1690,6 +1768,7 @@ app.patch('/api/applications/:id/review', (req, res) => {
 
 								// link approved drivers to sponsors
 								if (application_status === 'APPROVED') {
+									CreateNotification(row.user_id, `Your application has been approved!`);
 									db.query (
 										`UPDATE drivers SET sponsor_id = ?, phone_number = ? WHERE user_id = ?`,
 										[row.sponsor_id, row.phone_number, row.user_id],
@@ -2268,15 +2347,15 @@ app.post('/api/sponsor/bulk-upload', async (req,res) => {
 });
 
 //this creats a notification in the database and sends to to a phone number
-async function CreateNotification(token, message){
+async function CreateNotification(user_id, message){
 	/*const messageClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-	const phoneNumber = '+18436310882'
+	
 	const email = decodeAccessToken(token)
 
 	//get the phone number from email 
 
 	//create new notification for the database*/
-	db.query('INSERT INTO notifications (message) VALUES (?)', [message], (err, purchaseResults) => {
+	db.query('INSERT INTO notifications (user_id, message) VALUES (?, ?)', [user_id, message], (err, results) => {
 	});
 };
 
@@ -2315,7 +2394,7 @@ app.post('/api/purchase', async (req, res) => {
 					//then we need to update the driver table
 					db.query('UPDATE drivers SET cart = "", total_points = ? WHERE user_id = ?', [points - total, user_id], (err, finalResults) => {
 
-						CreateNotification(token, `Thanks for your purchase of ${total} points!`)
+						CreateNotification(user_id, `Thanks for your purchase of ${total} points!`)
 						.then(() => console.log("SMS Sent"))
 						.catch(e => console.error("SMS failed", e));
 						return res.status(200).json({ success: true, message: "Purchase Completed" });
@@ -2689,4 +2768,29 @@ if (fs.existsSync(clientDist)) {
 
 app.listen(PORT, '0.0.0.0', () => {
 	console.log(`React server running on port ${PORT}`);
+});
+
+//invoice logic
+app.get('api/admin/invoice', (req, res) => {
+	const sql = `
+	SELECT
+		b.company_name AS sponsor_name,
+		a.purchase_id AS purchase_number,
+		a.cost AS amount
+	FROM purchases a
+	JOIN sponsors b ON a.sponsor_id = b.sponsor_id
+	ORDER BY a.purchased_at DESC
+
+	`;
+
+
+	db.query(sql, (err, results) => {
+		if(err) {
+			console.error(err);
+			return res.status(500).json({ error: 'Database error.' });
+		}
+		res.json(results);
+	});
+
+
 });

@@ -8,7 +8,7 @@ export default function Nav() {
     const r = String(role ?? "").trim().toLowerCase();
     const [driverPoints, setDriverPoints] = useState(null);
     const [driverPointsErr, setDriverPointsErr] = useState(false);
-
+    /*
     useEffect(() => {
         if (!token || r !== "driver") {
             setDriverPoints(null);
@@ -19,7 +19,7 @@ export default function Nav() {
         let cancelled = false;
         setDriverPoints(null);
         setDriverPointsErr(false);
-
+        /*
         fetch("/api/me/points", {
             headers: { Authorization: `Bearer ${token}` },
         })
@@ -44,7 +44,8 @@ export default function Nav() {
         return () => {
             cancelled = true;
         };
-    }, [token, r]);
+    }, [token, r]);*/
+
     const roleHomePath = r === "driver"
         ? "/driver-page"
         : r === "sponsor"
@@ -69,7 +70,7 @@ export default function Nav() {
             <li><Link to="/about">About</Link></li>
             <li className="nav-spacer" aria-hidden="true" />
             {!token && <li><Link to="/">Login</Link></li>}
-            {token && r === "driver" && (
+            {/*token && r === "driver" && (
                 <li className="nav-driver-points" aria-live="polite">
                     <span className="nav-points-badge" title="Your current point balance">
                         {driverPointsErr
@@ -79,7 +80,7 @@ export default function Nav() {
                               : `Points: ${driverPoints.toLocaleString()}`}
                     </span>
                 </li>
-            )}
+            )*/}
             {token && <li><Link to="/account">Account</Link></li>}
             {token && <li><Link to="/" onClick={logout}>Logout</Link></li>}
         </ul>
