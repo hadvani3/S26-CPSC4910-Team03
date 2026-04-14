@@ -73,7 +73,7 @@ export default function AdminInvoice(){
         URL.revokeObjectURL(url);
     };
 
-   return (
+    return (
         <>
             <Nav />
             <div className="admin-dashboard">
