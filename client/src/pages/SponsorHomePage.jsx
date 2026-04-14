@@ -16,9 +16,6 @@ export default function SponsorHomePage() {
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
     const [sponsorID, setID] = useState(null);
-    const [drivers, setDrivers] = useState(null);
-    const [pointsChanges, setPointsChanges] = useState({});
-    const [pointsReason, setPointsReason] = useState("");
     const [pointsValue, setPointsValue] = useState(null)
     const [pointsValueUpdate, setPointsValueUpdate] = useState("")
     const [recentActivities, setRecentActivities] = useState([]);
@@ -99,75 +96,11 @@ export default function SponsorHomePage() {
         if (role === "sponsor") {
             fetchSponsor()
         }
-        console.log(sponsorID)
-
-        async function fetchSponsorDrivers() {
-            try {
-                const res = await fetch("https://team03.cpsc4911.com/GetSponsorDrivers", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        sponsorID: sponsorID,
-                    }),
-                });
-
-                const result = await res.json();
-
-                if (res.ok) {
-                    setDrivers(result);
-                } else {
-                    setError("Failed to fetch sponsor drivers");
-                }
-            } catch (err) {
-                console.error(err);
-                setError("Server error");
-            }
-        }
-
-        if (sponsorID) {
-            fetchSponsorDrivers()
-            console.log("Fetching drivers")
-        }
-        console.log(drivers)
     }, [token, role]);
 
     useEffect(() => {
-        async function fetchSponsorDrivers() {
-            try {
-                const res = await fetch("https://team03.cpsc4911.com/GetSponsorDrivers", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        sponsorID: sponsorID,
-                    }),
-                });
-
-                const result = await res.json();
-
-                if (res.ok) {
-                    setDrivers(result);
-                } else {
-                    setError("Failed to fetch sponsor drivers");
-                }
-            } catch (err) {
-                console.error(err);
-                setError("Server error");
-            }
-        }
-
-        if (sponsorID && drivers === null) {
-            fetchSponsorDrivers()
-            console.log("Fetching drivers")
-        }
-        console.log(drivers)
-
         async function fetchSponsorPointsValue() {
             try {
-                console.log(sponsorID)
                 const res = await fetch("https://team03.cpsc4911.com/getPointsValue", {
                     method: "POST",
                     headers: {
@@ -193,10 +126,8 @@ export default function SponsorHomePage() {
 
         if (sponsorID) {
             fetchSponsorPointsValue()
-            console.log("Fetching points value")
         }
-        console.log(pointsValue)
-    }, [sponsorID, drivers])
+    }, [sponsorID])
 
     useEffect(() => {
         if (token) {
@@ -215,44 +146,6 @@ export default function SponsorHomePage() {
         localStorage.removeItem("user");
         sessionStorage.clear();
         navigate("/");
-    };
-
-    const handleChangePoints = async (driver_id) => {
-        const change = pointsChanges[driver_id];
-
-        if (!change) return alert("Enter a value");
-        if (!pointsReason) return alert("Enter a reason");
-
-        try {
-            const res = await fetch("https://team03.cpsc4911.com/ChangePoints", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    driver_id,
-                    change,
-                    sponsor_id: sponsorID,
-                    reason: pointsReason,
-                }),
-            });
-
-            const result = await res.json();
-
-            if (res.ok && result.success) {
-                setDrivers((prev) =>
-                    prev.map((d) =>
-                        d.driver_id === driver_id
-                            ? { ...d, points: d.points + change }
-                            : d
-                    )
-                );
-                setPointsChanges((prev) => ({ ...prev, [driver_id]: "" }));
-            } else {
-                alert("Failed to update points");
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Server error");
-        }
     };
 
     const handleChangePointsValue = async () => {
@@ -276,27 +169,6 @@ export default function SponsorHomePage() {
             alert("Server error");
         }
     };
-
-    const {impersonate} = useContext(AuthContext);
-
-    const handleSponsorImpersonate = async (userId) => {
-        console.log('Impersonating driver_id:', userId);
-    try {
-        const res = await fetch(`/api/sponsor/impersonate/${userId}`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await res.json();
-        if (!res.ok) return alert(data.error);
-        impersonate(data.impersonateToken, data.role);
-        navigate('/driver-page');
-    } catch (err) {
-        console.error(err);
-        alert('Failed to impersonate driver');
-    }
-};
-
-
 
     return (
         <>
@@ -452,8 +324,12 @@ export default function SponsorHomePage() {
                         }}>
                             Driver Management
                         </h2>
-                        <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                            <button className="admin-cream-btn" style={{
+                        <button
+                            type="button"
+                            onClick={() => navigate('/sponsor/manage-drivers')}
+                            className="admin-cream-btn"
+                            style={{
+                                width: '100%',
                                 padding: '12px 20px',
                                 color: '#1f2937',
                                 border: '1px solid rgba(15, 23, 42, 0.18)',
@@ -461,35 +337,11 @@ export default function SponsorHomePage() {
                                 cursor: 'pointer',
                                 fontSize: '15px',
                                 fontWeight: '700',
-                                transition: 'background-color 0.2s'
-                            }}>
-                                View All Drivers
-                            </button>
-                            <button className="admin-cream-btn" style={{
-                                padding: '12px 20px',
-                                color: '#1f2937',
-                                border: '1px solid rgba(15, 23, 42, 0.18)',
-                                borderRadius: '10px',
-                                cursor: 'pointer',
-                                fontSize: '15px',
-                                fontWeight: '700',
-                                transition: 'background-color 0.2s'
-                            }}>
-                                Award Points
-                            </button>
-                            <button className="admin-cream-btn" style={{
-                                padding: '12px 20px',
-                                color: '#1f2937',
-                                border: '1px solid rgba(15, 23, 42, 0.18)',
-                                borderRadius: '10px',
-                                cursor: 'pointer',
-                                fontSize: '15px',
-                                fontWeight: '700',
-                                transition: 'background-color 0.2s'
-                            }}>
-                                Deduct Points
-                            </button>
-                        </div>
+                                transition: 'background-color 0.2s',
+                            }}
+                        >
+                            Manage Drivers
+                        </button>
                     </div>
 
                     <div style={{
@@ -676,73 +528,6 @@ export default function SponsorHomePage() {
                     </div>
                 </div>
 
-                {drivers && drivers.length > 0 && (
-                    <>
-                        <h2>Your Drivers</h2>
-                        <table border="1" cellPadding="8" style={{ color:"white"}}>
-                            <thead>
-                            <tr>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Phone</th>
-                                <th>Points</th>
-                                <th>Points Change Value</th>
-                                <th>Update Points</th>
-                                <th>Impersonate</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {drivers.length > 0 && drivers.map((driver, index) => (
-                                <tr key={index}>
-                                    <td>{driver.firstname}</td>
-                                    <td>{driver.lastname}</td>
-                                    <td>{driver.phone}</td>
-                                    <td>{driver.points}</td>
-                                    <td><input
-                                        type="number"
-                                        value={pointsChanges[driver.driver_id] || ""}
-                                        onChange={(e) =>
-                                            setPointsChanges({
-                                                ...pointsChanges,
-                                                [driver.driver_id]: Number(e.target.value),
-                                            })
-                                        }
-                                    /></td>
-                                    <td>
-                                        <button
-                                            onClick={() => handleChangePoints(driver.driver_id)}
-                                        >
-                                            Update
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <button
-                                            onClick={() => handleSponsorImpersonate(driver.driver_id)}
-                                            style={{
-                                                padding: '6px 12px',
-                                                backgroundColor: '#667eea',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '4px',
-                                                fontSize: '13px',
-                                                cursor: 'pointer'
-                                            }}
-                                        >
-                                            View as Driver
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
-                        <input
-                            type="text"
-                            placeholder={"Enter reason for points change"}
-                            value={pointsReason}
-                            onChange={(e) => setPointsReason(e.target.value)}
-                        />
-                    </>
-                )}
                 <div style={{
                     paddingTop: '25px',
                     borderTop: '2px solid #e0e0e0',

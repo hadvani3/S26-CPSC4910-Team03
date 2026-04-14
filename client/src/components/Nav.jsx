@@ -62,6 +62,7 @@ export default function Nav() {
             {token && r === "driver" && <li><Link to="/apply">Apply</Link></li>}
             {token && r === "admin" && <li><Link to="/admin/applications">Applications</Link></li>}
             {token && r === "sponsor" && <li><Link to="/sponsor/applications">Applications</Link></li>}
+            {token && r === "sponsor" && <li><Link to="/sponsor/manage-drivers">Manage Drivers</Link></li>}
             <li><Link to="/search">Search Products</Link></li>
             {token && r === "driver" && <li><Link to="/cart">Cart</Link></li>}
             {token && r === "driver" && <li><Link to="/purchaseHistory">Purchase History</Link></li>}
