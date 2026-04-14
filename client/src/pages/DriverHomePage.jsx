@@ -1,21 +1,57 @@
-import { useState } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'
+import { AuthContext } from "../components/AuthContext.jsx";
 import Nav from '../components/Nav';
 
+export default function DriverHomePage() {
 
-export default function DriverHomePage(){
-
+    const [data, setData] = useState(null);
+    const [SponsorData, setSponsorData] = useState(null);
+    const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
 
     const navigate = useNavigate();
+    const { token, role } = useContext(AuthContext);
+
+    // check token
+    useEffect(() => {
+        if (!token) {
+            navigate("/");
+        }
+    }, [token, navigate]);
+
+    useEffect(() => {
+    if (token) {
+        fetch('/api/driver-home', {
+            method: 'GET', // Matches your sponsor logic
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        })
+                .then(res => {
+                    if (!res.ok) throw new Error("Failed to fetch");
+                    return res.json();
+                })
+                .then(data => {
+                    setData(data);
+                    setSponsorData(data)
+                })
+                .catch(err => {
+                    console.error('Error fetching driver data:', err);
+                    setError(err.message);
+                });
+        }
+    }, [token]);
+
 
     //search for products from the homepage
     const searchCatalogue = (e) => {
-    e.preventDefault();
-    navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-  };
+        e.preventDefault();
+        navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+    };
 
-      return (
+    return (
         <>
         <Nav />
         <div className="admin-dashboard">
@@ -38,33 +74,77 @@ export default function DriverHomePage(){
                     Welcome back! 
                 </h1>
                 <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-around',
-                    marginTop: '25px',
-                    flexWrap: 'wrap',
-                    gap: '20px'
+                    background: 'rgba(255, 255, 255, 0.16)',
+                    border: '1px solid rgba(255, 255, 255, 0.22)',
+                    backdropFilter: 'blur(8px)',
+                    padding: '25px',
+                    borderRadius: '10px',
+                    marginBottom: '30px'
                 }}>
-                    <div>
-                        <p style={{ 
-                            fontSize: '3em', 
-                            fontWeight: 'bold', 
-                            margin: '0',
-                            textShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                        }}>0</p>
-                        <p style={{ margin: '5px 0 0 0', opacity: '0.9' }}>Total Points</p>
-                    </div>
-                    <div>
-                        <p style={{ 
-                            fontSize: '3em', 
-                            fontWeight: 'bold', 
-                            margin: '0',
-                            textShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                        }}>0</p>
-                        <p style={{ margin: '5px 0 0 0', opacity: '0.9' }}>This Month</p>
-                    </div>
+                    <h2 style={{ color: '#f4f8ff', marginBottom: '20px' }}>
+                        Sponsors
+                    </h2>
+                   <div style={{
+                    display: 'flex',
+                    flexDirection: 'column', 
+                    gap: '10px'            
+                }}>
+                    {SponsorData && SponsorData.length > 0 ? (
+                        SponsorData.map((item, index) => (
+                            <div key={index} style={{ 
+                                padding: '15px 25px',
+                                background: 'rgba(255, 255, 255, 0.18)',
+                                borderRadius: '8px',
+                                color: '#f4f8ff',
+                                border: '1px solid rgba(255,255,255,0.18)',
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr 1fr', 
+                                alignItems: 'center',
+                                textAlign: 'left'
+                            }}>
+                                <span style={{ 
+                                    fontWeight: '500', 
+                                    fontSize: '1.1em'
+                                }}>
+                                    {item.company_name}
+                                </span>
+
+                                <span style={{ 
+                                    fontWeight: 'bold', 
+                                    background: 'rgba(209, 205, 205, 0.3)', 
+                                    padding: '5px 15px', 
+                                    borderRadius: '20px',
+                                    color: '#f4efe1',
+                                    width: 'fit-content',
+                                    justifySelf: 'start' 
+                                }}>
+                                    {item.points} pts
+                                </span>
+                            <button 
+                            type="submit"
+                            onClick={() => navigate(`/sponsor/${item.sponsor_id}/catalog`)}
+                            style={{
+                                padding: '12px 30px',
+                                fontSize: '14px',
+                                fontWeight: '700',
+                                border: '1px solid rgba(15, 23, 42, 0.18)',
+                                backgroundColor: '#f4efe1',
+                                color: '#1f2937',
+                                borderRadius: '10px',
+                                cursor: 'pointer',
+                                transition: 'background-color 0.2s',
+                                justifySelf: 'end'
+                            }}>
+                            View Catalog
+                            </button>
+                            </div>
+                        ))
+                    ) : (
+                        <p style={{ color: 'white', opacity: 0.7 }}>No active sponsor affiliations.</p>
+                    )}
                 </div>
             </div>
-
+        </div>
             <div style={{
                 background: 'rgba(255, 255, 255, 0.16)',
                 border: '1px solid rgba(255, 255, 255, 0.22)',
@@ -143,7 +223,7 @@ export default function DriverHomePage(){
                         fontSize: '1.3em',
                         marginBottom: '15px'
                     }}>
-                        Sponsors Applied To
+                        Sponsor Applications
                     </h2>
                     <ul style={{
                         listStyle: 'none',

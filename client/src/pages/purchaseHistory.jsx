@@ -10,7 +10,7 @@ const PurchaseHistory = () => {
     const navigate = useNavigate();
     const { token } = useContext(AuthContext);
 
-    // Auth Guard
+    // check token
     useEffect(() => {
         if (!token) {
             navigate("/");
@@ -88,7 +88,6 @@ const PurchaseHistory = () => {
                                         gap: '20px',
                                         padding: '10px',
                                         borderRadius: '8px',
-                                        borderRadius: '12px',  
                                         backgroundColor: 'rgba(255, 255, 255, 0.14)',
                                         backdropFilter: 'blur(10px)',
                                         webkitBackdropFilter: 'blur(10px)'
