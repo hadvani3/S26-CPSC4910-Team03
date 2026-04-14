@@ -91,10 +91,10 @@ export default function AdminInvoice(){
                 }}>
                     <div>
                         <h1 style={{ margin: '0 0 4px 0', fontSize: '1.5em', fontWeight: '600', color: 'white' }}>
-                            Sales by Sponsor
+                            Invoice
                         </h1>
                         <p style={{ margin: 0, fontSize: '0.95em', opacity: 0.92 }}>
-                            Point changes grouped by sponsor
+                            Tracked purchases made
                         </p>
                     </div>
                     <button
