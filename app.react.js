@@ -1263,30 +1263,41 @@ app.post('/api/admin/users', async (req, res) => {
 
 // get all users
 app.get('/api/admin/users', (req, res) => {
-    const { role, status, search } = req.query;
+    const { role, status, search, sponsor_id} = req.query;
     
-    let query = 'SELECT user_id, email, role_type, is_active, created_at FROM users WHERE 1=1';
+    let query = `SELECT u.user_id, u.email, u.role_type, u.is_active, u.created_at FROM users u `;
     const params = [];
+
+	// filter by sponsor
+	if (sponsor_id) {
+		query += ` JOIN sponsor_users su ON u.user_id = su.user_id`;
+	}
+	query += ` WHERE 1=1`;
     
     // filter by role
     if (role && role !== 'all') {
-        query += ' AND role_type = ?';
+        query += ' AND u.role_type = ?';
         params.push(role);
     }
     
     // filter by status
     if (status && status !== 'all') {
-        query += ' AND is_active = ?';
+        query += ' AND u.is_active = ?';
         params.push(status === 'active' ? 1 : 0);
     }
     
     // search by email
     if (search) {
-        query += ' AND email LIKE ?';
+        query += ' AND u.email LIKE ?';
         params.push(`%${search}%`);
     }
+
+	if (sponsor_id) {
+		query += ' AND su.sponsor_id = ?';
+		params.push(sponsor_id);
+	}
     
-    query += ' ORDER BY created_at DESC';
+    query += ' ORDER BY u.created_at DESC';
     
     db.query(query, params, (err, results) => {
         if (err) {
@@ -2746,6 +2757,32 @@ app.post('/api/sponsor/impersonate/:driver_id', (req,res) => {
 
 });
 
+//invoice logic
+app.get('/api/admin/invoice', (req, res) => {
+	const sql = `
+	SELECT
+		b.company_name AS sponsor_name,
+		a.purchase_id AS purchase_number,
+		a.cost AS amount,
+		a.purchased_at AS purchase_date
+	FROM purchases a
+	JOIN sponsors b ON a.sponsor_id = b.sponsor_id
+	ORDER BY a.purchased_at DESC
+
+	`;
+
+
+	db.query(sql, (err, results) => {
+		if(err) {
+			console.error(err);
+			return res.status(500).json({ error: 'Database error.' });
+		}
+		res.json(results);
+	});
+
+
+});
+
 
 //Serve React build
 const clientDist = path.join(__dirname, 'client', 'dist');
@@ -2768,29 +2805,4 @@ if (fs.existsSync(clientDist)) {
 
 app.listen(PORT, '0.0.0.0', () => {
 	console.log(`React server running on port ${PORT}`);
-});
-
-//invoice logic
-app.get('api/admin/invoice', (req, res) => {
-	const sql = `
-	SELECT
-		b.company_name AS sponsor_name,
-		a.purchase_id AS purchase_number,
-		a.cost AS amount
-	FROM purchases a
-	JOIN sponsors b ON a.sponsor_id = b.sponsor_id
-	ORDER BY a.purchased_at DESC
-
-	`;
-
-
-	db.query(sql, (err, results) => {
-		if(err) {
-			console.error(err);
-			return res.status(500).json({ error: 'Database error.' });
-		}
-		res.json(results);
-	});
-
-
 });

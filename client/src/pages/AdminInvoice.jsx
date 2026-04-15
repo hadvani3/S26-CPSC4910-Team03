@@ -13,7 +13,7 @@ export default function AdminInvoice(){
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('api/admin/invoice')
+        fetch('/api/admin/invoice')
             .then(res => res.json())
             .then(data => {
                 setReport(data);
@@ -32,7 +32,7 @@ export default function AdminInvoice(){
 
     const filteredReport = report.filter(item => {
         const matchesSponsor = sponsorFilter === 'all' || item.sponsor_name === sponsorFilter;
-        const itemDate = new Date(item.date);
+        const itemDate = new Date(item.purchase_date);
         const matchesStart = startDate ? itemDate >= new Date(startDate) : true;
         const matchesEnd = endDate ? itemDate <= new Date(endDate + 'T23:59:59') : true;
         return matchesSponsor && matchesStart && matchesEnd;
@@ -42,12 +42,12 @@ export default function AdminInvoice(){
     const summaryData = filteredReport.reduce((acc, item) => {
         const existing = acc.find(s => s.sponsor_name === item.sponsor_name);
         if (existing) {
-            existing.total_points += item.points_change;
+            existing.total_points += item.amount;
             existing.total_changes += 1;
         } else {
             acc.push({
                 sponsor_name: item.sponsor_name,
-                total_points: item.points_change,
+                total_points: item.amount,
                 total_changes: 1
             });
         }
@@ -56,19 +56,19 @@ export default function AdminInvoice(){
 
     const handleDownloadCSV = () => {
         const headers = view === 'summary'
-            ? ['Sponsor', 'Total Point Changes', 'Number of Changes']
-            : ['Sponsor', 'Driver', 'Points Change', 'Date', 'Reason'];
+            ? ['Sponsor', 'Total Cost (pts)', 'Number of Purchases']
+            : ['Sponsor', 'Purchase #', 'Amount (pts)', 'Date'];
 
         const rows = view === 'summary'
             ? summaryData.map(item => [item.sponsor_name, item.total_points, item.total_changes])
-            : filteredReport.map(item => [item.sponsor_name, item.driver_name, item.points_change, new Date(item.date).toLocaleString(), item.reason]);
+            : filteredReport.map(item => [item.sponsor_name, item.purchase_number, item.amount, new Date(item.purchase_date).toLocaleString()]);
 
         const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'sales_by_sponsor.csv';
+        a.download = 'invoice_report.csv';
         a.click();
         URL.revokeObjectURL(url);
     };
@@ -99,7 +99,7 @@ export default function AdminInvoice(){
                     </div>
                     <button
                         type="button"
-                        onClick={() => navigate('/admin-page')}
+                        onClick={() => navigate('/admin/reports')}
                         className="admin-cream-btn"
                         style={{
                             padding: '10px 22px',
@@ -111,7 +111,7 @@ export default function AdminInvoice(){
                             fontWeight: '700',
                         }}
                     >
-                        Back to Dashboard
+                        Back to Reports
                     </button>
                 </div>
 
@@ -213,7 +213,7 @@ export default function AdminInvoice(){
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
-                                        {['Sponsor', 'Total Points Awarded', 'Number of Changes'].map(h => (
+                                        {['Sponsor', 'Total Cost (pts)', 'Number of Purchases'].map(h => (
                                             <th key={h} style={{
                                                 padding: '12px 16px',
                                                 textAlign: 'left',
@@ -245,7 +245,7 @@ export default function AdminInvoice(){
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}>
-                                        {['Sponsor', 'Purchase', 'Amount'].map(h => (
+                                        {['Sponsor', 'Purchase', 'Amount', 'Date'].map(h => (
                                             <th key={h} style={{
                                                 padding: '12px 16px',
                                                 textAlign: 'left',
@@ -263,12 +263,9 @@ export default function AdminInvoice(){
                                     {filteredReport.map((item, index) => (
                                         <tr key={index} style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                                             <td style={{ padding: '12px 16px', color: '#f4f8ff', fontSize: '14px' }}>{item.sponsor_name}</td>
-                                            <td style={{ padding: '12px 16px', color: '#f4f8ff', fontSize: '14px' }}>{item.driver_name}</td>
-                                            <td style={{ padding: '12px 16px', fontSize: '14px', color: item.points_change >= 0 ? '#86efac' : '#fca5a5', fontWeight: '600' }}>
-                                                {item.points_change >= 0 ? '+' : ''}{item.points_change}
-                                            </td>
-                                            <td style={{ padding: '12px 16px', color: '#dbe6ff', fontSize: '14px' }}>{new Date(item.date).toLocaleString()}</td>
-                                            <td style={{ padding: '12px 16px', color: '#f4f8ff', fontSize: '14px' }}>{item.reason}</td>
+                                            <td style={{ padding: '12px 16px', color: '#f4f8ff', fontSize: '14px' }}>{item.purchase_number}</td>
+                                            <td style={{ padding: '12px 16px', color: '#86efac', fontSize: '14px', fontWeight: '600' }}>{item.amount}</td>
+                                            <td style={{ padding: '12px 16px', color: '#dbe6ff', fontSize: '14px' }}>{new Date(item.purchase_date).toLocaleString()}</td>
                                         </tr>
                                     ))}
                                 </tbody>

@@ -13,20 +13,20 @@ is_curr
 
 SELECT 
 	'Team 3',
-    'Sprint 9',
+    'Sprint 10',
     CURDATE(),
     'Good Driver Incentive Program',
-    'Sprint 9 Changes - Implemented bulk upload feature for admin and sponsor users, audit logging with login attempts, point changes and application tracking. Admin and sponsor reports are available with CSV export option.',
+    'Sprint 10 Changes - Added admin and sponsor user impersonation, password reset via email, password change logging, sponsor audit log, sales by driver report, driver approval now links sponsor, and sponsor dashboard real-time stats.',
     TRUE
 
 WHERE NOT EXISTS (
 	SELECT 1
     FROM about_info
-    WHERE team_number = 'Team 3' AND version_number = 'Sprint 9'
+    WHERE team_number = 'Team 3' AND version_number = 'Sprint 10'
 );
 
--- ensure that only Sprint 9 data is inserted as current version
+-- ensure that only Sprint 10 data is inserted as current version
 UPDATE about_info
-SET is_curr = (version_number = 'Sprint 9')
+SET is_curr = (version_number = 'Sprint 10')
 WHERE team_number = 'Team 3';
     
