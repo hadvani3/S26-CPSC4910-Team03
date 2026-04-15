@@ -898,7 +898,8 @@ app.post("/GetSponsor", (req, res) => {
 					return res.status(404).json({error: "No sponsor user with that id"});
 				} else {
 					const sponsor_id = sponsorResults[0].sponsor_id
-					return res.json({sponsor_id:sponsor_id})
+					const company_name = sponsorResults[0].company_name
+					return res.json({sponsor_id:sponsor_id, company_name:company_name})
 				}
 			})
 		}
@@ -910,6 +911,7 @@ app.post('/ChangePoints', (req, res) => {
 	const change = req.body.change
 	const sponsor_id = req.body.sponsor_id
 	const reason = req.body.reason
+	const company_name = req.body.company_name
 
 	const update = "UPDATE driver_sponsors SET points = points + ? WHERE driver_id = ? and sponsor_id = ?"
 	const update_query = mysql.format(update, [change, driverID, sponsor_id])
@@ -922,7 +924,7 @@ app.post('/ChangePoints', (req, res) => {
 			insert_query = mysql.format(insert, [driverID, sponsor_id, change, reason])
 
 			//create a notification sent to the driver about the change in points
-			CreateNotification(driverID, `You've gotten ${change} for reason: ${reason}`);
+			CreateNotification(driverID, `You've gotten ${change} from ${company_name} for reason: ${reason}`);
 
 			db.query(insert_query, async (err) => {
 				if (err) {

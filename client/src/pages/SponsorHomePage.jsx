@@ -19,6 +19,7 @@ export default function SponsorHomePage() {
     const [pointsValue, setPointsValue] = useState(null)
     const [pointsValueUpdate, setPointsValueUpdate] = useState("")
     const [recentActivities, setRecentActivities] = useState([]);
+    const [company_name, setCompanyName] = useState('');
 
     useEffect(() => {
         if (token) {
@@ -84,6 +85,7 @@ export default function SponsorHomePage() {
 
                 if (res.ok) {
                     setID(result.sponsor_id);
+                    setCompanyName(result.company_name)
                 } else {
                     setError("Failed to fetch sponsor ID");
                 }
@@ -156,6 +158,7 @@ export default function SponsorHomePage() {
                 body: JSON.stringify({
                     sponsor_id: sponsorID,
                     value: pointsValueUpdate,
+                    company_name: company_name,
                 }),
             });
 

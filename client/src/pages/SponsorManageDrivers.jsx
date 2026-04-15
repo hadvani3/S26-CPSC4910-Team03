@@ -11,6 +11,7 @@ export default function SponsorManageDrivers() {
     const [drivers, setDrivers] = useState(null);
     const [pointsChanges, setPointsChanges] = useState({});
     const [pointsReason, setPointsReason] = useState('');
+    const [company_name, setCompanyName] = useState('');
 
     useEffect(() => {
         async function fetchSponsor() {
@@ -23,6 +24,7 @@ export default function SponsorManageDrivers() {
                 const result = await res.json();
                 if (res.ok) {
                     setID(result.sponsor_id);
+                    setCompanyName(result.company_name)
                 } else {
                     setError('Failed to fetch sponsor ID');
                 }
@@ -76,6 +78,7 @@ export default function SponsorManageDrivers() {
                     change,
                     sponsor_id: sponsorID,
                     reason: pointsReason,
+                    company_name: company_name,
                 }),
             });
             const result = await res.json();
