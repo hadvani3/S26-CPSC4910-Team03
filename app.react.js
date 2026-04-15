@@ -1929,7 +1929,7 @@ app.get('/api/admin/audit-log',async (req,res) => {
 		CONCAT('Password changed for user #', pl.user_id) AS label,
 		NULL AS success, pl.changed_at AS timestamp
 		FROM password_logs pl
-		ORDER BY timestamp DESC LIMIT 50`;	
+		ORDER BY timestamp DESC LIMIT 200`;	
 	}
 	db.query(sql, (err, results) => {
 		if (err) {
