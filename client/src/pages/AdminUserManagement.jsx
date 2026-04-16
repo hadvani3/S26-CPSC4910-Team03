@@ -120,9 +120,11 @@ export default function AdminUserManagement() {
 
             if(data.role === 'driver'){
                 navigate('/driver-page');
+                window.scrollTo(0,0);
             }
             else if(data.role === 'sponsor'){  
-                navigate('/sponsor-page');  
+                navigate('/sponsor-page');
+                window.scrollTo(0,0);  
             }
         } catch (err) {
             console.error('Error during impersonation:', err);

@@ -266,6 +266,9 @@ async function getPointsFromSponsor(email) {
             db.query('SELECT driver_id FROM drivers WHERE user_id = (SELECT user_id FROM users WHERE email = ?)', [email], (err, results) => {
 				if (err) {
 					return reject(err);
+				}
+				else if (!results || results.length === 0) {
+					return resolve(null);
 				} else {
 					return resolve(results[0].driver_id);
 				}
@@ -289,6 +292,7 @@ async function getPointsFromSponsor(email) {
 	sponsor_data = await getSponsorfromId();
 
 	const sponsorIds = sponsor_data.map(item => item.sponsor_id);
+	if (sponsorIds.length === 0) return [];
 	const getSponsorNames = () => new Promise((resolve, reject) => {
         db.query('select sponsor_id, company_name FROM sponsors WHERE sponsor_id IN (?)', [sponsorIds], (err, results) => {
             if (err) return reject(err);
