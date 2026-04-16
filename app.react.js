@@ -1904,9 +1904,10 @@ app.get('/api/admin/audit-log',async (req,res) => {
 	}
 	else if (type === 'password') {
 		sql = `SELECT 'password' AS type,
-		CONCAT('Password changed for user #', pl.user_id) AS label,
+		CONCAT('Password changed for ', u.email) AS label,
 		NULL AS success, pl.changed_at AS timestamp
 		FROM password_logs pl
+		JOIN users u ON pl.user_id = u.user_id
 		ORDER BY timestamp DESC LIMIT 50`;
 	}
 	else {
@@ -1926,10 +1927,11 @@ app.get('/api/admin/audit-log',async (req,res) => {
 		JOIN drivers d on dp.driver_id = d.driver_id
 		UNION ALL
 		SELECT 'password' AS type,
-		CONCAT('Password changed for user #', pl.user_id) AS label,
+		CONCAT('Password changed for ', u.email) AS label,
 		NULL AS success, pl.changed_at AS timestamp
 		FROM password_logs pl
-		ORDER BY timestamp DESC LIMIT 200`;	
+		JOIN users u ON pl.user_id = u.user_id
+		ORDER BY timestamp DESC LIMIT 500`;	
 	}
 	db.query(sql, (err, results) => {
 		if (err) {
