@@ -11,7 +11,7 @@ const Cart = () =>{
   const location = useLocation();
   const { token, authReady } = useContext(AuthContext);
 
- //checking the token (wait for localStorage hydration so refresh does not bounce to login)
+ //checking the token (wait for sessionStorage hydration so refresh does not bounce to login)
   useEffect(() => {
     if (!authReady) return;
     if (!token) {

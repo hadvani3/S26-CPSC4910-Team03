@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Nav from '../components/Nav';
+import { AuthContext } from '../components/AuthContext.jsx';
 
 const btnBase = {
     padding: '12px 16px',
@@ -24,6 +25,7 @@ const sectionTitle = {
 
 export default function AdminHomePage() {
     const navigate = useNavigate();
+    const { logout } = useContext(AuthContext);
     const [stats, setStats] = useState({
         totalUsers: 0,
         totalDrivers: 0,
@@ -61,10 +63,8 @@ export default function AdminHomePage() {
     }, []);
 
     const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
+        logout();
         localStorage.removeItem("user");
-        sessionStorage.clear();
         navigate("/");
     };
 

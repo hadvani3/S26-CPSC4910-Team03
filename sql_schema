@@ -1,0 +1,98 @@
+Table_Name, Column_Name, Data_Type, Column_Type, Is_Nullable, Column_Key
+about_info	id	int	int	NO	PRI
+about_info	team_number	varchar	varchar(50)	NO	
+about_info	version_number	varchar	varchar(50)	NO	
+about_info	release_date	date	date	NO	
+about_info	product_name	varchar	varchar(255)	NO	
+about_info	product_desc	text	text	NO	
+about_info	is_curr	tinyint	tinyint(1)	NO	
+about_info	created_at	timestamp	timestamp	NO	
+about_info	updated_at	timestamp	timestamp	NO	
+driver_applications	application_id	int	int	NO	PRI
+driver_applications	user_id	int	int	NO	
+driver_applications	sponsor_id	int	int	NO	
+driver_applications	first_name	varchar	varchar(50)	YES	
+driver_applications	last_name	varchar	varchar(50)	YES	
+driver_applications	birth_date	date	date	YES	
+driver_applications	email_address	varchar	varchar(100)	YES	
+driver_applications	phone_number	varchar	varchar(25)	YES	
+driver_applications	license_number	varchar	varchar(50)	YES	
+driver_applications	street_address	varchar	varchar(255)	YES	
+driver_applications	city	varchar	varchar(100)	YES	
+driver_applications	state	varchar	varchar(50)	YES	
+driver_applications	zip_code	varchar	varchar(20)	YES	
+driver_applications	reason	text	text	YES	
+driver_applications	application_status	varchar	varchar(25)	NO	
+driver_applications	notes	varchar	varchar(500)	YES	
+driver_applications	reviewed_at	timestamp	timestamp	YES	
+driver_applications	created_at	timestamp	timestamp	NO	
+driver_applications	updated_at	timestamp	timestamp	NO	
+driver_points	transaction_id	int	int	NO	PRI
+driver_points	driver_id	int	int	NO	
+driver_points	sponsor_id	int	int	NO	
+driver_points	points_change	int	int	NO	
+driver_points	reason	varchar	varchar(255)	YES	
+driver_points	created_at	timestamp	timestamp	NO	
+driver_sponsors	id	int	int	NO	PRI
+driver_sponsors	driver_id	int	int	NO	MUL
+driver_sponsors	sponsor_id	int	int	NO	MUL
+driver_sponsors	status	varchar	varchar(25)	NO	
+driver_sponsors	points	int	int	NO	
+drivers	driver_id	int	int	NO	PRI
+drivers	user_id	int	int	NO	UNI
+drivers	sponsor_id	int	int	YES	
+drivers	first_name	varchar	varchar(250)	NO	
+drivers	last_name	varchar	varchar(250)	NO	
+drivers	phone_number	varchar	varchar(25)	YES	
+drivers	driver_status	varchar	varchar(25)	YES	
+drivers	is_active	tinyint	tinyint(1)	NO	
+drivers	created_at	timestamp	timestamp	NO	
+drivers	updated_at	timestamp	timestamp	NO	
+drivers	total_points	int	int	NO	
+drivers	cart	varchar	varchar(1000)	NO	
+login_attempts	attempt_id	int	int	NO	PRI
+login_attempts	username	varchar	varchar(255)	NO	
+login_attempts	success	tinyint	tinyint(1)	NO	
+login_attempts	attempted_at	timestamp	timestamp	NO	
+notifications	notification_id	int	int	NO	PRI
+notifications	user_id	int	int	YES	
+notifications	message	varchar	varchar(1000)	YES	
+notifications	sent_at	timestamp	timestamp	YES	
+password_logs	change_id	int	int	NO	PRI
+password_logs	user_id	int	int	NO	
+password_logs	changed_at	timestamp	timestamp	YES	
+purchases	purchase_id	int	int	NO	PRI
+purchases	user_id	int	int	YES	
+purchases	cost	int	int	YES	
+purchases	cart	varchar	varchar(1000)	YES	
+purchases	purchased_at	timestamp	timestamp	YES	
+purchases	sponsor_id	int	int	NO	
+reset_password_tokens	token_id	int	int	NO	PRI
+reset_password_tokens	user_id	int	int	NO	
+reset_password_tokens	token	varchar	varchar(255)	NO	UNI
+reset_password_tokens	expires_at	timestamp	timestamp	NO	
+reset_password_tokens	used	tinyint	tinyint(1)	NO	
+reset_password_tokens	created_at	timestamp	timestamp	NO	
+sponsor_users	user_id	int	int	NO	PRI
+sponsor_users	sponsor_id	int	int	NO	
+sponsor_users	first_name	varchar	varchar(250)	NO	
+sponsor_users	last_name	varchar	varchar(250)	NO	
+sponsor_users	phone_number	varchar	varchar(25)	YES	
+sponsor_users	is_active	tinyint	tinyint(1)	NO	
+sponsor_users	created_at	timestamp	timestamp	NO	
+sponsor_users	updated_at	timestamp	timestamp	NO	
+sponsors	sponsor_id	int	int	NO	PRI
+sponsors	company_name	varchar	varchar(255)	NO	UNI
+sponsors	point_value_usd	decimal	decimal(10,4)	NO	
+sponsors	is_active	tinyint	tinyint(1)	NO	
+sponsors	created_at	timestamp	timestamp	NO	
+sponsors	updated_at	timestamp	timestamp	NO	
+sponsors	catalog	varchar	varchar(1000)	YES	
+users	user_id	int	int	NO	PRI
+users	email	varchar	varchar(255)	NO	UNI
+users	password_hash	varchar	varchar(255)	NO	
+users	role_type	varchar	varchar(50)	NO	
+users	is_active	tinyint	tinyint(1)	NO	
+users	created_at	timestamp	timestamp	NO	
+users	updated_at	timestamp	timestamp	NO	
+users	username	varchar	varchar(255)	YES	

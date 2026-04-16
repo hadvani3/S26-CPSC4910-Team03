@@ -6,7 +6,7 @@ import {AuthContext} from "../components/AuthContext.jsx";
 
 export default function SponsorHomePage() {
     const navigate = useNavigate();
-    const { token, role } = useContext(AuthContext);
+    const { token, role, logout } = useContext(AuthContext);
     const [stats, setStats] = useState({
         totalDrivers: 0,
         activeDrivers: 0,
@@ -142,9 +142,8 @@ export default function SponsorHomePage() {
     }, [token])
 
     const handleLogout = () => {
-        localStorage.removeItem("token");
+        logout();
         localStorage.removeItem("user");
-        sessionStorage.clear();
         navigate("/");
     };
 

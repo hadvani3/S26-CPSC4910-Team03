@@ -9,7 +9,7 @@ export default function ImpersonationBanner() {
     if(!isImpersonating) return null;
 
     const handleStop = () => {
-        const originalRole = localStorage.getItem("originalRole");  
+        const originalRole = sessionStorage.getItem("originalRole");
         stopImpersonation();
         if (originalRole === 'admin') {
             navigate('/admin-page');

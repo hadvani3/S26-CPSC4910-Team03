@@ -10,7 +10,7 @@ const PurchaseHistory = () => {
     const navigate = useNavigate();
     const { token, authReady } = useContext(AuthContext);
 
-    // check token (wait for localStorage hydration so refresh does not bounce to login)
+    // check token (wait for sessionStorage hydration so refresh does not bounce to login)
     useEffect(() => {
         if (!authReady) return;
         if (!token) {

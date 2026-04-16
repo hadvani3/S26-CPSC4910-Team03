@@ -35,7 +35,7 @@ export default function Login() {
         if (data.accessToken) {
           login(data.accessToken, data.role);
           console.log(sessionStorage.getItem("token"));
-          console.log(localStorage.getItem("role"));
+          console.log(sessionStorage.getItem("role"));
         }
 
         if (data.role === 'driver'){

@@ -13,7 +13,7 @@ export default function DriverHomePage() {
     const navigate = useNavigate();
     const { token, role, authReady } = useContext(AuthContext);
 
-    // check token (wait for localStorage hydration so refresh does not bounce to login)
+    // check token (wait for sessionStorage hydration so refresh does not bounce to login)
     useEffect(() => {
         if (!authReady) return;
         if (!token) {

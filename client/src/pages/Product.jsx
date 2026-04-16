@@ -13,7 +13,7 @@ const Product = () => {
 	const [product, setProduct] = useState([]);
   const [quantity, setQuantity] = useState(1);
 
-  //check the token (wait for localStorage hydration so refresh does not bounce to login)
+  //check the token (wait for sessionStorage hydration so refresh does not bounce to login)
     useEffect(() => {
       if (!authReady) return;
       if (!token) {
