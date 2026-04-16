@@ -158,7 +158,8 @@ app.get('/api/search', async (req, res) => {
 
 //searching for product
 app.get('/api/product', async (req, res) => {
-	let product_id = parseInt(req.query.q, 10);
+	let product_id = parseInt(req.query.id, 10);
+	let sponsor_id = parseInt(req.query.sponsor_id, 10);
 	//api spec stuff
 	const requestOptions = {
         method: 'GET',
@@ -172,12 +173,25 @@ app.get('/api/product', async (req, res) => {
 	const response = await fetch(url.toString(), requestOptions);
     const data = await response.json();
 
+	//get the point ration that we want for the product
+	const getRatio = () => new Promise((resolve, reject) => {
+		db.query('SELECT point_value_usd FROM sponsors WHERE sponsor_id = ?', [sponsor_id], (err, results) => {
+			if (err) {
+				return reject(err);
+			} else {
+				return resolve(results[0].point_value_usd);
+			}
+		});
+	});
+
+	const ratio = await getRatio();
+
 	//format the response that we want
 	if (response.ok) {
 		const newData = data.results.map(item => ({
 			listing_id: item.listing_id,
 			title: item.title,
-			price: item.price.amount,
+			price: (item.price.amount / 100) * ratio,
 			description: item.description,
 			materials: item.materials,
 			image: '',
@@ -231,11 +245,23 @@ app.get('/api/:sponsor_id/catalog', async (req, res) =>{
 		const url = `https://openapi.etsy.com/v3/application/listings/batch?listing_ids=${listingIds}&includes=Images`;
         const response = await fetch(url, requestOptions);
         const data = await response.json();
+		//get the value of the ratio of points for each sponsor 
+		const getRation = () => new Promise((resolve, reject) => {
+            db.query('SELECT point_value_usd FROM sponsors WHERE sponsor_id = ?', [sponsor_id], (err, results) => {
+				if (err) {
+					return reject(err);
+				} else {
+					return resolve(results[0].point_value_usd);
+				}
+			});
+		});
+
+		const ratio = await getRation();
 
 		const newData = data.results.map(item => ({
 			listing_id: item.listing_id,
 			title: item.title,
-			price: item.price.amount,
+			price: (item.price.amount / 100) * ratio,
 			image: '',
 			ratingAvg: 0
 		}));
@@ -573,6 +599,7 @@ app.post('/api/cart', async (req, res) =>{
 
 app.post('/api/addToCart', async (req, res) => {
 	const product = req.body.product_id;
+	const sponsor_id = req.body.sponsor_id;
 	const count = req.body.count;
 	const token = req.body.key
 	const email = decodeAccessToken(token)
@@ -597,6 +624,12 @@ app.post('/api/addToCart', async (req, res) => {
 			addString += `,${product}`;
 		}
 
+		//do the same thing for the sponsor id
+		let addSponsorString = ''
+		for(let i = 0; i < count; i++){
+			addSponsorString += `,${sponsor_id}`;
+		}
+
 		//query to add to the cart field
 		const query = 'UPDATE drivers SET cart = CONCAT (cart, ?) WHERE user_id = ?';
 		db.query(query, [addString, user_id], (err, results) => {
@@ -610,8 +643,21 @@ app.post('/api/addToCart', async (req, res) => {
 				return res.status(404).json({ error: "cart not found not found" });
 			}
 
-		
-			return res.status(200).json({ success: true, message: "Cart updated" });
+			//add corresponding sponsor ids to the equiavalent cart
+			const sponsorQuery = 'UPDATE drivers SET cart_sponsor = CONCAT(cart_sponsor, ?) WHERE user_id = ?';
+			db.query(sponsorQuery, [addSponsorString, user_id], (err, sponsorResults) => {
+				if (err) {
+					console.error("Database Error:", err);
+					return res.status(500).json({ error: "Failed to update catalog" });
+				}
+				if (sponsorResults.affectedRows === 0) {
+					return res.status(404).json({ error: "cart not found not found" });
+				}
+
+							
+				
+				return res.status(200).json({ success: true, message: "Cart updated" });
+			});
 		});
 	});
 })
