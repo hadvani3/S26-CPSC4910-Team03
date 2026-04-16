@@ -11,14 +11,15 @@ export default function DriverHomePage() {
     const [searchQuery, setSearchQuery] = useState('');
 
     const navigate = useNavigate();
-    const { token, role } = useContext(AuthContext);
+    const { token, role, authReady } = useContext(AuthContext);
 
-    // check token
+    // check token (wait for localStorage hydration so refresh does not bounce to login)
     useEffect(() => {
+        if (!authReady) return;
         if (!token) {
             navigate("/");
         }
-    }, [token, navigate]);
+    }, [authReady, token, navigate]);
 
     useEffect(() => {
     if (token) {

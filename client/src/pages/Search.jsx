@@ -10,14 +10,15 @@ const SearchResults = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const { token, role } = useContext(AuthContext);
+  const { token, role, authReady } = useContext(AuthContext);
 
-  //check the token
+  //check the token (wait for localStorage hydration so refresh does not bounce to login)
   useEffect(() => {
+    if (!authReady) return;
     if (!token) {
       navigate("/"); 
     }
-  }, [token, navigate]);
+  }, [authReady, token, navigate]);
 
   //get the queries passed we want to search with
   useEffect(() => {

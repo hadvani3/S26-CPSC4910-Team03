@@ -9,14 +9,15 @@ const Cart = () =>{
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { token} = useContext(AuthContext);
+  const { token, authReady } = useContext(AuthContext);
 
- //checking the token
+ //checking the token (wait for localStorage hydration so refresh does not bounce to login)
   useEffect(() => {
+    if (!authReady) return;
     if (!token) {
       navigate("/");
     }
-  }, [token, navigate]);
+  }, [authReady, token, navigate]);
 
 
   useEffect(() => {
