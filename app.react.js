@@ -231,11 +231,23 @@ app.get('/api/:sponsor_id/catalog', async (req, res) =>{
 		const url = `https://openapi.etsy.com/v3/application/listings/batch?listing_ids=${listingIds}&includes=Images`;
         const response = await fetch(url, requestOptions);
         const data = await response.json();
+		//get the value of the ratio of points for each sponsor 
+		const getRation = () => new Promise((resolve, reject) => {
+            db.query('SELECT point_value_usd FROM sponsors WHERE sponsor_id = ?', [sponsor_id], (err, results) => {
+				if (err) {
+					return reject(err);
+				} else {
+					return resolve(results[0].point_value_usd);
+				}
+			});
+		});
+
+		const ratio = await getRation();
 
 		const newData = data.results.map(item => ({
 			listing_id: item.listing_id,
 			title: item.title,
-			price: item.price.amount,
+			price: (item.price.amount / 100) * ratio,
 			image: '',
 			ratingAvg: 0
 		}));
