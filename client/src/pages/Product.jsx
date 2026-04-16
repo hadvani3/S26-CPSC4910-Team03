@@ -9,16 +9,17 @@ const Product = () => {
 	const location = useLocation();
 	const [loading, setLoading] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
-  const { token} = useContext(AuthContext);
+  const { token, authReady } = useContext(AuthContext);
 	const [product, setProduct] = useState([]);
   const [quantity, setQuantity] = useState(1);
 
-  //check the token
+  //check the token (wait for localStorage hydration so refresh does not bounce to login)
     useEffect(() => {
+      if (!authReady) return;
       if (!token) {
         navigate("/"); 
       }
-    }, [token, navigate]);
+    }, [authReady, token, navigate]);
 
 
 	//get the queries passed we want to retrieve produc with

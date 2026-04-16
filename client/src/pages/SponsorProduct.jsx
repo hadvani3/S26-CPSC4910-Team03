@@ -9,13 +9,14 @@ const SponsorProduct = () => {
 	const [loading, setLoading] = useState(false);
 	const [searchQuery, setSearchQuery] = useState('');
 	const [product, setProduct] = useState([]);
-    const { token, role } = useContext(AuthContext);
+    const { token, role, authReady } = useContext(AuthContext);
     const [sponsorID, setSponsorID] = useState(null);
     const [isVerified, setIsVerified] = useState(false);
 
     //verify the auth token
     useEffect(() => {
         async function verifyUser() {
+            if (!authReady) return;
             if (!token) {
                 navigate("/"); 
                 return;
@@ -41,7 +42,7 @@ const SponsorProduct = () => {
             }
         }
         verifyUser();
-    }, [token, navigate]);
+    }, [authReady, token, navigate]);
 
 	//get the queries passed we want to retrieve produc with
   useEffect(() => {

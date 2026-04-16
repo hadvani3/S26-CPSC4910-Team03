@@ -11,14 +11,15 @@ const Catalog = () =>{
   const location = useLocation();
 
   const { sponsor_id } = useParams(); 
-  const { token, role } = useContext(AuthContext);
+  const { token, role, authReady } = useContext(AuthContext);
   
-    //check the token
+    //check the token (wait for localStorage hydration so refresh does not bounce to login)
     useEffect(() => {
+      if (!authReady) return;
       if (!token) {
         navigate("/"); 
       }
-    }, [token, navigate]);
+    }, [authReady, token, navigate]);
 
   useEffect(() => {
     if (sponsor_id) {
