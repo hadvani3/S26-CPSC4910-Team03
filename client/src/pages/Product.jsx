@@ -12,6 +12,7 @@ const Product = () => {
   const { token} = useContext(AuthContext);
 	const [product, setProduct] = useState([]);
   const [quantity, setQuantity] = useState(1);
+  const [SponsorID, setSponsorId] = useState(null);
 
   //check the token
     useEffect(() => {
@@ -24,21 +25,26 @@ const Product = () => {
 	//get the queries passed we want to retrieve produc with
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    const product_id = queryParams.get('id');
-    const sponsor_id = queryParams.get('sponsor_id');
-
-    if (product_id) {
-      fetchResults(product_id);
+    const p_id = queryParams.get('id');
+    const s_id = queryParams.get('sponsor_id');
+    if (s_id) {
+      setSponsorId(s_id);
     }
+
+    if (p_id && s_id) {
+      fetchResults(p_id, s_id);
+      } else {
+      console.warn("Missing IDs in URL");
+      }
   }, [location.search]);
 
 	//recieve the data from the backend with these queries
-  const fetchResults = async (query) => {
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/product?id=${encodeURIComponent(query)}&sponsor_id=${encodeURIComponent(sponsor_id)}`);
-      const data = await response.json();
-      setProduct(data);
+  const fetchResults = async (product_query, s_id) => { 
+  setLoading(true);
+  try {
+    const response = await fetch(`/api/product?id=${encodeURIComponent(product_query)}&sponsor_id=${encodeURIComponent(s_id)}`);
+    const data = await response.json();
+    setProduct(data);
     } catch (error) {
       console.error("No product found:", error);
     } finally {
@@ -65,6 +71,7 @@ const Product = () => {
                 body: JSON.stringify({
                     key: token,
                     product_id: product[0]?.listing_id,
+                    sponsor_id: SponsorID,
                     count: quantity
                 }),
             });

@@ -45,7 +45,7 @@ const Catalog = () =>{
   const getProductPath = (id) => {
     return role === 'sponsor' 
       ? `/sponsor_product?id=${id}&sponsor_id=${sponsor_id}` 
-      : `/product?q=${id}`;
+      : `/product?id=${id}&sponsor_id=${sponsor_id}`;
   };
 
    return (
