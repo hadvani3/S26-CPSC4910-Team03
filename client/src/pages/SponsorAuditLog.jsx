@@ -13,6 +13,8 @@ export default function SponsorAuditLog() {
     const [search, setSearch] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 20;
 
     useEffect(() => {
 
@@ -40,6 +42,13 @@ export default function SponsorAuditLog() {
         const matchEnd = endDate ? itemDate <= new Date(endDate + 'T23:59:59') : true;
         return matchesSearch && matchStart && matchEnd;
     });
+
+    // add pagination 
+    const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
+    const paginatedLogs = filteredLogs.slice (
+        (currentPage-1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     const handleDownloadCSV =() => {
         const headers = ['Type', 'Label', 'Timestamp'];
@@ -191,7 +200,7 @@ export default function SponsorAuditLog() {
                     ) : filteredLogs.length === 0 ? (
                         <div style={{ color: '#dbe6ff' }}>No activity found.</div>
                     ) : (
-                        filteredLogs.map((item, index) => (
+                        paginatedLogs.map((item, index) => (
                             <div key={index} style={{
                                 padding: '12px',
                                 background: 'rgba(255, 255, 255, 0.16)',
@@ -207,6 +216,61 @@ export default function SponsorAuditLog() {
                             </div>
                         ))
                     )}
+                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '16px' }}>
+                    <span
+                        onClick={() => currentPage !== 1 && setCurrentPage(1)}
+                        style={{
+                            color: currentPage === 1 ? '#888' : '#a5b4fc',
+                            fontSize: '12px',
+                            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                            textDecoration: currentPage === 1 ? 'none' : 'underline',
+                            userSelect: 'none',
+                        }}
+                    >First</span>
+                    <button
+                        type="button"
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        style={{
+                            padding: '8px 16px',
+                            color: 'white',
+                            backgroundColor: currentPage === 1 ? '#555' : '#667eea',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                        }}
+                    >Previous</button>
+                    <span style={{ color: '#f4f8ff', fontSize: '14px' }}>
+                        Page {currentPage} of {totalPages || 1}
+                    </span>
+                    <button
+                        type="button"
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages || totalPages === 0}
+                        style={{
+                            padding: '8px 16px',
+                            color: 'white',
+                            backgroundColor: (currentPage === totalPages || totalPages === 0) ? '#555' : '#667eea',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                        }}
+                    >Next</button>
+                    <span
+                        onClick={() => currentPage !== totalPages && setCurrentPage(totalPages)}
+                        style={{
+                            color: (currentPage === totalPages || totalPages === 0) ? '#888' : '#a5b4fc',
+                            fontSize: '12px',
+                            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                            textDecoration: (currentPage === totalPages || totalPages === 0) ? 'none' : 'underline',
+                            userSelect: 'none',
+                        }}
+                    >Last</span>
+                </div>
                 </div>
             </div>
         </>
