@@ -30,6 +30,8 @@ import AdminReports from './pages/AdminReports.jsx';
 import AdminSalesBySponsor from './pages/AdminSalesBySponsor.jsx';
 import AdminSalesByDriver from './pages/AdminSalesByDriver.jsx';
 import SponsorAuditLog from './pages/SponsorAuditLog.jsx';
+import SponsorManageDrivers from './pages/SponsorManageDrivers.jsx';
+import AdminInvoice from './pages/AdminInvoice.jsx'
 import './App.css';
 
 
@@ -69,7 +71,9 @@ function App() {
         <Route path= "/admin/reports/sales-by-sponsor" element={<AdminSalesBySponsor />} />
         <Route path= "/admin/reports/sales-by-driver" element={<AdminSalesByDriver />} />
         <Route path= "/sponsor/audit-log" element={<SponsorAuditLog />} />
+        <Route path="/sponsor/manage-drivers" element={<SponsorManageDrivers />} />
 
+        <Route path= "/admin/invoice" element={<AdminInvoice />} />
       </Routes>
     </BrowserRouter>
   );
