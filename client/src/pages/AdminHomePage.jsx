@@ -249,7 +249,7 @@ export default function AdminHomePage() {
                                 className="admin-cream-btn"
                                 style={btnBase}
                             >
-                                View All Sponsors
+                                View All Sponsor Users
                             </button>
                             <button
                                 type="button"

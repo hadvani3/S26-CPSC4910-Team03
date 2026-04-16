@@ -8,6 +8,8 @@ export default function AdminUserManagement() {
     const [searchParams] = useSearchParams();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [sponsors, setSponsors] = useState([]);
+    const [sponsorFilter, setSponsorFilter] = useState('all');
     const [filters, setFilters] = useState({
         role: searchParams.get('role') || 'all',
         status: 'all',
@@ -17,7 +19,14 @@ export default function AdminUserManagement() {
         
     useEffect(() => {
         fetchUsers();
-    }, [filters, navigate]);
+    }, [filters, sponsorFilter, navigate]);
+
+    useEffect(() => {
+        fetch('/api/sponsors')
+        .then(res => res.json())
+        .then(data => setSponsors(data))
+        .catch(err => console.error('Error fetching sponsors:', err));
+    }, []);
 
         const fetchUsers = async () => {
         setLoading(true);
@@ -26,6 +35,7 @@ export default function AdminUserManagement() {
             if (filters.role !== 'all') params.append('role', filters.role);
             if (filters.status !== 'all') params.append('status', filters.status);
             if (filters.search) params.append('search', filters.search);
+            if(sponsorFilter !== 'all') params.append('sponsor_id', sponsorFilter);
 
             const res = await fetch(`/api/admin/users?${params}`);
             const data = await res.json();
@@ -110,9 +120,11 @@ export default function AdminUserManagement() {
 
             if(data.role === 'driver'){
                 navigate('/driver-page');
+                window.scrollTo(0,0);
             }
             else if(data.role === 'sponsor'){  
-                navigate('/sponsor-page');  
+                navigate('/sponsor-page');
+                window.scrollTo(0,0);  
             }
         } catch (err) {
             console.error('Error during impersonation:', err);
@@ -187,6 +199,24 @@ export default function AdminUserManagement() {
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
                     </select>
+                    {filters.role === 'sponsor' && (
+                        <select
+                            value={sponsorFilter}
+                            onChange={(e) => setSponsorFilter(e.target.value)}
+                            style={{
+                                padding: '10px 15px',
+                                border: '1px solid #ddd',
+                                borderRadius: '6px',
+                                fontSize: '15px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <option value="all">All Sponsors</option>
+                            {sponsors.map(s => (
+                                <option key={s.sponsor_id} value={s.sponsor_id}>{s.company_name}</option>
+                            ))}
+                        </select>
+                    )}
 
                     <input
                         type="text"

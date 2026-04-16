@@ -9,6 +9,9 @@ export default function AdminReports() {
             <Nav />
             <div className="admin-dashboard">
                 <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
                     background: 'rgba(255, 255, 255, 0.16)',
                     border: '1px solid rgba(255, 255, 255, 0.24)',
                     backdropFilter: 'blur(8px)',
@@ -17,17 +20,34 @@ export default function AdminReports() {
                     color: 'white',
                     boxShadow: '0 10px 24px rgba(0,0,0,0.2)'
                 }}>
-                    <h1 style={{ margin: '0 0 4px 0', fontSize: '1.5em', fontWeight: '600', color: 'white' }}>
-                        Reports
-                    </h1>
-                    <p style={{ margin: 0, fontSize: '0.95em', opacity: 0.92 }}>
-                        Select a report to view
-                    </p>
-                </div>
+                    <div>
+                        <h1 style={{ margin: '0 0 4px 0', fontSize: '1.5em', fontWeight: '600', color: 'white' }}>
+                            Reports
+                        </h1>
+                        <p style={{ margin: 0, fontSize: '0.95em', opacity: 0.92 }}>
+                            Select a report to view
+                        </p>
+                    </div>
+                    <button
+                        type = "button"
+                        onClick = {() => navigate('/admin-page')}
+                        className = "admin-cream-btn"
+                        style = {{
+                            padding: '10px 22px',
+                            color: '#1f2937',
+                            border: '1px solid rgba(15, 23, 42, 0.22)',
+                            borderRadius: '10px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '700',
+                        }}
+                    >Back to Dashboard
+                    </button>
+                    </div>
 
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
                     gap: '14px',
                 }}>
                     <div style={{
@@ -70,6 +90,34 @@ export default function AdminReports() {
                         <button
                             type="button"
                             onClick={() => navigate('/admin/reports/sales-by-driver')}
+                            className="admin-cream-btn"
+                            style={{
+                                padding: '10px 20px',
+                                color: '#1f2937',
+                                border: '1px solid rgba(15, 23, 42, 0.18)',
+                                borderRadius: '10px',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                fontWeight: '700',
+                            }}
+                        >
+                            View Report
+                        </button>
+                    </div>
+
+                    <div style = {{
+                        background: 'rgba(255, 255, 255, 0.16)',
+                        border : '1px solid rgba(255, 255, 255, 0.22)',
+                        backdropFilter: 'blur(8px)',
+                        padding: '24px',
+                        borderRadius: '10px',
+                        boxShadow: '0 6px 16px rgba(0,0,0,0.16)'
+                    }}>
+                        <h2 style={{ color: '#f4f8ff', marginTop: 0 }}>Invoices</h2>
+                        <p style={{ color: '#dbe6ff', fontSize: '14px' }}>View purchases summarized by sponsor.</p>
+                        <button
+                            type="button"
+                            onClick={() => navigate('/admin/reports/invoices')}
                             className="admin-cream-btn"
                             style={{
                                 padding: '10px 20px',

@@ -72,8 +72,7 @@ function App() {
         <Route path= "/admin/reports/sales-by-driver" element={<AdminSalesByDriver />} />
         <Route path= "/sponsor/audit-log" element={<SponsorAuditLog />} />
         <Route path="/sponsor/manage-drivers" element={<SponsorManageDrivers />} />
-
-        <Route path= "/admin/invoice" element={<AdminInvoice />} />
+        <Route path= "/admin/reports/invoices" element={<AdminInvoice />} />
       </Routes>
     </BrowserRouter>
   );
