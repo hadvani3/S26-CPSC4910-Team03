@@ -261,60 +261,95 @@ app.get('/api/:sponsor_id/catalog', async (req, res) =>{
 //function to easily get the points from each sponsor a driver has done work for
 async function getPointsFromSponsor(email) {
 	console.log("Getting points for email:", email);
-	//get the driver_id from email
-	const getDriver_id = () => new Promise((resolve, reject) => {
-            db.query('SELECT driver_id FROM drivers WHERE user_id = (SELECT user_id FROM users WHERE email = ?)', [email], (err, results) => {
-				if (err) {
-					return reject(err);
+	if (email == null || String(email).trim() === '') {
+		console.warn('getPointsFromSponsor: missing email from token');
+		return [];
+	}
+	const getDriverRow = () =>
+		new Promise((resolve, reject) => {
+			db.query(
+				'SELECT driver_id, sponsor_id FROM drivers WHERE user_id = (SELECT user_id FROM users WHERE email = ? LIMIT 1) LIMIT 1',
+				[email],
+				(err, results) => {
+					if (err) return reject(err);
+					if (!results || results.length === 0) return resolve(null);
+					return resolve(results[0]);
 				}
-				else if (!results || results.length === 0) {
-					return resolve(null);
-				} else {
-					return resolve(results[0].driver_id);
-				}
-			});
-	});
-
-	driver_id = await getDriver_id();
-	if (!driver_id) return [];
-
-	//get the sponsor names and points from the database
-	const getSponsorfromId = () => new Promise((resolve, reject) => {
-		db.query('select sponsor_id, points FROM driver_sponsors WHERE driver_id = ? AND status = ?', [driver_id, 'APPROVED'], (err, results) => {
-			if (err) {
-				return reject(err);
-			} else {
-				return resolve(results);
-			}
+			);
 		});
+
+	const driverRow = await getDriverRow();
+	if (!driverRow) return [];
+
+	const driver_id = driverRow.driver_id;
+	const primarySponsorId =
+		driverRow.sponsor_id != null && driverRow.sponsor_id !== ''
+			? Number(driverRow.sponsor_id)
+			: null;
+
+	// Points per sponsor from junction table
+	const getSponsorfromId = () =>
+		new Promise((resolve, reject) => {
+			db.query(
+				`SELECT sponsor_id, points FROM driver_sponsors
+				 WHERE driver_id = ? AND LOWER(TRIM(status)) = 'approved'`,
+				[driver_id],
+				(err, results) => {
+					if (err) return reject(err);
+					return resolve(results || []);
+				}
+			);
+		});
+
+	const sponsor_data = await getSponsorfromId();
+
+	const sponsorMap = new Map();
+	for (const row of sponsor_data) {
+		const sid = Number(row.sponsor_id);
+		if (!Number.isFinite(sid) || sid <= 0) continue;
+		sponsorMap.set(sid, Number(row.points) || 0);
+	}
+	// Approved applications update drivers.sponsor_id
+	const primaryOk =
+		primarySponsorId != null && Number.isFinite(primarySponsorId) && primarySponsorId > 0;
+	if (primaryOk && !sponsorMap.has(primarySponsorId)) {
+		sponsorMap.set(primarySponsorId, 0);
+	}
+
+	let sponsorIds = [...sponsorMap.keys()].filter((id) => Number.isFinite(id) && id > 0);
+	if (sponsorIds.length === 0) return [];
+
+	sponsorIds = [...new Set(sponsorIds)];
+	if (primaryOk && sponsorIds.includes(primarySponsorId)) {
+		sponsorIds = [primarySponsorId, ...sponsorIds.filter((id) => id !== primarySponsorId)];
+	}
+
+	const getSponsorNames = () =>
+		new Promise((resolve, reject) => {
+			const placeholders = sponsorIds.map(() => '?').join(', ');
+			db.query(
+				`SELECT sponsor_id, company_name FROM sponsors WHERE sponsor_id IN (${placeholders})`,
+				sponsorIds,
+				(err, results) => {
+					if (err) return reject(err);
+					resolve(results || []);
+				}
+			);
+		});
+
+	const sponsor_names = await getSponsorNames();
+
+	const finalData = sponsorIds.map((sid) => {
+		const nameObj = sponsor_names.find((n) => Number(n.sponsor_id) === sid);
+		return {
+			sponsor_id: sid,
+			company_name: nameObj ? nameObj.company_name : 'Unknown',
+			points: sponsorMap.get(sid),
+		};
 	});
 
-	sponsor_data = await getSponsorfromId();
-
-	const sponsorIds = sponsor_data.map(item => item.sponsor_id);
-	if (sponsorIds.length === 0) return [];
-	const getSponsorNames = () => new Promise((resolve, reject) => {
-        db.query('select sponsor_id, company_name FROM sponsors WHERE sponsor_id IN (?)', [sponsorIds], (err, results) => {
-            if (err) return reject(err);
-            resolve(results);
-        });
-    });
-
-    const sponsor_names = await getSponsorNames();
-
-    const finalData = sponsor_data.map(data => {
-        const nameObj = sponsor_names.find(n => n.sponsor_id === data.sponsor_id);
-        return {
-            sponsor_id: data.sponsor_id,
-            company_name: nameObj ? nameObj.company_name : 'Unknown',
-            points: data.points
-        };
-    });
-
-    console.log("Sponsor data with names retrieved:", finalData);
-    return finalData;
-
-
+	console.log("Sponsor data with names retrieved:", finalData);
+	return finalData;
 }
 
 //function for the info we need on the driver homepage
@@ -837,36 +872,31 @@ app.post("/GetSponsorDrivers", (req, res) => {
 		if (driverResults.length === 0) {
 			console.log("No drivers")
 			return res.status(404).json({error: "There are no drivers for this sponsor"});
-		} else {
-			const sqlSearch2 = "select * from driver_sponsors where sponsor_id = ?"
-			const search_query2 = mysql.format(sqlSearch2, [sponsorID])
-			db.query(search_query2, async (err, driverResults2) => {
-				if (err) {
-					console.error(err);
-					return res.status(500).json({error: "Database Error"});
-				}
-				if (driverResults2.length === 0) {
-					console.log("No drivers")
-					return res.status(404).json({error: "There are no drivers for this sponsor"});
-				} else {
-					const results2Map = Object.fromEntries(
-						driverResults2.map(d => [d.driver_id, d])
-					);
-					return res.json(driverResults.map(d => {
-						const d2 = results2Map[d.driver_id];
-						return {
-							driver_id: d.driver_id,
-							firstname: d.first_name,
-							lastname: d.last_name,
-							phone: d.phone_number,
-							points: d2 ? d2.points : null,
-							createDate: d.created_at,
-							updatedDate: d.updated_at
-						}
-					}));
-				}
-			})
 		}
+		// Points live in driver_sponsors; drivers may be linked via drivers.sponsor_id before any row exists there
+		const sqlSearch2 = "select * from driver_sponsors where sponsor_id = ?"
+		const search_query2 = mysql.format(sqlSearch2, [sponsorID])
+		db.query(search_query2, async (err, driverResults2) => {
+			if (err) {
+				console.error(err);
+				return res.status(500).json({error: "Database Error"});
+			}
+			const results2Map = Object.fromEntries(
+				(driverResults2 || []).map(d => [d.driver_id, d])
+			);
+			return res.json(driverResults.map(d => {
+				const d2 = results2Map[d.driver_id];
+				return {
+					driver_id: d.driver_id,
+					firstname: d.first_name,
+					lastname: d.last_name,
+					phone: d.phone_number,
+					points: d2 ? d2.points : 0,
+					createDate: d.created_at,
+					updatedDate: d.updated_at
+				}
+			}));
+		})
 	})
 })
 
@@ -911,35 +941,90 @@ app.post("/GetSponsor", (req, res) => {
 })
 
 app.post('/ChangePoints', (req, res) => {
-	const driverID = req.body.driver_id
-	const change = req.body.change
-	const sponsor_id = req.body.sponsor_id
-	const reason = req.body.reason
-	const company_name = req.body.company_name
+	const driverID = parseInt(req.body.driver_id, 10)
+	const change = parseInt(req.body.change, 10)
+	const sponsor_id = parseInt(req.body.sponsor_id, 10)
+	const reason = req.body.reason != null ? String(req.body.reason).trim() : ''
 
-	const update = "UPDATE driver_sponsors SET points = points + ? WHERE driver_id = ? and sponsor_id = ?"
-	const update_query = mysql.format(update, [change, driverID, sponsor_id])
-	db.query(update_query, async (err) => {
-		if (err) {
-			console.error(err);
-			return res.status(500).json({error: "Database Error"});
-		} else {
-			insert = "INSERT INTO driver_points (driver_id, sponsor_id, points_change, reason) VALUES (?, ?, ?, ?);"
-			insert_query = mysql.format(insert, [driverID, sponsor_id, change, reason])
+	if (
+		!Number.isFinite(driverID) ||
+		driverID <= 0 ||
+		!Number.isFinite(sponsor_id) ||
+		sponsor_id <= 0 ||
+		!Number.isFinite(change) ||
+		change === 0
+	) {
+		return res.status(400).json({ error: 'driver_id, sponsor_id, and a non-zero numeric change are required' })
+	}
+	if (!reason) {
+		return res.status(400).json({ error: 'Reason is required' })
+	}
 
-			//create a notification sent to the driver about the change in points
-			CreateNotification(driverID, `You've gotten ${change} from ${company_name} for reason: ${reason}`);
+	db.query(
+		'SELECT user_id FROM drivers WHERE driver_id = ? LIMIT 1',
+		[driverID],
+		(e0, drows) => {
+			if (e0) {
+				console.error(e0)
+				return res.status(500).json({ error: 'Database Error' })
+			}
+			if (!drows || !drows.length) {
+				return res.status(404).json({ error: 'Driver not found' })
+			}
+			const userId = drows[0].user_id
 
-			db.query(insert_query, async (err) => {
+			const update =
+				'UPDATE driver_sponsors SET points = points + ? WHERE driver_id = ? AND sponsor_id = ?'
+			db.query(update, [change, driverID, sponsor_id], (err, result) => {
 				if (err) {
-					console.error(err);
-					return res.status(500).json({error: "Database Error"});
+					console.error(err)
+					return res.status(500).json({ error: 'Database Error' })
+				}
+
+				const finishAward = () => {
+					const insert =
+						'INSERT INTO driver_points (driver_id, sponsor_id, points_change, reason) VALUES (?, ?, ?, ?)'
+					const insert_query = mysql.format(insert, [driverID, sponsor_id, change, reason])
+					CreateNotification(
+						userId,
+						`You've received ${change} points. Reason: ${reason}`
+					)
+					db.query(insert_query, (eIns) => {
+						if (eIns) {
+							console.error(eIns)
+							return res.status(500).json({ error: 'Database Error' })
+						}
+						db.query(
+							'UPDATE drivers SET total_points = COALESCE(total_points, 0) + ? WHERE driver_id = ?',
+							[change, driverID],
+							(eTot) => {
+								if (eTot) {
+									console.error('drivers.total_points update skipped or failed:', eTot)
+								}
+								return res.json({ success: true })
+							}
+						)
+					})
+				}
+
+				// Affiliation is often only on drivers.sponsor_id until the first points change — create the junction row
+				if (!result.affectedRows) {
+					const ins =
+						'INSERT INTO driver_sponsors (driver_id, sponsor_id, points, status) VALUES (?, ?, ?, ?)'
+					const ins_query = mysql.format(ins, [driverID, sponsor_id, change, 'APPROVED'])
+					db.query(ins_query, (e1) => {
+						if (e1) {
+							console.error(e1)
+							return res.status(500).json({ error: 'Database Error' })
+						}
+						finishAward()
+					})
 				} else {
-					return res.json({ success: true });
+					finishAward()
 				}
 			})
 		}
-	})
+	)
 })
 
 app.post('/getPointsValue', (req, res) => {
@@ -1786,12 +1871,43 @@ app.patch('/api/applications/:id/review', (req, res) => {
 								// link approved drivers to sponsors
 								if (application_status === 'APPROVED') {
 									CreateNotification(row.user_id, `Your application has been approved!`);
-									db.query (
+									db.query(
 										`UPDATE drivers SET sponsor_id = ?, phone_number = ? WHERE user_id = ?`,
 										[row.sponsor_id, row.phone_number, row.user_id],
 										(e4) => {
-											if (e4) console.error('Failed to link this driver to sponsor.', e4);
-											res.json({ success: true, message: 'Application approved and driver linked to sponsor' });
+											if (e4) {
+												console.error('Failed to link this driver to sponsor.', e4);
+												return res.status(500).json({ error: 'Failed to link driver to sponsor' });
+											}
+											db.query(
+												'SELECT driver_id FROM drivers WHERE user_id = ? LIMIT 1',
+												[row.user_id],
+												(e5, drRows) => {
+													if (e5 || !drRows || !drRows.length) {
+														if (e5) console.error(e5);
+														return res.json({
+															success: true,
+															message: 'Application approved and driver linked to sponsor',
+														});
+													}
+													const did = drRows[0].driver_id;
+													db.query(
+														`INSERT INTO driver_sponsors (driver_id, sponsor_id, points, status)
+														 VALUES (?, ?, 0, 'APPROVED')
+														 ON DUPLICATE KEY UPDATE status = 'APPROVED'`,
+														[did, row.sponsor_id],
+														(e6) => {
+															if (e6) {
+																console.error('driver_sponsors upsert after approval:', e6);
+															}
+															return res.json({
+																success: true,
+																message: 'Application approved and driver linked to sponsor',
+															});
+														}
+													);
+												}
+											);
 										}
 									);
 								}

@@ -85,7 +85,9 @@ export default function SponsorManageDrivers() {
             if (res.ok && result.success) {
                 setDrivers((prev) =>
                     prev.map((d) =>
-                        d.driver_id === driver_id ? { ...d, points: d.points + change } : d
+                        d.driver_id === driver_id
+                            ? { ...d, points: Number(d.points || 0) + Number(change) }
+                            : d
                     )
                 );
                 setPointsChanges((prev) => ({ ...prev, [driver_id]: '' }));
