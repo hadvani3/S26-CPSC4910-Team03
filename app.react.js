@@ -158,7 +158,8 @@ app.get('/api/search', async (req, res) => {
 
 //searching for product
 app.get('/api/product', async (req, res) => {
-	let product_id = parseInt(req.query.q, 10);
+	let product_id = parseInt(req.query.id, 10);
+	let sponsor_id = parseInt(req.query.sponsor_id, 10);
 	//api spec stuff
 	const requestOptions = {
         method: 'GET',
@@ -172,12 +173,25 @@ app.get('/api/product', async (req, res) => {
 	const response = await fetch(url.toString(), requestOptions);
     const data = await response.json();
 
+	//get the point ration that we want for the product
+	const getRation = () => new Promise((resolve, reject) => {
+		db.query('SELECT point_value_usd FROM sponsors WHERE sponsor_id = ?', [sponsor_id], (err, results) => {
+			if (err) {
+				return reject(err);
+			} else {
+				return resolve(results[0].point_value_usd);
+			}
+		});
+	});
+
+	const ratio = await getRation();
+
 	//format the response that we want
 	if (response.ok) {
 		const newData = data.results.map(item => ({
 			listing_id: item.listing_id,
 			title: item.title,
-			price: item.price.amount,
+			price: (item.price.amount / 100) * ratio,
 			description: item.description,
 			materials: item.materials,
 			image: '',
