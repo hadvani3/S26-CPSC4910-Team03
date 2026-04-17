@@ -530,6 +530,71 @@ app.post('/api/purchase-history', async (req, res) => {
     }
 });
 
+//remove an item from a cart
+app.post('/api/removeFromCart', async (req, res) => {
+	const index = req.body.index;
+	//decode the token for the email
+	const token = getBearerToken(req);
+	if(!token) return res.status(401).json({ error: 'Authorization is required!' });
+	const email = decodeAccessToken(token);
+	//get the user_id from the token
+	const user_id = await new Promise((resolve, reject) => {
+		db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, results) => {
+			if (err) {
+				return reject(err);
+			} else {
+				return resolve(results[0].user_id);
+			}
+		});
+	});
+
+	//get the value of the cart and the sponsor cart
+	const cart = await new Promise((resolve, reject) => {
+		db.query('SELECT cart FROM drivers WHERE user_id = ?', [user_id], (err, results) => {
+			if (err) {
+				return reject(err);
+			} else {
+				return resolve(results[0].cart);
+			}
+		});
+	});
+
+	const sponsorCart = await new Promise((resolve, reject) => {
+		db.query('SELECT cart_sponsor FROM drivers WHERE user_id = ?', [user_id], (err, results) => {
+			if (err) {
+				return reject(err);
+			} else {
+				return resolve(results[0].cart_sponsor);
+			}
+		});
+	});
+
+	//split them into lists so we can parse
+	const cartList = String(cart).split(',').filter(id => id.trim() !== "");
+	const sponsorCartList = String(sponsorCart).split(',').filter(id => id.trim() !== "");
+
+	//remove the item at the index of both lists
+	cartList.splice(index, 1);
+	sponsorCartList.splice(index, 1);
+
+	//put them back into the format for the database
+	const newCartString = cartList.length > 0 ? ',' + cartList.join(',') : '';
+	const newSponsorCartString = sponsorCartList.length > 0 ? ',' + sponsorCartList.join(',') : '';
+
+	//update the database with the new cart values
+	const query = 'UPDATE drivers SET cart = ?, cart_sponsor = ? WHERE user_id = ?';
+	db.query(query, [newCartString, newSponsorCartString, user_id], (err, results) => {
+		if (err) {
+			console.error("Database Error:", err);
+			return res.status(500).json({ error: "Failed to update cart" });
+		}
+		if (results.affectedRows === 0) {
+			return res.status(404).json({ error: "Cart not found" });
+		}
+		return res.status(200).json({ success: true, message: "Cart updated" });
+	});
+	
+});
 //api for getting the details of sponsors corresponding to the cart
 app.get('/api/sponsorCart', async (req, res) =>{
 	//decode token for email

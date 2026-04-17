@@ -100,6 +100,29 @@ const Cart = () =>{
                 });
         }
     }
+
+    const handleRemoveFromCart = (index) => async () => {
+        console.log("Removing item at index:", index);
+        if (!token) {
+            alert("Identity not verified. Please log in again.");
+            return;
+        }
+        try {
+            const res = await fetch("/api/removeFromCart", {
+                method: "POST",
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': "application/json" },
+                body: JSON.stringify({
+                    index: index
+                }),
+                
+            });
+            navigate(0);
+        } catch (err) {
+            console.error(err);
+            alert("Server error while removing product.");
+        }
+    };
+
   const handlePurchase = async () => {
         if (!token) {
             alert("Identity not verified. Please log in again.");
@@ -224,7 +247,26 @@ const Cart = () =>{
       {!loading && products.length === 0 && <p style={{ color: 'white' }}>No products found.</p>}
         <h1>Your Cart:</h1>
         {products.map((item, index) => (
-          <div key={`${item.listing_id}-${index}`} className="container">
+          <div key={`${item.listing_id}-${index}`} className="container" style={{position: 'relative', padding: '20px'}}>
+            <button 
+                        onClick={handleRemoveFromCart(index)}
+                        style={{
+                            position: 'absolute',
+                            top: '10px',
+                            right: '10px',
+                            margin: '0 auto',
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            border: 'none',
+                            backgroundColor: '#9b150b',
+                            color: 'white',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s'
+                        }}
+                    >
+                        Remove
+            </button>
           <a href= {`/product?q=${item.listing_id}`}>
             <img src={item.image} alt={item.title} style={{ width: '200px'}} />
             <h4 style={{ color: 'white' }}>{item.title}</h4>
