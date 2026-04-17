@@ -1175,6 +1175,29 @@ app.post('/changePointsValue', (req, res) => {
 	})
 })
 
+app.post('/DisplayNotifications', (req, res) => {
+	const user_id = req.body.user_id
+
+	const search = "Select * from notifications where user_id = ?"
+	const search_query = mysql.format(search, [user_id])
+	db.query(search_query, async (err, searchResults) => {
+		if (err) {
+			console.error(err);
+			return res.status(500).json({error: "Database Error"});
+		}
+		if (searchResults.length === 0) {
+			console.log("No notifications with that id")
+			return res.status(404).json({error: "No notifications with that id"});
+		} else {
+			return res.json(searchResults.map(d => ({
+				notification_id: d.notification_id,
+				message: d.message,
+				sent_at: d.sent_at,
+			})));
+		}
+	})
+})
+
 // Forgot Password Route
 app.post('/api/forgot-password', (req, res) => {
 	const { email } = req.body;

@@ -82,6 +82,7 @@ export default function Nav() {
                 </li>
             )*/}
             {token && <li><Link to="/account">Account</Link></li>}
+            {token && <li><Link to="/notifications">Notifications</Link></li>}
             {token && <li><Link to="/" onClick={logout}>Logout</Link></li>}
         </ul>
         </>
