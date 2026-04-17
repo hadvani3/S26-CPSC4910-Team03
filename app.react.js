@@ -530,6 +530,69 @@ app.post('/api/purchase-history', async (req, res) => {
     }
 });
 
+//api for getting the details of sponsors corresponding to the cart
+app.get('/api/sponsorCart', async (req, res) =>{
+	//decode token for email
+	const token = getBearerToken(req);
+	if(!token) return res.status(401).json({ error: 'Authorization is required!' });
+	const email = decodeAccessToken(token);
+	//get the user_id from the email
+	const user_id = await new Promise((resolve, reject) => {
+		db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, results) => {
+			if (err) {
+				return reject(err);
+			} else {
+				return resolve(results[0].user_id);
+			}
+		});
+	});
+
+	//get sponsor cart from driver table
+	const query = 'SELECT cart_sponsor FROM drivers WHERE user_id = ?';
+
+	try{
+		//get the sponsor information for the sponsor ids in the cart
+		const sponsorCart  = await new Promise((resolve, reject) => {
+			db.query(query, [user_id], (err, results) => {
+				if (err) {
+
+					reject(err);
+				} else {
+					resolve(results);
+				}
+			});
+		});
+
+		if (!sponsorCart.length || !sponsorCart[0].cart_sponsor) {
+				return res.json([]); 
+		}
+
+		//put the array of sponsor ids into the format of a list'
+		const sponsorString = String(sponsorCart[0].cart_sponsor);
+		const sponsorIdList = sponsorString.split(',').filter(id => id.trim() !== "");
+
+		const detailedSponsors = await Promise.all(sponsorIdList.map(async (id) => {
+			return new Promise((resolve, reject) => {
+				
+				//go through and get the name and point value for each sponsor id
+				const combinedQuery = 'SELECT sponsor_id, company_name, point_value_usd FROM sponsors WHERE sponsor_id = ?';
+						
+				db.query(combinedQuery, [id], (err, results) => {
+					if (err) reject(err);
+					else resolve(results[0]); 
+				});
+			});
+		}));
+
+		res.status(200).json(detailedSponsors);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+
 //showing the details of you cart
 app.post('/api/cart', async (req, res) =>{
 	const token = req.body.key
@@ -548,6 +611,7 @@ app.post('/api/cart', async (req, res) =>{
 		const user_id = userResults[0].user_id;
 		//getting the product values from the database
 		const query = 'SELECT cart FROM drivers WHERE user_id = ?';
+
 		db.query(query, [user_id], async (err, results) => {
 			if (err) {
 				console.error(err);
@@ -570,7 +634,7 @@ app.post('/api/cart', async (req, res) =>{
 			},
 			};
 
-			// Fetch from Etsy (Etsy returns a UNIQUE list of matching results)
+			//make the etsy api call 
                 const url = `https://openapi.etsy.com/v3/application/listings/batch?listing_ids=${listingIds.join(',')}&includes=Images`;
                 const response = await fetch(url, requestOptions);
                 const data = await response.json();
@@ -1261,6 +1325,7 @@ app.post('/api/reset-password', async (req, res) => {
 								[resetRecord.user_id],
 								(logErr) => {
 									if (logErr) console.error('Failed to log password change:', logErr);
+									CreateNotification(resetRecord.user_id, "Your password was recently reset.");
 									res.json({ success: true, message: "Password reset was successful!" });
 								}
 							);
@@ -2529,13 +2594,6 @@ app.post('/api/sponsor/bulk-upload', async (req,res) => {
 
 //this creats a notification in the database and sends to to a phone number
 async function CreateNotification(user_id, message){
-	/*const messageClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-	
-	const email = decodeAccessToken(token)
-
-	//get the phone number from email 
-
-	//create new notification for the database*/
 	db.query('INSERT INTO notifications (user_id, message) VALUES (?, ?)', [user_id, message], (err, results) => {
 	});
 };

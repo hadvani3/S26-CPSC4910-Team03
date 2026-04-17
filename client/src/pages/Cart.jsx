@@ -7,6 +7,11 @@ const Cart = () =>{
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const [data, setData] = useState(null);
+  const [SponsorData, setSponsorData] = useState(null);
+  const [error, setError] = useState(null);
+  const [sData, setSData] = useState(null);
+  const [sponsorList, setSponsorList] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { token, authReady } = useContext(AuthContext);
@@ -23,6 +28,8 @@ const Cart = () =>{
   useEffect(() => {
     if (token) {
       fetchResults();
+      fetchSponsors(token);
+      fetchSponsorDetails(token);
     }
   }, [token]);
 
@@ -46,6 +53,53 @@ const Cart = () =>{
     }
   };
   
+  const fetchSponsors = async (token) => {
+    if (token) {
+        fetch('/api/driver-home', {
+            method: 'GET', 
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        })
+                .then(res => {
+                    if (!res.ok) throw new Error("Failed to fetch");
+                    return res.json();
+                })
+                .then(data => {
+                    setData(data);
+                    setSponsorData(data)
+                })
+                .catch(err => {
+                    console.error('Error fetching driver data:', err);
+                    setError(err.message);
+                });
+        }
+    }
+    
+    const fetchSponsorDetails = async (token) => {
+        if (token) {
+        fetch('/api/sponsorCart', {
+            method: 'GET', 
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        })
+                .then(res => {
+                    if (!res.ok) throw new Error("Failed to fetch");
+                    return res.json();
+                })
+                .then(sData => {
+                    setSData(sData);
+                    setSponsorList(sData)
+                })
+                .catch(err => {
+                    console.error('Error fetching driver data:', err);
+                    setError(err.message);
+                });
+        }
+    }
   const handlePurchase = async () => {
         if (!token) {
             alert("Identity not verified. Please log in again.");
@@ -73,10 +127,97 @@ const Cart = () =>{
         }
     };
 
-  const pointTotal = products.reduce((sum, item) => sum + Number(item.price || 0), 0);
+    const sponsorTotals = products.reduce((acc, item, index) => {
+        const sponsor = sponsorList && sponsorList[index];
+        if (sponsor) {
+            const companyName = sponsor.company_name;
+            const pointValue = sponsor.point_value_usd;
+            const itemPoints = (Number(item.price) / 100) * pointValue;
+
+            if (!acc[companyName]) {
+                acc[companyName] = 0;
+            }
+            acc[companyName] += itemPoints;
+        }
+        return acc;
+    }, {});
+
+
+  //const pointTotal = products.reduce((sum, item) => sum + Number(item.price || 0), 0);
    return (
     <>
     <Nav />
+    <div style={{
+                    background: 'rgba(255, 255, 255, 0.16)',
+                    border: '1px solid rgba(255, 255, 255, 0.22)',
+                    backdropFilter: 'blur(8px)',
+                    padding: '25px',
+                    borderRadius: '10px',
+                    marginBottom: '30px'
+                }}>
+                    <h2 style={{ color: '#f4f8ff', marginBottom: '20px' }}>
+                        Sponsors
+                    </h2>
+                   <div style={{
+                    display: 'flex',
+                    flexDirection: 'column', 
+                    gap: '10px'            
+                }}>
+                    {SponsorData && SponsorData.length > 0 ? (
+                        SponsorData.map((item, index) => (
+                            <div key={index} style={{ 
+                                padding: '15px 25px',
+                                background: 'rgba(255, 255, 255, 0.18)',
+                                borderRadius: '8px',
+                                color: '#f4f8ff',
+                                border: '1px solid rgba(255,255,255,0.18)',
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr 1fr', 
+                                alignItems: 'center',
+                                textAlign: 'left'
+                            }}>
+                                <span style={{ 
+                                    fontWeight: '500', 
+                                    fontSize: '1.1em'
+                                }}>
+                                    {item.company_name}
+                                </span>
+
+                                <span style={{ 
+                                    fontWeight: 'bold', 
+                                    background: 'rgba(209, 205, 205, 0.3)', 
+                                    padding: '5px 15px', 
+                                    borderRadius: '20px',
+                                    color: '#f4efe1',
+                                    width: 'fit-content',
+                                    justifySelf: 'start' 
+                                }}>
+                                    {item.points } pts
+                                </span>
+                            <button 
+                            type="submit"
+                            onClick={() => navigate(`/sponsor/${item.sponsor_id}/catalog`)}
+                            style={{
+                                padding: '12px 30px',
+                                fontSize: '14px',
+                                fontWeight: '700',
+                                border: '1px solid rgba(15, 23, 42, 0.18)',
+                                backgroundColor: '#f4efe1',
+                                color: '#1f2937',
+                                borderRadius: '10px',
+                                cursor: 'pointer',
+                                transition: 'background-color 0.2s',
+                                justifySelf: 'end'
+                            }}>
+                            View Catalog
+                            </button>
+                            </div>
+                        ))
+                    ) : (
+                        <p style={{ color: 'white', opacity: 0.7 }}>No active sponsor affiliations.</p>
+                    )}
+                </div>
+            </div>
     <div className="Searchcontainer" style={{width: '1000px'}}>
       {loading && <p>Loading...</p>}
 
@@ -87,13 +228,31 @@ const Cart = () =>{
           <a href= {`/product?q=${item.listing_id}`}>
             <img src={item.image} alt={item.title} style={{ width: '200px'}} />
             <h4 style={{ color: 'white' }}>{item.title}</h4>
+
             <p style={{
               color: "white"
-            }}> <b>Points: {item.price}</b></p>
+            }}> <b>Points: {
+                sponsorList && sponsorList[index] 
+                    ? ((Number(item.price) / 100) * sponsorList[index].point_value_usd).toFixed(0) 
+                    : "Calculating..."
+                }</b>
+                <br />
+                <b>Catalog: {
+                sponsorList && sponsorList[index] 
+                    ? (sponsorList[index].company_name)
+                    : ""
+                }</b>
+                </p>
             </a>
           </div>
         ))}
-        <p style={{ font: 'ariel', fontSize: '30px', fontWeight: 'bold', color: '#059C0E', textAlign: 'center'}}>Total: {pointTotal}</p>
+        <p style={{ font: 'ariel', fontSize: '30px', fontWeight: 'bold', color: '#059C0E', lineHeight: '5px', textAlign: 'center'}}>Total: </p>
+            {Object.entries(sponsorTotals).map(([name, total]) => (
+            <p key={name} style={{ color: '#059C0E', fontSize: '30px', lineHeight: '1px', fontWeight: 'bold', textAlign: 'center' }}>
+                {name}: {total.toFixed(0)} pts
+            </p>
+            ))}
+            <br/>
         <button 
                         onClick = {handlePurchase}
                         style={{
