@@ -367,6 +367,7 @@ export default function SponsorHomePage() {
                                 onClick={() => navigate('/sponsor/applications')}
                                 className="admin-cream-btn"
                                 style={{
+                                width: '100%',
                                 padding: '12px 20px',
                                 color: '#1f2937',
                                 border: '1px solid rgba(15, 23, 42, 0.18)',
@@ -377,30 +378,6 @@ export default function SponsorHomePage() {
                                 transition: 'background-color 0.2s'
                             }}>
                                 Review Applications
-                            </button>
-                            <button className="admin-cream-btn" style={{
-                                padding: '12px 20px',
-                                color: '#1f2937',
-                                border: '1px solid rgba(15, 23, 42, 0.18)',
-                                borderRadius: '10px',
-                                cursor: 'pointer',
-                                fontSize: '15px',
-                                fontWeight: '700',
-                                transition: 'background-color 0.2s'
-                            }}>
-                                Approved Drivers
-                            </button>
-                            <button className="admin-cream-btn" style={{
-                                padding: '12px 20px',
-                                color: '#1f2937',
-                                border: '1px solid rgba(15, 23, 42, 0.18)',
-                                borderRadius: '10px',
-                                cursor: 'pointer',
-                                fontSize: '15px',
-                                fontWeight: '700',
-                                transition: 'background-color 0.2s'
-                            }}>
-                                Rejected Applications
                             </button>
                         </div>
                     </div>

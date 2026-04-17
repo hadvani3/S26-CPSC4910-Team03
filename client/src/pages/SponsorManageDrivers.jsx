@@ -91,6 +91,7 @@ export default function SponsorManageDrivers() {
                     )
                 );
                 setPointsChanges((prev) => ({ ...prev, [driver_id]: '' }));
+                setPointsReason('');
             } else {
                 alert('Failed to update points');
             }
@@ -135,19 +136,21 @@ export default function SponsorManageDrivers() {
             <Nav />
             <div className="admin-dashboard">
                 <div
-                    style={{
+                     style={{
+                        display : 'flex',
+                        alignItems : 'center',
+                        justifyContent : 'space-between',
                         background: 'rgba(255, 255, 255, 0.16)',
                         border: '1px solid rgba(255, 255, 255, 0.24)',
                         backdropFilter: 'blur(8px)',
-                        padding: '40px 30px',
+                        padding: '16px 22px',
                         borderRadius: '12px',
                         color: 'white',
                         textAlign: 'center',
-                        marginBottom: '30px',
                         boxShadow: '0 10px 24px rgba(0,0,0,0.2)',
                     }}
                 >
-                    <h1 style={{ margin: '0 0 10px 0', fontSize: '2em', fontWeight: '600' }}>Manage drivers</h1>
+                    <h1 style={{ margin: '0 0 10px 0', fontSize: '2em', fontWeight: '600' }}>Manage Drivers</h1>
                     <p style={{ margin: '0', fontSize: '1.1em', opacity: '0.95' }}>
                         View sponsored drivers, adjust points, and open their view
                     </p>
@@ -161,71 +164,109 @@ export default function SponsorManageDrivers() {
 
                 {drivers && drivers.length > 0 ? (
                     <>
-                        <h2 style={{ color: '#f4f8ff' }}>Your drivers</h2>
-                        <table border="1" cellPadding="8" style={{ color: 'white', marginBottom: '16px' }}>
-                            <thead>
-                                <tr>
-                                    <th>First Name</th>
-                                    <th>Last Name</th>
-                                    <th>Phone</th>
-                                    <th>Points</th>
-                                    <th>Points Change Value</th>
-                                    <th>Update Points</th>
-                                    <th>Impersonate</th>
+                    <div style={{
+                    background: 'rgba(255, 255, 255, 0.16)',
+                    border: '1px solid rgba(255, 255, 255, 0.22)',
+                    backdropFilter: 'blur(8px)',
+                    padding: '18px',
+                    borderRadius: '10px',
+                    boxShadow: '0 6px 16px rgba(0,0,0,0.16)',
+                    marginTop: '16px',
+                }}>
+                    <input
+                        type="text"
+                        placeholder="Enter reason for points change"
+                        value={pointsReason}
+                        onChange={(e) => setPointsReason(e.target.value)}
+                        style={{
+                            padding: '10px 14px',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(15,23,42,0.18)',
+                            fontSize: '14px',
+                            width: '100%',
+                            marginBottom: '16px',
+                            boxSizing: 'border-box',
+                        }}
+                    />
+                    <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white' }}>
+                        <thead>
+                            <tr style={{ borderBottom: '2px solid rgba(255,255,255,0.2)' }}>
+                                <th style={{ padding: '10px 12px', textAlign: 'left' }}>First Name</th>
+                                <th style={{ padding: '10px 12px', textAlign: 'left' }}>Last Name</th>
+                                <th style={{ padding: '10px 12px', textAlign: 'left' }}>Phone</th>
+                                <th style={{ padding: '10px 12px', textAlign: 'left' }}>Points</th>
+                                <th style={{ padding: '10px 12px', textAlign: 'left' }}>Points Change</th>
+                                <th style={{ padding: '10px 12px', textAlign: 'left' }}>Update</th>
+                                <th style={{ padding: '10px 12px', textAlign: 'left' }}>Impersonate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {drivers.map((driver, index) => (
+                                <tr key={index} style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                    <td style={{ padding: '10px 12px' }}>{driver.firstname}</td>
+                                    <td style={{ padding: '10px 12px' }}>{driver.lastname}</td>
+                                    <td style={{ padding: '10px 12px' }}>{driver.phone}</td>
+                                    <td style={{ padding: '10px 12px' }}>{driver.points}</td>
+                                    <td style={{ padding: '10px 12px' }}>
+                                        <input
+                                            type="number"
+                                            value={pointsChanges[driver.driver_id] || ''}
+                                            onChange={(e) =>
+                                                setPointsChanges({
+                                                    ...pointsChanges,
+                                                    [driver.driver_id]: Number(e.target.value),
+                                                })
+                                            }
+                                            style={{
+                                                padding: '6px 10px',
+                                                borderRadius: '6px',
+                                                border: '1px solid rgba(15,23,42,0.18)',
+                                                fontSize: '14px',
+                                                width: '100px',
+                                            }}
+                                        />
+                                    </td>
+                                    <td style={{ padding: '10px 12px' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleChangePoints(driver.driver_id)}
+                                            className="admin-cream-btn"
+                                            style={{
+                                                padding: '6px 14px',
+                                                color: '#1f2937',
+                                                border: '1px solid rgba(15,23,42,0.18)',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer',
+                                                fontSize: '13px',
+                                                fontWeight: '600',
+                                            }}
+                                        >
+                                            Update
+                                        </button>
+                                    </td>
+                                    <td style={{ padding: '10px 12px' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSponsorImpersonate(driver.driver_id)}
+                                            style={{
+                                                padding: '6px 12px',
+                                                backgroundColor: '#667eea',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                fontSize: '13px',
+                                                cursor: 'pointer',
+                                                fontWeight: '600',
+                                            }}
+                                        >
+                                            View as Driver
+                                        </button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {drivers.map((driver, index) => (
-                                    <tr key={index}>
-                                        <td>{driver.firstname}</td>
-                                        <td>{driver.lastname}</td>
-                                        <td>{driver.phone}</td>
-                                        <td>{driver.points}</td>
-                                        <td>
-                                            <input
-                                                type="number"
-                                                value={pointsChanges[driver.driver_id] || ''}
-                                                onChange={(e) =>
-                                                    setPointsChanges({
-                                                        ...pointsChanges,
-                                                        [driver.driver_id]: Number(e.target.value),
-                                                    })
-                                                }
-                                            />
-                                        </td>
-                                        <td>
-                                            <button type="button" onClick={() => handleChangePoints(driver.driver_id)}>
-                                                Update
-                                            </button>
-                                        </td>
-                                        <td>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleSponsorImpersonate(driver.driver_id)}
-                                                style={{
-                                                    padding: '6px 12px',
-                                                    backgroundColor: '#667eea',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    fontSize: '13px',
-                                                    cursor: 'pointer',
-                                                }}
-                                            >
-                                                View as Driver
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        <input
-                            type="text"
-                            placeholder="Enter reason for points change"
-                            value={pointsReason}
-                            onChange={(e) => setPointsReason(e.target.value)}
-                            style={{ marginBottom: '24px' }}
-                        />
+                            ))}
+                        </tbody>
+                    </table>
+                    </div>
                     </>
                 ) : drivers && drivers.length === 0 ? (
                     <p style={{ color: '#dbe6ff' }}>No drivers are associated with your sponsor account yet.</p>
@@ -239,16 +280,16 @@ export default function SponsorManageDrivers() {
                         className="admin-cream-btn"
                         onClick={() => navigate('/sponsor-page')}
                         style={{
-                            padding: '12px 30px',
+                            padding: '10px 22px',
                             color: '#1f2937',
-                            border: '1px solid rgba(15, 23, 42, 0.18)',
+                            border: '1px solid rgba(15, 23, 42, 0.22)',
                             borderRadius: '10px',
                             cursor: 'pointer',
-                            fontSize: '16px',
+                            fontSize: '14px',
                             fontWeight: '700',
                         }}
                     >
-                        Back to sponsor dashboard
+                        Back to Dashboard
                     </button>
                 </div>
             </div>
