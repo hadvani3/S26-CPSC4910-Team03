@@ -1635,21 +1635,34 @@ app.post('/api/admin/users/:id/toggle-status', (req, res) => {
 // Delete user
 app.delete('/api/admin/users/:id', (req, res) => {
     const { id } = req.params;
-    
-    db.query('DELETE FROM users WHERE user_id = ?', [id], (err, result) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ error: 'Database error' });
+	db.query('SELECT driver_id FROM drivers WHERE user_id = ?', [id], (err, rows) => {
+		const driver_id = rows && rows.length > 0 ? rows[0].driver_id : null;
+
+		// check is user has driver id
+		if (driver_id) {
+			db.query('DELETE FROM driver_sponsors WHERE driver_id = ?', [driver_id], () => {
+				db.query('DELETE FROM driver_points WHERE driver_id = ?', [driver_id], () => {
+					db.query('DELETE FROM drivers WHERE user_id = ?', [id], () => {
+						db.query('DELETE FROM sponsor_users WHERE user_id = ?', [id], () => {
+							db.query('DELETE FROM users WHERE user_id = ?', [id], (err, result) => {
+								if (err) return res.status(500).json({ error: 'Database error' });
+								if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
+								res.json({ success: true, message: 'User deleted successfully' });
+							});
+						});
+					});
+				});
+			});
+		}
+	 else {
+            db.query('DELETE FROM sponsor_users WHERE user_id = ?', [id], () => {
+                db.query('DELETE FROM users WHERE user_id = ?', [id], (err, result) => {
+                    if (err) return res.status(500).json({ error: 'Database error' });
+                    if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
+                    res.json({ success: true, message: 'User deleted successfully' });
+                });
+            });
         }
-        
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        
-        res.json({ 
-            success: true, 
-            message: 'User deleted successfully' 
-        });
     });
 });
 
@@ -2345,6 +2358,13 @@ app.post('/api/admin/bulk-upload', async (req, res) => {
                 continue;
             }
 
+			// check for non-numeric point values
+			if (points && isNaN(parseInt(points))) {
+				errors.push({line, content, reason: 'Points must in numeric format!'});
+				continue;
+
+			}
+
             // check if user already exists
             const existingUser = await new Promise((resolve) => {
                 db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, results) => {
@@ -2416,11 +2436,18 @@ app.post('/api/admin/bulk-upload', async (req, res) => {
             const first_name = parts[2]?.trim();
             const last_name = parts[3]?.trim();
             const email = parts[4]?.trim();
+			const points = parts[5]?.trim();
 
             if (!org || !first_name || !last_name || !email) {
                 errors.push({ line, content, reason: 'Missing required fields (org, first name, last name, email)' });
                 continue;
             }
+
+			// flag an error for points but create the user
+			if (points) {
+				errors.push({line, content, reason : 'Points cannot be assigned to a sponsor user, but user will still be created'});
+
+			}
 
             const sponsor_id = orgMap[org];
             if (!sponsor_id) {
@@ -2506,16 +2533,23 @@ app.post('/api/sponsor/bulk-upload', async (req,res) => {
 
 		// ensure 0 type not allowed
 		if (type === "O") {
-			errors.push({ line, content, reason: 'Organization rows are not allowed in sponsor uploads' });
+			errors.push({ line, content, reason: 'Organization names are not allowed in sponsor uploads' });
 			continue;
 		}
 
 		if (type === 'D') {
-			const first_name = parts[1]?.trim();
-			const last_name = parts[2] ?.trim();
-			const email = parts[3]?.trim();
-			const points = parts[4]?.trim();
-			const reason = parts[5]?.trim();
+			const org = parts[1]?.trim();
+			const first_name = parts[2]?.trim();
+			const last_name = parts[3] ?.trim();
+			const email = parts[4]?.trim();
+			const points = parts[5]?.trim();
+			const reason = parts[6]?.trim();
+
+			// check for organization field and flag it
+			if (org) {
+				errors.push({line, content, reason: 'Organization names are not allowed in sponsor uploads!'})
+			}
+
 
 			// check for missing fields
 			if (!first_name || !last_name || !email) {
@@ -2527,6 +2561,13 @@ app.post('/api/sponsor/bulk-upload', async (req,res) => {
 			if (points && !reason) {
 				errors.push({ line, content, reason: 'Missing reason field!' });
 				continue;
+			}
+
+			// check for non-numeric point values
+			if (points && isNaN(parseInt(points))) {
+				errors.push({line, content, reason: 'Points must in numeric format!'});
+				continue;
+
 			}
 
 			// make sure that user exists
@@ -2586,8 +2627,8 @@ app.post('/api/sponsor/bulk-upload', async (req,res) => {
 
                 await new Promise((resolve) => {
                     db.query(
-                        'INSERT INTO drivers (user_id, first_name, last_name) VALUES (?, ?, ?)',
-                        [user_id, first_name, last_name],
+                        'INSERT INTO drivers (user_id, first_name, last_name, sponsor_id) VALUES (?, ?, ?, ?)',
+                        [user_id, first_name, last_name, sponsor_id],
                         (err) => resolve(!err)
                     );
                 });
@@ -2623,10 +2664,16 @@ app.post('/api/sponsor/bulk-upload', async (req,res) => {
 
         } 
 		else if (type === 'S') {
-            const first_name = parts[1]?.trim();
-            const last_name = parts[2]?.trim();
-            const email = parts[3]?.trim();
-            const points = parts[4]?.trim();
+			const org = parts[1]?.trim();
+            const first_name = parts[2]?.trim();
+            const last_name = parts[3]?.trim();
+            const email = parts[4]?.trim();
+            const points = parts[5]?.trim();
+
+			// check if organization is in sponsor row
+			if (org) {
+				errors.push({line, content, reason: 'Organization names are not allowed for sponsor bulk uploads and will be ignored!'});
+			}
 
             if (!first_name || !last_name || !email) {
                 errors.push({ line, content, reason: 'Missing required fields (first name, last name, email)' });
