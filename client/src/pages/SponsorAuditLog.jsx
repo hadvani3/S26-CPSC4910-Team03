@@ -123,7 +123,7 @@ export default function SponsorAuditLog() {
                             <label style={{ color: '#f4f8ff', fontWeight: '600' }}>Filter by type:</label>
                             <select
                                 value={filter}
-                                onChange={e => setFilter(e.target.value)}
+                                onChange={e => {setFilter(e.target.value); setCurrentPage(1);}}
                                 style={{
                                     padding: '8px 12px',
                                     borderRadius: '8px',
@@ -141,7 +141,7 @@ export default function SponsorAuditLog() {
                                 type="text"
                                 placeholder="Search..."
                                 value={search}
-                                onChange={e => setSearch(e.target.value)}
+                                onChange={e => {setSearch(e.target.value); setCurrentPage(1);}}
                                 style={{
                                     padding: '8px 12px',
                                     borderRadius: '8px',
@@ -156,7 +156,7 @@ export default function SponsorAuditLog() {
                             <input
                                 type="date"
                                 value={startDate}
-                                onChange={e => setStartDate(e.target.value)}
+                                onChange={e => {setStartDate(e.target.value); setCurrentPage(1);}}
                                 style={{
                                     padding: '8px 12px',
                                     borderRadius: '8px',
@@ -168,7 +168,7 @@ export default function SponsorAuditLog() {
                             <input
                                 type="date"
                                 value={endDate}
-                                onChange={e => setEndDate(e.target.value)}
+                                onChange={e => {setEndDate(e.target.value); setCurrentPage(1);}}
                                 style={{
                                     padding: '8px 12px',
                                     borderRadius: '8px',

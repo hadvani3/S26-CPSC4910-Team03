@@ -131,7 +131,7 @@ export default function AdminAuditLog() {
                         type = "text"
                         placeholder = "Search by email...."
                         value = {search}
-                        onChange={e => setSearch(e.target.value)}
+                        onChange={e => {setSearch(e.target.value) ; setCurrentPage(1);}}
                         style= {{
                             padding: '10px 14px',
                             borderRadius : '8px',
@@ -146,7 +146,7 @@ export default function AdminAuditLog() {
                     <input 
                         type = "date"
                         value = {startDate}
-                        onChange={e => setStartDate(e.target.value)}
+                        onChange={e => {setStartDate(e.target.value); setCurrentPage(1);}}
                         style = {{
                             padding: '10px 14px',
                             borderRadius : '8px',
@@ -157,7 +157,7 @@ export default function AdminAuditLog() {
                     <input 
                         type = "date"
                         value = {endDate}
-                        onChange={e => setEndDate(e.target.value)}
+                        onChange={e => {setEndDate(e.target.value); setCurrentPage(1);}}
                         style = {{
                             padding: '10px 14px',
                             borderRadius : '8px',
@@ -168,7 +168,7 @@ export default function AdminAuditLog() {
                     <label style={{ color: '#f4f8ff', fontWeight: '600' }}>Sponsor</label>
                     <select 
                         value={sponsorFilter}
-                        onChange = {e => setSponsorFilter(e.target.value)}
+                        onChange = {e => {setSponsorFilter(e.target.value); setCurrentPage(1);}}
                         style = {{
                             padding: '10px 14px',
                             borderRadius : '8px',
