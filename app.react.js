@@ -378,7 +378,7 @@ async function getPointsFromSponsor(email) {
 		};
 	});
 
-	console.log("Sponsor data with names retrieved:", finalData);
+	//console.log("Sponsor data with names retrieved:", finalData);
 	return finalData;
 }
 
@@ -445,7 +445,16 @@ async function fetchGroupProducts(listingIdsArray) {
 
 //get the purchase history of a user
 app.post('/api/purchase-history', async (req, res) => {
+	//get the ratio of point values from all sponsor
+	const getSponsors = () => new Promise((resolve, reject) => {
+    db.query('SELECT sponsor_id, point_value_usd FROM sponsors', (err, results) => {
+        if (err) reject(err);
+        else resolve(results);
+    	});
+	});
+
     try {
+		const sponsorList = await getSponsors();
         const token = req.body.key;
 
         
@@ -497,8 +506,8 @@ app.post('/api/purchase-history', async (req, res) => {
         let etsyProducts = [];
         if (allListingIds.length > 0) {
             etsyProducts = await fetchGroupProducts(allListingIds);
-			console.log("Total IDs sent to Etsy:", allListingIds.length);
-			console.log("IDs actually returned by Etsy:", etsyProducts.map(e => e.listing_id));
+			//console.log("Total IDs sent to Etsy:", allListingIds.length);
+			//console.log("IDs actually returned by Etsy:", etsyProducts.map(e => e.listing_id));
         }
         
         //format the data that we send back
@@ -507,15 +516,27 @@ app.post('/api/purchase-history', async (req, res) => {
                 ? purchase.cart.split(',').map(id => id.trim()).filter(id => id !== "") 
                 : [];
 
+			//map the sponsor_id of each purchase to point ratio
+			const currentSponsor = sponsorList.find(s => s.sponsor_id === purchase.sponsor_id);
+    		const ratio = currentSponsor ? currentSponsor.point_value_usd : 1;	
             const productsInfo = idsInThisCart.map(id => {
-                return etsyProducts.find(e => e.listing_id == id) || { 
-                    listing_id: id, 
-                    title: "Item no longer available", 
-                    price: 0, 
-                    image: "" 
-                };
-            });
-            
+			const product = etsyProducts.find(e => e.listing_id == id) || { 
+				listing_id: id, 
+				title: "Item no longer available", 
+				price: 0, 
+				image: "" 
+			};
+
+			const calculated = ((Number(product.price) / 100) * ratio).toFixed(2);
+
+			//console.log(`Product: ${product.title}, Price: ${product.price}, Points: ${calculated}`);
+
+			return {
+				...product,
+				calculated_points: calculated
+			};
+		});
+
             return {
                 purchase_id: purchase.purchase_id,
     			user_id: purchase.user_id,
@@ -2788,7 +2809,7 @@ app.post('/api/purchase', async (req, res) => {
 						const filteredCartString = filteredItems.join(',');
 
 						//if the points are enough make a new purchase in table
-						db.query('INSERT INTO purchases (user_id, cost, cart) VALUES (?, ?, ?)', [user_id, total, filteredCartString], (err, purchaseResults) => {
+						db.query('INSERT INTO purchases (user_id, cost, cart, sponsor_id) VALUES (?, ?, ?, ?)', [user_id, total, filteredCartString, sponsor_id], (err, purchaseResults) => {
 							
 							//then we need to update the driver table
 							db.query('UPDATE driver_sponsors SET points = ? WHERE sponsor_id = ? AND driver_id = ?', [points - total, sponsor_id, driver_id], (err, finalResults) => {

@@ -102,7 +102,7 @@ const PurchaseHistory = () => {
                                         
                                         <div style={{ flex: 1 }}>
                                             <h4 style={{ margin: '0 0 5px 0', fontSize: '1rem' }}>{product.title}</h4>
-                                            <p style={{ margin: 0, color: '#aaa', fontSize: '0.9rem' }}>Price: {product.price} Points</p>
+                                            <p style={{ margin: 0, color: '#aaa', fontSize: '0.9rem' }}>Price: {product.calculated_points} Points</p>
                                         </div>
                                    
                                     </div>

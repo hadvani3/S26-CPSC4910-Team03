@@ -37,7 +37,7 @@ const Cart = () =>{
         }
         return acc;
     }, {});
-
+    
  //checking the token (wait for sessionStorage hydration so refresh does not bounce to login)
   useEffect(() => {
     if (!authReady) return;
@@ -322,7 +322,7 @@ const Cart = () =>{
                     >
                         Remove
             </button>
-          <a href= {`/product?q=${item.listing_id}`}>
+          <a href={`/product?id=${item.listing_id}&sponsor_id=${sponsorList && sponsorList[index] ? sponsorList[index].sponsor_id : ''}`}>
             <img src={item.image} alt={item.title} style={{ width: '200px'}} />
             <h4 style={{ color: 'white' }}>{item.title}</h4>
 
