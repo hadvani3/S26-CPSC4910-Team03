@@ -2736,9 +2736,13 @@ async function CreateNotification(user_id, message){
 
 //purchase your cart as a driver
 app.post('/api/purchase', async (req, res) => {
-	const token = req.body.key
 	const total = req.body.total
-	const email = decodeAccessToken(token)
+	const sponsor_id = req.body.sponsor_id
+
+	//decode the token
+	const token = getBearerToken(req);
+	if (!token) return res.status(401).json({ error: 'Authorization is required!' });
+	const email = decodeAccessToken(token);
 
 	//get the user_id from email
 	db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, userResults) => {
@@ -2754,31 +2758,62 @@ app.post('/api/purchase', async (req, res) => {
 		//get the info we need from the driver table
 		db.query('SELECT * FROM drivers WHERE user_id = ?', [user_id], (err, driverResults) => {
 
-			const points = driverResults[0].total_points;
+			const driver_id = driverResults[0].driver_id;
 			const cart = driverResults[0].cart;
 
-			//check if the purchase can be made
-			if (points - total < 0){
-				return res.status(403).json({ error: "You do not have enough points"});
+			console.log("getting points for driver_id", driver_id, "and sponsor_id", sponsor_id);
+			//get the current points of the driver from driver_sponsors
+			db.query('SELECT points FROM driver_sponsors WHERE sponsor_id = ? AND driver_id = ?', [sponsor_id, driver_id], (err, pointsResults) => {
+				const points = pointsResults[0].points;
+				//check if the purchase can be made
+				if (points - total < 0){
+					return res.status(403).json({ error: "You do not have enough points"});
 
-			}else{
-				//if the points are enough make a new purchase in table
-				db.query('INSERT INTO purchases (user_id, cost, cart) VALUES (?, ?, ?)', [user_id, total, cart], (err, purchaseResults) => {
-					
-					//then we need to update the driver table
-					db.query('UPDATE drivers SET cart = "", total_points = ? WHERE user_id = ?', [points - total, user_id], (err, finalResults) => {
+				}else{
+					//if the points are enough make a new purchase in table
+					db.query('INSERT INTO purchases (user_id, cost, cart) VALUES (?, ?, ?)', [user_id, total, cart], (err, purchaseResults) => {
+						
+						//then we need to update the driver table
+						db.query('UPDATE driver_sponsors SET points = ? WHERE sponsor_id = ? AND driver_id = ?', [points - total, sponsor_id, driver_id], (err, finalResults) => {
 
-						CreateNotification(user_id, `Thanks for your purchase of ${total} points!`)
-						.then(() => console.log("SMS Sent"))
-						.catch(e => console.error("SMS failed", e));
-						return res.status(200).json({ success: true, message: "Purchase Completed" });
-					})
-				});
-			}
+							CreateNotification(user_id, `Thanks for your purchase of ${total} points!`)
+							.then(() => console.log("SMS Sent"))
+							.catch(e => console.error("SMS failed", e));
+							return res.status(200).json({ success: true, message: "Purchase Completed" });
+						})
+					});
+				}
+			});
 		});
-
 	});
-})
+});
+
+//call for completely emptying both carts
+app.get('/api/emptyCart', async (req, res) => {
+	const token = getBearerToken(req);
+	if (!token) return res.status(401).json({ error: 'Authorization is required!' });
+
+	const email = decodeAccessToken(token);
+	//get the user_id from email
+	const user_id = await new Promise ((resolve) => {
+		db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, userResults) => {
+			if (err) {
+				console.error("Database Error:", err);
+				return res.status(500).json({ error: "Error with database" });
+			}
+			resolve(userResults[0]?.user_id);
+		});
+	});
+
+	//update the cart from the driver table
+	db.query('UPDATE drivers SET cart = "", cart_sponsor = "" WHERE user_id = ?', [user_id], (err, results) => {
+		if (err) {
+			console.error("Database Error:", err);
+			return res.status(500).json({ error: "Error with database" });
+		}
+		return res.status(200).json({ success: true, message: "Cart Emptied" });
+	});
+});
 
 // sponsor point reports
 app.get('/api/sponsor/points-report', async (req, res) => {
