@@ -58,8 +58,15 @@ export default function Notifications() {
                 console.log(result)
                 if (res.ok) {
                     setNotifications(result)
-                } else {
-                    setError('Failed to fetch notifications');
+                }
+                else if (res.status === 404){
+                    setError('No notifications found');
+                }
+                else if (res.status === 500){
+                    setError('Server Error')
+                }
+                else {
+                    setError('Unknown Error')
                 }
             }
             catch (err) {
@@ -88,10 +95,7 @@ export default function Notifications() {
                         boxShadow: '0 10px 24px rgba(0,0,0,0.2)',
                     }}
                 >
-                    <h1 style={{ margin: '0 0 10px 0', fontSize: '2em', fontWeight: '600' }}>Manage drivers</h1>
-                    <p style={{ margin: '0', fontSize: '1.1em', opacity: '0.95' }}>
-                        View Notiffications
-                    </p>
+                    <h1 style={{ margin: '0 0 10px 0', fontSize: '2em', fontWeight: '600' }}>View Notifications</h1>
                 </div>
 
                 {error && (

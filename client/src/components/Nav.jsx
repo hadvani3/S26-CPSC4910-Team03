@@ -61,6 +61,7 @@ export default function Nav() {
             <li><Link to={roleHomePath}>Home</Link></li>
             <li><Link to="/home">Our Program</Link></li>
             {token && r === "driver" && <li><Link to="/apply">Apply</Link></li>}
+            {token && r === "driver" && <li><Link to="/notifications">Notifications</Link></li>}
             {token && r === "admin" && <li><Link to="/admin/applications">Applications</Link></li>}
             {token && r === "sponsor" && <li><Link to="/sponsor/applications">Applications</Link></li>}
             {token && r === "sponsor" && <li><Link to="/sponsor/manage-drivers">Manage Drivers</Link></li>}
@@ -82,7 +83,6 @@ export default function Nav() {
                 </li>
             )*/}
             {token && <li><Link to="/account">Account</Link></li>}
-            {token && <li><Link to="/notifications">Notifications</Link></li>}
             {token && <li><Link to="/" onClick={logout}>Logout</Link></li>}
         </ul>
         </>
