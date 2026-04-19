@@ -159,7 +159,8 @@ app.get('/api/search', async (req, res) => {
 //searching for product
 app.get('/api/product', async (req, res) => {
 	let product_id = parseInt(req.query.id, 10);
-	let sponsor_id = parseInt(req.query.sponsor_id, 10);
+	const raw_s_id = req.query.sponsor_id;
+    const sponsor_id = parseInt(raw_s_id, 10);
 	//api spec stuff
 	const requestOptions = {
         method: 'GET',
@@ -174,15 +175,18 @@ app.get('/api/product', async (req, res) => {
     const data = await response.json();
 
 	//get the point ration that we want for the product
-	const getRatio = () => new Promise((resolve, reject) => {
-		db.query('SELECT point_value_usd FROM sponsors WHERE sponsor_id = ?', [sponsor_id], (err, results) => {
-			if (err) {
-				return reject(err);
-			} else {
-				return resolve(results[0].point_value_usd);
-			}
-		});
-	});
+	const getRatio = async () => {
+		if (isNaN(sponsor_id)) {
+            return 1.0; 
+        }
+		return new Promise((resolve, reject) => {
+            db.query('SELECT point_value_usd FROM sponsors WHERE sponsor_id = ?', [sponsor_id], (err, results) => {
+                if (err) return reject(err);
+                if (!results || results.length === 0) return resolve(1.0); 
+                return resolve(results[0].point_value_usd);
+            });
+        });
+    };
 
 	const ratio = await getRatio();
 
@@ -383,8 +387,8 @@ app.get('/api/driver-home', async (req, res) => {
     const token = getBearerToken(req);
 	if(!token) return res.status(401).json({ error: 'Authorization is required!' });
 
-
-	const email = decodeAccessToken(token);
+	
+		const email = decodeAccessToken(token);
 
     console.log("Driver Home API called for email:", email);
 
@@ -595,6 +599,7 @@ app.post('/api/removeFromCart', async (req, res) => {
 	});
 	
 });
+
 //api for getting the details of sponsors corresponding to the cart
 app.get('/api/sponsorCart', async (req, res) =>{
 	//decode token for email

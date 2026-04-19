@@ -53,8 +53,8 @@ const SearchResults = () => {
   //send to the specific type of product page
   const getProductPath = (id) => {
     return role === 'sponsor' 
-      ? `/sponsor_product?q=${id}` 
-      : `/product?q=${id}`;
+      ? `/sponsor_product?id=${id}` 
+      : `/product?id=${id}`;
   };
 
 
