@@ -72,7 +72,7 @@ const SearchResults = () => {
       </div>
       <h2 style={{ color: 'white', textAlign: 'center' }}>Results for "{new URLSearchParams(location.search).get('q')}":</h2>
 
-      {loading && <p>Loading...</p>}
+      {loading && <p style={{ color: 'white', fontSize: '1.5rem', textAlign: 'center', marginTop: '20px' }}>Loading...</p>}
       <div style ={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px', padding: '20px', maxWidth: '1400px', width: '100%', margin: '0 auto'}}>
       {!loading && products.length === 0 && <p style={{ color: 'white', textAlign: 'center' }}>No products found.</p>}
 

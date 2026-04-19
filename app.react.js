@@ -524,16 +524,18 @@ app.post('/api/purchase-history', async (req, res) => {
 				listing_id: id, 
 				title: "Item no longer available", 
 				price: 0, 
-				image: "" 
+				image: "", 
 			};
 
 			const calculated = ((Number(product.price) / 100) * ratio).toFixed(2);
 
-			//console.log(`Product: ${product.title}, Price: ${product.price}, Points: ${calculated}`);
+			//console.log(`Product: ${product.title}, Price: ${product.price}, Points: ${calculated}, Sponsord_id: ${currentSponsor}`);
 
 			return {
 				...product,
+				sponsor_id: purchase.sponsor_id,
 				calculated_points: calculated
+				
 			};
 		});
 

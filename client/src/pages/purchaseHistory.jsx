@@ -82,7 +82,7 @@ const PurchaseHistory = () => {
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                 {order.productDetails && order.productDetails.map((product, index) => (
-                                    <Link to={`/product?q=${product.listing_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                    <Link to={`/product?id=${product.listing_id}&sponsor_id=${product.sponsor_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                                     <div className="ProductContainer" key={`${order.purchase_id}-${index}`} style={{
                                         display: 'flex',
                                         alignItems: 'center',
