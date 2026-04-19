@@ -111,7 +111,7 @@ export default function AdminAuditLog() {
                         <label style={{ color: '#f4f8ff', fontWeight: '600' }}>Filter by type:</label>
                         <select
                             value={filter}
-                            onChange={e => setFilter(e.target.value)}
+                            onChange={e => {setFilter(e.target.value); setCurrentPage(1); }}
                             style={{
                                 padding: '8px 12px',
                                 borderRadius: '8px',

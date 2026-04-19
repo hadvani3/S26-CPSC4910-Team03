@@ -2223,7 +2223,7 @@ app.get('/api/admin/audit-log',async (req,res) => {
 	if (type == 'login') {
 		sql = `SELECT 'login' AS type, username AS label, success, attempted_at AS timestamp
 		FROM login_attempts
-		ORDER BY timestamp DESC LIMIT 50`;
+		ORDER BY timestamp DESC LIMIT 500`;
 	}
 	else if (type === 'application') {
 		sql = `SELECT 'application' AS type,
@@ -2231,7 +2231,7 @@ app.get('/api/admin/audit-log',async (req,res) => {
 		NULL AS success, da.created_at AS timestamp
 		FROM driver_applications da
 		JOIN sponsors s ON da.sponsor_id = s.sponsor_id
-		ORDER BY timestamp DESC LIMIT 50`;
+		ORDER BY timestamp DESC LIMIT 500`;
 	}
 	else if (type === 'points') {
 		sql = `SELECT 'points' AS type,
@@ -2239,7 +2239,7 @@ app.get('/api/admin/audit-log',async (req,res) => {
 		NULL AS success, dp.created_at AS timestamp
 		FROM driver_points dp
 		JOIN drivers d ON dp.driver_id = d.driver_id
-		ORDER BY timestamp DESC LIMIT 50`;
+		ORDER BY timestamp DESC LIMIT 500`;
 	}
 	else if (type === 'password') {
 		sql = `SELECT 'password' AS type,
@@ -2247,7 +2247,7 @@ app.get('/api/admin/audit-log',async (req,res) => {
 		NULL AS success, pl.changed_at AS timestamp
 		FROM password_logs pl
 		JOIN users u ON pl.user_id = u.user_id
-		ORDER BY timestamp DESC LIMIT 50`;
+		ORDER BY timestamp DESC LIMIT 500`;
 	}
 	else {
 		sql = `SELECT 'login' AS type, username AS label, success, attempted_at AS timestamp
