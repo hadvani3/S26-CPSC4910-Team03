@@ -198,7 +198,6 @@ return (
                             backgroundColor: isChecking ? 'gray' : (isEligible ?'#667eea' : 'gray'),
                             color: 'white',
                             borderRadius: '8px',
-                            cursor: 'pointer',
                             transition: 'background-color 0.2s',
                             cursor: isEligible? 'pointer' : 'not-allowed'
                         }}

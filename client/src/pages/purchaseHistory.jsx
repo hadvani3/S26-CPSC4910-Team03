@@ -91,7 +91,7 @@ const PurchaseHistory = () => {
                                         borderRadius: '8px',
                                         backgroundColor: 'rgba(255, 255, 255, 0.14)',
                                         backdropFilter: 'blur(10px)',
-                                        webkitBackdropFilter: 'blur(10px)'
+                                        WebkitBackdropFilter: 'blur(10px)'
                                     }}>
                                     
                                         <img 

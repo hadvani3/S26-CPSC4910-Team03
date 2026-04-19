@@ -463,7 +463,7 @@ app.post('/api/purchase-history', async (req, res) => {
 		});
 
         const getPurchases = (uid) => new Promise((resolve, reject) => {
-            db.query('SELECT * FROM purchases WHERE user_id = ?', [uid], (err, results) => {
+            db.query('SELECT * FROM purchases WHERE user_id = ? ORDER BY purchased_at DESC', [uid], (err, results) => {
 				if(err) {
 					return reject(err)
 				}else {
@@ -1248,7 +1248,7 @@ app.post('/changePointsValue', (req, res) => {
 app.post('/DisplayNotifications', (req, res) => {
 	const user_id = req.body.user_id
 
-	const search = "Select * from notifications where user_id = ?"
+	const search = "Select * from notifications where user_id = ? ORDER BY sent_at DESC"
 	const search_query = mysql.format(search, [user_id])
 	db.query(search_query, async (err, searchResults) => {
 		if (err) {
@@ -2775,17 +2775,30 @@ app.post('/api/purchase', async (req, res) => {
 					return res.status(403).json({ error: "You do not have enough points"});
 
 				}else{
-					//if the points are enough make a new purchase in table
-					db.query('INSERT INTO purchases (user_id, cost, cart) VALUES (?, ?, ?)', [user_id, total, cart], (err, purchaseResults) => {
-						
-						//then we need to update the driver table
-						db.query('UPDATE driver_sponsors SET points = ? WHERE sponsor_id = ? AND driver_id = ?', [points - total, sponsor_id, driver_id], (err, finalResults) => {
+					db.query('SELECT company_name from sponsors where sponsor_id = ?', [sponsor_id], (err, sponsorNameResults) => {
+						//we need to get the items only belonging to the sponso_id given 
+						const companyName = sponsorNameResults[0].company_name;
+						const cart = driverResults[0].cart;
+						const cart_sponsor = driverResults[0].cart_sponsor;
 
-							CreateNotification(user_id, `Thanks for your purchase of ${total} points!`)
-							.then(() => console.log("SMS Sent"))
-							.catch(e => console.error("SMS failed", e));
-							return res.status(200).json({ success: true, message: "Purchase Completed" });
-						})
+						const itemsArray = cart.split(',');
+						const sponsorsArray = cart_sponsor.split(',');
+
+						const filteredItems = itemsArray.filter((_, index) => sponsorsArray[index] == sponsor_id);
+						const filteredCartString = filteredItems.join(',');
+
+						//if the points are enough make a new purchase in table
+						db.query('INSERT INTO purchases (user_id, cost, cart) VALUES (?, ?, ?)', [user_id, total, filteredCartString], (err, purchaseResults) => {
+							
+							//then we need to update the driver table
+							db.query('UPDATE driver_sponsors SET points = ? WHERE sponsor_id = ? AND driver_id = ?', [points - total, sponsor_id, driver_id], (err, finalResults) => {
+
+								CreateNotification(user_id, `Thanks for your purchase of ${total} points from ${companyName}!`)
+								.then(() => console.log("SMS Sent"))
+								.catch(e => console.error("SMS failed", e));
+								return res.status(200).json({ success: true, message: "Purchase Completed" });
+							})
+						});
 					});
 				}
 			});

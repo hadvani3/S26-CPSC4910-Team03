@@ -213,7 +213,7 @@ const Cart = () =>{
             //empty the cart and reload page
             alert("Purchase successful!");
             await emptyCart();
-            navigate(0)
+            navigate('/driver-page')
         } catch (err) {
             console.error(err);
             alert("There was an error with your purchase.");
