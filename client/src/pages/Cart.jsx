@@ -6,7 +6,7 @@ import {AuthContext} from "../components/AuthContext.jsx";
 const Cart = () =>{
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-
+  const [isOverBudget, setIsOverBudget] = useState(false);
   const [data, setData] = useState(null);
   const [SponsorData, setSponsorData] = useState(null);
   const [error, setError] = useState(null);
@@ -15,6 +15,28 @@ const Cart = () =>{
   const navigate = useNavigate();
   const location = useLocation();
   const { token, authReady } = useContext(AuthContext);
+
+//calulate the total number of points spent from each sponsor
+      
+    const sponsorTotals = products.reduce((acc, item, index) => {
+        const sponsor = sponsorList && sponsorList[index];
+        if (sponsor) {
+            const companyName = sponsor.company_name;
+            const sponsorId = sponsor.sponsor_id;
+            const pointValue = sponsor.point_value_usd;
+            const itemPoints = (Number(item.price) / 100) * pointValue;
+
+            if (!acc[companyName]) {
+                
+                acc[companyName] = {
+                    total: 0, 
+                    sponsor_id: sponsorId
+                };
+            }
+            acc[companyName].total += itemPoints;
+        }
+        return acc;
+    }, {});
 
  //checking the token (wait for sessionStorage hydration so refresh does not bounce to login)
   useEffect(() => {
@@ -32,6 +54,35 @@ const Cart = () =>{
       fetchSponsorDetails(token);
     }
   }, [token]);
+
+  useEffect(() => {
+    if (!SponsorData || products.length === 0) {
+    setIsOverBudget(false);
+    return;
+  }
+
+  let overBudget = false;
+  for (const [name, total] of Object.entries(sponsorTotals)) {
+    const sponsor = SponsorData.find(s => s.company_name === name);
+    if (sponsor && total > sponsor.points) {
+      overBudget = true;
+      break;
+    }
+  }
+  setIsOverBudget(overBudget);
+}, [sponsorTotals, SponsorData, products]);
+
+  const emptyCart = async () => {
+    try {
+        const res = await fetch("/api/emptyCart", {
+          method: "GET",
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': "application/json" },
+        });
+      } catch (err) {
+        console.error(err);
+        alert("Server error while emptying cart.");
+      }
+    };
 
   const fetchResults = async () => {
     setLoading(true);
@@ -100,50 +151,77 @@ const Cart = () =>{
                 });
         }
     }
-  const handlePurchase = async () => {
+
+
+
+    const handleRemoveFromCart = (index) => async () => {
+        console.log("Removing item at index:", index);
+        if (!token) {
+            alert("Identity not verified. Please log in again.");
+            return;
+        }
+        try {
+            const res = await fetch("/api/removeFromCart", {
+                method: "POST",
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': "application/json" },
+                body: JSON.stringify({
+                    index: index
+                }),
+                
+            });
+            navigate(0);
+        } catch (err) {
+            console.error(err);
+            alert("Server error while removing product.");
+        }
+    };
+
+   
+
+    //function for the purchase button
+    const handlePurchase = async () => {
         if (!token) {
             alert("Identity not verified. Please log in again.");
             return;
         }
 
-        try {
-            const res = await fetch("/api/purchase", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    key: token,
-                    total: pointTotal
-                }),
-            });
+        //make a list of purchases per sponsor
+        const purchaseQueue = Object.values(sponsorTotals);
+        console.log("Current sponsorTotals object:", sponsorTotals);
+        console.log("Purchase Queue being sent:", purchaseQueue);
 
-            if (res.ok) {
-                alert("Purchased!");
-            } else {
-                alert("You do not have enough points");
+        //actually make the backend calls
+        try{
+            for (const purchase of purchaseQueue) {
+                const res = await fetch("/api/purchase", {
+                    method: "POST",
+                    headers: { 
+                        "Content-Type": "application/json", 
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({
+                        total: purchase.total,
+                        sponsor_id: purchase.sponsor_id
+                    }),
+                });
+
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.error || `Purchase failed for sponsor ID: ${purchase.sponsor_id}`);
+                }
             }
+            //empty the cart and reload page
+            alert("Purchase successful!");
+            await emptyCart();
+            navigate(0)
         } catch (err) {
             console.error(err);
-            alert("Server error while adding product.");
+            alert("There was an error with your purchase.");
         }
     };
 
-    const sponsorTotals = products.reduce((acc, item, index) => {
-        const sponsor = sponsorList && sponsorList[index];
-        if (sponsor) {
-            const companyName = sponsor.company_name;
-            const pointValue = sponsor.point_value_usd;
-            const itemPoints = (Number(item.price) / 100) * pointValue;
-
-            if (!acc[companyName]) {
-                acc[companyName] = 0;
-            }
-            acc[companyName] += itemPoints;
-        }
-        return acc;
-    }, {});
 
 
-  //const pointTotal = products.reduce((sum, item) => sum + Number(item.price || 0), 0);
    return (
     <>
     <Nav />
@@ -224,7 +302,26 @@ const Cart = () =>{
       {!loading && products.length === 0 && <p style={{ color: 'white' }}>No products found.</p>}
         <h1>Your Cart:</h1>
         {products.map((item, index) => (
-          <div key={`${item.listing_id}-${index}`} className="container">
+          <div key={`${item.listing_id}-${index}`} className="container" style={{position: 'relative', padding: '20px'}}>
+            <button 
+                        onClick={handleRemoveFromCart(index)}
+                        style={{
+                            position: 'absolute',
+                            top: '10px',
+                            right: '10px',
+                            margin: '0 auto',
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            border: 'none',
+                            backgroundColor: '#9b150b',
+                            color: 'white',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s'
+                        }}
+                    >
+                        Remove
+            </button>
           <a href= {`/product?q=${item.listing_id}`}>
             <img src={item.image} alt={item.title} style={{ width: '200px'}} />
             <h4 style={{ color: 'white' }}>{item.title}</h4>
@@ -233,7 +330,7 @@ const Cart = () =>{
               color: "white"
             }}> <b>Points: {
                 sponsorList && sponsorList[index] 
-                    ? ((Number(item.price) / 100) * sponsorList[index].point_value_usd).toFixed(0) 
+                    ? ((Number(item.price) / 100) * sponsorList[index].point_value_usd).toFixed(2) 
                     : "Calculating..."
                 }</b>
                 <br />
@@ -247,14 +344,15 @@ const Cart = () =>{
           </div>
         ))}
         <p style={{ font: 'ariel', fontSize: '30px', fontWeight: 'bold', color: '#059C0E', lineHeight: '5px', textAlign: 'center'}}>Total: </p>
-            {Object.entries(sponsorTotals).map(([name, total]) => (
+            {Object.entries(sponsorTotals).map(([name, entry]) => (
             <p key={name} style={{ color: '#059C0E', fontSize: '30px', lineHeight: '1px', fontWeight: 'bold', textAlign: 'center' }}>
-                {name}: {total.toFixed(0)} pts
+                {name}: {entry.total.toFixed(2)} pts
             </p>
             ))}
             <br/>
         <button 
                         onClick = {handlePurchase}
+                        disabled={isOverBudget || products.length === 0}
                         style={{
                             alignItem: 'center',
                             justifyContent: 'center',
@@ -262,14 +360,14 @@ const Cart = () =>{
                             fontSize: '16px',
                             fontWeight: '600',
                             border: 'none',
-                            backgroundColor: '#667eea',
+                            backgroundColor: (isOverBudget || products.length === 0)? 'grey' :'#667eea',
                             color: 'white',
                             borderRadius: '8px',
-                            cursor: 'pointer',
+                            cursor: (isOverBudget || products.length === 0)? 'not-allowed' : 'pointer',
                             transition: 'background-color 0.2s'
                         }}
                     >
-                        Purchase
+                        {isOverBudget ? "Insufficient Points" : "Purchase"}
              </button>
       </div>
     </>

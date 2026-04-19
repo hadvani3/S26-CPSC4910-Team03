@@ -13,7 +13,10 @@ const Product = () => {
 	const [product, setProduct] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [SponsorID, setSponsorId] = useState(null);
-
+  const [isEligible, setIsEligible] = useState(false);
+  const [data, setData] = useState(null);
+  const [sponsorData, setSponsorData] = useState(null);
+  const [isChecking, setIsChecking] = useState(true);
   //check the token (wait for sessionStorage hydration so refresh does not bounce to login)
     useEffect(() => {
       if (!authReady) return;
@@ -23,35 +26,90 @@ const Product = () => {
     }, [authReady, token, navigate]);
 
 
+
 	//get the queries passed we want to retrieve produc with
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const p_id = queryParams.get('id');
     const s_id = queryParams.get('sponsor_id');
-    if (s_id) {
-      setSponsorId(s_id);
-    }
+    setSponsorId(s_id);
 
-    if (p_id && s_id) {
-      fetchResults(p_id, s_id);
-      } else {
-      console.warn("Missing IDs in URL");
-      }
-  }, [location.search]);
+    console.log(p_id);
+    if (p_id) {
+        fetchResults(p_id, s_id);
+    }
+    
+    if (token) {
+        fetchSponsors(token);
+    }
+}, [location.search, token]);
+
+  //check if it is in the sponsor catalog
+useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const s_id_from_url = queryParams.get('sponsor_id');
+    
+    const querySponsorId = Number(s_id_from_url) || 0;
+
+    if (sponsorData) {
+        const hasAccess = sponsorData.some(s => Number(s.sponsor_id) === querySponsorId);
+        
+        setIsEligible(hasAccess);
+        setIsChecking(false);
+    } 
+    else {
+        setIsChecking(true);
+    }
+}, [sponsorData, location.search]);
+
+
+  //get the list of sponsors that the user is in 
+  const fetchSponsors = async (token) => {
+    if (token) {
+        fetch('/api/driver-home', {
+            method: 'GET', 
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        })
+                .then(res => {
+                    if (!res.ok) throw new Error("Failed to fetch");
+                    return res.json();
+                })
+                .then(data => {
+                    setData(data);
+                    setSponsorData(data)
+                })
+                .catch(err => {
+                    console.error('Error fetching driver data:', err);
+                    setError(err.message);
+                });
+        }
+    }
 
 	//recieve the data from the backend with these queries
   const fetchResults = async (product_query, s_id) => { 
-  setLoading(true);
-  try {
-    const response = await fetch(`/api/product?id=${encodeURIComponent(product_query)}&sponsor_id=${encodeURIComponent(s_id)}`);
-    const data = await response.json();
-    setProduct(data);
+    setLoading(true);
+    try {
+        console.log(s_id);
+        let url = `/api/product?id=${encodeURIComponent(product_query)}`;
+        
+        if (s_id && s_id !== "null" && s_id !== "undefined") {
+            url += `&sponsor_id=${encodeURIComponent(s_id)}`;
+        }
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Failed to fetch product");
+        
+        const data = await response.json();
+        setProduct(data);
     } catch (error) {
-      console.error("No product found:", error);
+        console.error("No product found:", error);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   //used to search again from the same page
   const handleNewSearch = (e) => {
@@ -131,19 +189,22 @@ return (
             <br/>
             <button 
                         onClick={handleAddToCart}
+                        disabled = {isChecking || !isEligible}
                         style={{
                             padding: '12px 30px',
-                            fontSize: '16px',
+                            fontSize: isEligible? '16px' : '12px',
                             fontWeight: '600',
                             border: 'none',
-                            backgroundColor: '#667eea',
+                            backgroundColor: isChecking ? 'gray' : (isEligible ?'#667eea' : 'gray'),
                             color: 'white',
                             borderRadius: '8px',
                             cursor: 'pointer',
-                            transition: 'background-color 0.2s'
+                            transition: 'background-color 0.2s',
+                            cursor: isEligible? 'pointer' : 'not-allowed'
                         }}
                     >
-                        Add to Cart
+                        {isChecking ? "Checking availability..." : (isEligible ? "Add to Cart" : "Not in sponsor catalog")
+    }
              </button>
             <p style={{font: 'ariel', color: 'white'}}> {product[0]?.description}</p>
             <p style={{font: 'ariel', color: 'white'}}>Materials: {product[0]?.materials[0]}</p>

@@ -159,7 +159,8 @@ app.get('/api/search', async (req, res) => {
 //searching for product
 app.get('/api/product', async (req, res) => {
 	let product_id = parseInt(req.query.id, 10);
-	let sponsor_id = parseInt(req.query.sponsor_id, 10);
+	const raw_s_id = req.query.sponsor_id;
+    const sponsor_id = parseInt(raw_s_id, 10);
 	//api spec stuff
 	const requestOptions = {
         method: 'GET',
@@ -174,15 +175,18 @@ app.get('/api/product', async (req, res) => {
     const data = await response.json();
 
 	//get the point ration that we want for the product
-	const getRatio = () => new Promise((resolve, reject) => {
-		db.query('SELECT point_value_usd FROM sponsors WHERE sponsor_id = ?', [sponsor_id], (err, results) => {
-			if (err) {
-				return reject(err);
-			} else {
-				return resolve(results[0].point_value_usd);
-			}
-		});
-	});
+	const getRatio = async () => {
+		if (isNaN(sponsor_id)) {
+            return 1.0; 
+        }
+		return new Promise((resolve, reject) => {
+            db.query('SELECT point_value_usd FROM sponsors WHERE sponsor_id = ?', [sponsor_id], (err, results) => {
+                if (err) return reject(err);
+                if (!results || results.length === 0) return resolve(1.0); 
+                return resolve(results[0].point_value_usd);
+            });
+        });
+    };
 
 	const ratio = await getRatio();
 
@@ -383,8 +387,8 @@ app.get('/api/driver-home', async (req, res) => {
     const token = getBearerToken(req);
 	if(!token) return res.status(401).json({ error: 'Authorization is required!' });
 
-
-	const email = decodeAccessToken(token);
+	
+		const email = decodeAccessToken(token);
 
     console.log("Driver Home API called for email:", email);
 
@@ -528,6 +532,72 @@ app.post('/api/purchase-history', async (req, res) => {
         console.error("Detailed Server Error:", error);
         return res.status(500).json({ error: "Internal Server Error" });
     }
+});
+
+//remove an item from a cart
+app.post('/api/removeFromCart', async (req, res) => {
+	const index = req.body.index;
+	//decode the token for the email
+	const token = getBearerToken(req);
+	if(!token) return res.status(401).json({ error: 'Authorization is required!' });
+	const email = decodeAccessToken(token);
+	//get the user_id from the token
+	const user_id = await new Promise((resolve, reject) => {
+		db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, results) => {
+			if (err) {
+				return reject(err);
+			} else {
+				return resolve(results[0].user_id);
+			}
+		});
+	});
+
+	//get the value of the cart and the sponsor cart
+	const cart = await new Promise((resolve, reject) => {
+		db.query('SELECT cart FROM drivers WHERE user_id = ?', [user_id], (err, results) => {
+			if (err) {
+				return reject(err);
+			} else {
+				return resolve(results[0].cart);
+			}
+		});
+	});
+
+	const sponsorCart = await new Promise((resolve, reject) => {
+		db.query('SELECT cart_sponsor FROM drivers WHERE user_id = ?', [user_id], (err, results) => {
+			if (err) {
+				return reject(err);
+			} else {
+				return resolve(results[0].cart_sponsor);
+			}
+		});
+	});
+
+	//split them into lists so we can parse
+	const cartList = String(cart).split(',').filter(id => id.trim() !== "");
+	const sponsorCartList = String(sponsorCart).split(',').filter(id => id.trim() !== "");
+
+	//remove the item at the index of both lists
+	cartList.splice(index, 1);
+	sponsorCartList.splice(index, 1);
+
+	//put them back into the format for the database
+	const newCartString = cartList.length > 0 ? ',' + cartList.join(',') : '';
+	const newSponsorCartString = sponsorCartList.length > 0 ? ',' + sponsorCartList.join(',') : '';
+
+	//update the database with the new cart values
+	const query = 'UPDATE drivers SET cart = ?, cart_sponsor = ? WHERE user_id = ?';
+	db.query(query, [newCartString, newSponsorCartString, user_id], (err, results) => {
+		if (err) {
+			console.error("Database Error:", err);
+			return res.status(500).json({ error: "Failed to update cart" });
+		}
+		if (results.affectedRows === 0) {
+			return res.status(404).json({ error: "Cart not found" });
+		}
+		return res.status(200).json({ success: true, message: "Cart updated" });
+	});
+	
 });
 
 //api for getting the details of sponsors corresponding to the cart
@@ -1570,21 +1640,34 @@ app.post('/api/admin/users/:id/toggle-status', (req, res) => {
 // Delete user
 app.delete('/api/admin/users/:id', (req, res) => {
     const { id } = req.params;
-    
-    db.query('DELETE FROM users WHERE user_id = ?', [id], (err, result) => {
-        if (err) {
-            console.error(err);
-            return res.status(500).json({ error: 'Database error' });
+	db.query('SELECT driver_id FROM drivers WHERE user_id = ?', [id], (err, rows) => {
+		const driver_id = rows && rows.length > 0 ? rows[0].driver_id : null;
+
+		// check is user has driver id
+		if (driver_id) {
+			db.query('DELETE FROM driver_sponsors WHERE driver_id = ?', [driver_id], () => {
+				db.query('DELETE FROM driver_points WHERE driver_id = ?', [driver_id], () => {
+					db.query('DELETE FROM drivers WHERE user_id = ?', [id], () => {
+						db.query('DELETE FROM sponsor_users WHERE user_id = ?', [id], () => {
+							db.query('DELETE FROM users WHERE user_id = ?', [id], (err, result) => {
+								if (err) return res.status(500).json({ error: 'Database error' });
+								if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
+								res.json({ success: true, message: 'User deleted successfully' });
+							});
+						});
+					});
+				});
+			});
+		}
+	 else {
+            db.query('DELETE FROM sponsor_users WHERE user_id = ?', [id], () => {
+                db.query('DELETE FROM users WHERE user_id = ?', [id], (err, result) => {
+                    if (err) return res.status(500).json({ error: 'Database error' });
+                    if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' });
+                    res.json({ success: true, message: 'User deleted successfully' });
+                });
+            });
         }
-        
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        
-        res.json({ 
-            success: true, 
-            message: 'User deleted successfully' 
-        });
     });
 });
 
@@ -2140,7 +2223,7 @@ app.get('/api/admin/audit-log',async (req,res) => {
 	if (type == 'login') {
 		sql = `SELECT 'login' AS type, username AS label, success, attempted_at AS timestamp
 		FROM login_attempts
-		ORDER BY timestamp DESC LIMIT 50`;
+		ORDER BY timestamp DESC LIMIT 500`;
 	}
 	else if (type === 'application') {
 		sql = `SELECT 'application' AS type,
@@ -2148,7 +2231,7 @@ app.get('/api/admin/audit-log',async (req,res) => {
 		NULL AS success, da.created_at AS timestamp
 		FROM driver_applications da
 		JOIN sponsors s ON da.sponsor_id = s.sponsor_id
-		ORDER BY timestamp DESC LIMIT 50`;
+		ORDER BY timestamp DESC LIMIT 500`;
 	}
 	else if (type === 'points') {
 		sql = `SELECT 'points' AS type,
@@ -2156,7 +2239,7 @@ app.get('/api/admin/audit-log',async (req,res) => {
 		NULL AS success, dp.created_at AS timestamp
 		FROM driver_points dp
 		JOIN drivers d ON dp.driver_id = d.driver_id
-		ORDER BY timestamp DESC LIMIT 50`;
+		ORDER BY timestamp DESC LIMIT 500`;
 	}
 	else if (type === 'password') {
 		sql = `SELECT 'password' AS type,
@@ -2164,7 +2247,7 @@ app.get('/api/admin/audit-log',async (req,res) => {
 		NULL AS success, pl.changed_at AS timestamp
 		FROM password_logs pl
 		JOIN users u ON pl.user_id = u.user_id
-		ORDER BY timestamp DESC LIMIT 50`;
+		ORDER BY timestamp DESC LIMIT 500`;
 	}
 	else {
 		sql = `SELECT 'login' AS type, username AS label, success, attempted_at AS timestamp
@@ -2280,6 +2363,13 @@ app.post('/api/admin/bulk-upload', async (req, res) => {
                 continue;
             }
 
+			// check for non-numeric point values
+			if (points && isNaN(parseInt(points))) {
+				errors.push({line, content, reason: 'Points must in numeric format!'});
+				continue;
+
+			}
+
             // check if user already exists
             const existingUser = await new Promise((resolve) => {
                 db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, results) => {
@@ -2351,11 +2441,18 @@ app.post('/api/admin/bulk-upload', async (req, res) => {
             const first_name = parts[2]?.trim();
             const last_name = parts[3]?.trim();
             const email = parts[4]?.trim();
+			const points = parts[5]?.trim();
 
             if (!org || !first_name || !last_name || !email) {
                 errors.push({ line, content, reason: 'Missing required fields (org, first name, last name, email)' });
                 continue;
             }
+
+			// flag an error for points but create the user
+			if (points) {
+				errors.push({line, content, reason : 'Points cannot be assigned to a sponsor user, but user will still be created'});
+
+			}
 
             const sponsor_id = orgMap[org];
             if (!sponsor_id) {
@@ -2441,16 +2538,23 @@ app.post('/api/sponsor/bulk-upload', async (req,res) => {
 
 		// ensure 0 type not allowed
 		if (type === "O") {
-			errors.push({ line, content, reason: 'Organization rows are not allowed in sponsor uploads' });
+			errors.push({ line, content, reason: 'Organization names are not allowed in sponsor uploads' });
 			continue;
 		}
 
 		if (type === 'D') {
-			const first_name = parts[1]?.trim();
-			const last_name = parts[2] ?.trim();
-			const email = parts[3]?.trim();
-			const points = parts[4]?.trim();
-			const reason = parts[5]?.trim();
+			const org = parts[1]?.trim();
+			const first_name = parts[2]?.trim();
+			const last_name = parts[3] ?.trim();
+			const email = parts[4]?.trim();
+			const points = parts[5]?.trim();
+			const reason = parts[6]?.trim();
+
+			// check for organization field and flag it
+			if (org) {
+				errors.push({line, content, reason: 'Organization names are not allowed in sponsor uploads!'})
+			}
+
 
 			// check for missing fields
 			if (!first_name || !last_name || !email) {
@@ -2462,6 +2566,13 @@ app.post('/api/sponsor/bulk-upload', async (req,res) => {
 			if (points && !reason) {
 				errors.push({ line, content, reason: 'Missing reason field!' });
 				continue;
+			}
+
+			// check for non-numeric point values
+			if (points && isNaN(parseInt(points))) {
+				errors.push({line, content, reason: 'Points must in numeric format!'});
+				continue;
+
 			}
 
 			// make sure that user exists
@@ -2521,8 +2632,8 @@ app.post('/api/sponsor/bulk-upload', async (req,res) => {
 
                 await new Promise((resolve) => {
                     db.query(
-                        'INSERT INTO drivers (user_id, first_name, last_name) VALUES (?, ?, ?)',
-                        [user_id, first_name, last_name],
+                        'INSERT INTO drivers (user_id, first_name, last_name, sponsor_id) VALUES (?, ?, ?, ?)',
+                        [user_id, first_name, last_name, sponsor_id],
                         (err) => resolve(!err)
                     );
                 });
@@ -2558,10 +2669,16 @@ app.post('/api/sponsor/bulk-upload', async (req,res) => {
 
         } 
 		else if (type === 'S') {
-            const first_name = parts[1]?.trim();
-            const last_name = parts[2]?.trim();
-            const email = parts[3]?.trim();
-            const points = parts[4]?.trim();
+			const org = parts[1]?.trim();
+            const first_name = parts[2]?.trim();
+            const last_name = parts[3]?.trim();
+            const email = parts[4]?.trim();
+            const points = parts[5]?.trim();
+
+			// check if organization is in sponsor row
+			if (org) {
+				errors.push({line, content, reason: 'Organization names are not allowed for sponsor bulk uploads and will be ignored!'});
+			}
 
             if (!first_name || !last_name || !email) {
                 errors.push({ line, content, reason: 'Missing required fields (first name, last name, email)' });
@@ -2624,9 +2741,13 @@ async function CreateNotification(user_id, message){
 
 //purchase your cart as a driver
 app.post('/api/purchase', async (req, res) => {
-	const token = req.body.key
 	const total = req.body.total
-	const email = decodeAccessToken(token)
+	const sponsor_id = req.body.sponsor_id
+
+	//decode the token
+	const token = getBearerToken(req);
+	if (!token) return res.status(401).json({ error: 'Authorization is required!' });
+	const email = decodeAccessToken(token);
 
 	//get the user_id from email
 	db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, userResults) => {
@@ -2642,31 +2763,62 @@ app.post('/api/purchase', async (req, res) => {
 		//get the info we need from the driver table
 		db.query('SELECT * FROM drivers WHERE user_id = ?', [user_id], (err, driverResults) => {
 
-			const points = driverResults[0].total_points;
+			const driver_id = driverResults[0].driver_id;
 			const cart = driverResults[0].cart;
 
-			//check if the purchase can be made
-			if (points - total < 0){
-				return res.status(403).json({ error: "You do not have enough points"});
+			console.log("getting points for driver_id", driver_id, "and sponsor_id", sponsor_id);
+			//get the current points of the driver from driver_sponsors
+			db.query('SELECT points FROM driver_sponsors WHERE sponsor_id = ? AND driver_id = ?', [sponsor_id, driver_id], (err, pointsResults) => {
+				const points = pointsResults[0].points;
+				//check if the purchase can be made
+				if (points - total < 0){
+					return res.status(403).json({ error: "You do not have enough points"});
 
-			}else{
-				//if the points are enough make a new purchase in table
-				db.query('INSERT INTO purchases (user_id, cost, cart) VALUES (?, ?, ?)', [user_id, total, cart], (err, purchaseResults) => {
-					
-					//then we need to update the driver table
-					db.query('UPDATE drivers SET cart = "", total_points = ? WHERE user_id = ?', [points - total, user_id], (err, finalResults) => {
+				}else{
+					//if the points are enough make a new purchase in table
+					db.query('INSERT INTO purchases (user_id, cost, cart) VALUES (?, ?, ?)', [user_id, total, cart], (err, purchaseResults) => {
+						
+						//then we need to update the driver table
+						db.query('UPDATE driver_sponsors SET points = ? WHERE sponsor_id = ? AND driver_id = ?', [points - total, sponsor_id, driver_id], (err, finalResults) => {
 
-						CreateNotification(user_id, `Thanks for your purchase of ${total} points!`)
-						.then(() => console.log("SMS Sent"))
-						.catch(e => console.error("SMS failed", e));
-						return res.status(200).json({ success: true, message: "Purchase Completed" });
-					})
-				});
-			}
+							CreateNotification(user_id, `Thanks for your purchase of ${total} points!`)
+							.then(() => console.log("SMS Sent"))
+							.catch(e => console.error("SMS failed", e));
+							return res.status(200).json({ success: true, message: "Purchase Completed" });
+						})
+					});
+				}
+			});
 		});
-
 	});
-})
+});
+
+//call for completely emptying both carts
+app.get('/api/emptyCart', async (req, res) => {
+	const token = getBearerToken(req);
+	if (!token) return res.status(401).json({ error: 'Authorization is required!' });
+
+	const email = decodeAccessToken(token);
+	//get the user_id from email
+	const user_id = await new Promise ((resolve) => {
+		db.query('SELECT user_id FROM users WHERE email = ?', [email], (err, userResults) => {
+			if (err) {
+				console.error("Database Error:", err);
+				return res.status(500).json({ error: "Error with database" });
+			}
+			resolve(userResults[0]?.user_id);
+		});
+	});
+
+	//update the cart from the driver table
+	db.query('UPDATE drivers SET cart = "", cart_sponsor = "" WHERE user_id = ?', [user_id], (err, results) => {
+		if (err) {
+			console.error("Database Error:", err);
+			return res.status(500).json({ error: "Error with database" });
+		}
+		return res.status(200).json({ success: true, message: "Cart Emptied" });
+	});
+});
 
 // sponsor point reports
 app.get('/api/sponsor/points-report', async (req, res) => {
