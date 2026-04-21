@@ -47,7 +47,7 @@ const SponsorProduct = () => {
 	//get the queries passed we want to retrieve produc with
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    const product_id = queryParams.get('q');
+    const product_id = queryParams.get('id');
 
     if (product_id) {
       fetchResults(product_id);
@@ -85,7 +85,7 @@ const SponsorProduct = () => {
   const fetchResults = async (query) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/product?q=${encodeURIComponent(query)}`);
+      const response = await fetch(`/api/product?id=${encodeURIComponent(query)}`);
       const data = await response.json();
       setProduct(data);
     } catch (error) {
